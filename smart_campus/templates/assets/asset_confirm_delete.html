@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}
+Delete Asset
+{% endblock title %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card border-danger">
+
+        <div class="card-header bg-danger text-white">
+            <h3>Delete Asset</h3>
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                Are you sure you want to delete
+                <strong>{{ object }}</strong>?
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-danger">
+                    Delete
+                </button>
+
+                <a href="{% url 'assets:asset_list' %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock content %}
