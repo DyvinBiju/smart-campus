@@ -1,43 +1,49 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
-Delete Asset
+  Delete Asset - SmartCampus
 {% endblock title %}
 
 {% block content %}
-
-<div class="container mt-4">
-
-    <div class="card border-danger">
-
-        <div class="card-header bg-danger text-white">
-            <h3>Delete Asset</h3>
+<div class="asset-delete-container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card border-danger shadow-sm rounded-4 overflow-hidden border-1">
+        <div class="card-header bg-danger text-white p-4">
+          <div class="d-flex align-items-center">
+            <i class="fa-solid fa-triangle-exclamation fs-2 me-3"></i>
+            <div>
+              <h4 class="fw-bold mb-0 text-white">Delete Asset Confirmation</h4>
+              <small class="text-white-50">This action cannot be undone.</small>
+            </div>
+          </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body p-4 p-md-5 text-center">
+          <div class="p-4 bg-light rounded-3 mb-4 text-start border">
+            <p class="mb-1 text-muted fs-7 text-uppercase fw-semibold">Target Asset</p>
+            <h5 class="fw-bold text-dark mb-0">{{ object }}</h5>
+          </div>
 
-            <p>
-                Are you sure you want to delete
-                <strong>{{ object }}</strong>?
-            </p>
+          <p class="text-secondary mb-4">
+            Are you sure you want to permanently delete <strong>"{{ object }}"</strong> from the SmartCampus asset registry?
+          </p>
 
-            <form method="post">
-                {% csrf_token %}
-
-                <button type="submit" class="btn btn-danger">
-                    Delete
-                </button>
-
-                <a href="{% url 'assets:asset_list' %}" class="btn btn-secondary">
-                    Cancel
-                </a>
-
-            </form>
-
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center gap-3">
+              <a href="{% url 'assets:asset_list' %}" class="btn btn-light border px-4 py-2 text-secondary fw-semibold">
+                <i class="fa-solid fa-xmark me-1"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-danger px-4 py-2 fw-semibold">
+                <i class="fa-solid fa-trash me-1"></i> Confirm Delete
+              </button>
+            </div>
+          </form>
         </div>
-
+      </div>
     </div>
-
+  </div>
 </div>
-
 {% endblock content %}

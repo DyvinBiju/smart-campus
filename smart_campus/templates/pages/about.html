@@ -1,3 +1,91 @@
 {% extends "base.html" %}
+{% load static %}
 
+{% block title %}
+  About SmartCampus
+{% endblock title %}
 
+{% block content %}
+<div class="about-container">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-primary text-white p-4 p-md-5" style="background: linear-gradient(135deg, #525fe1 0%, #282a74 100%);">
+          <span class="badge bg-white text-primary px-3 py-2 rounded-pill fw-semibold mb-2">System Overview</span>
+          <h2 class="display-6 fw-bold text-white mb-2">About SmartCampus</h2>
+          <p class="lead text-white-50 mb-0">Campus Operations & Resource Management System</p>
+        </div>
+        <div class="card-body p-4 p-md-5">
+          <div class="row g-4">
+            <div class="col-md-7">
+              <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-bullseye text-primary me-2"></i>Project Mission</h4>
+              <p class="text-secondary mb-3">
+                SmartCampus is a comprehensive web-based platform designed to centralize and automate campus operations, asset tracking, maintenance workflows, inventory management, and reporting analytics across educational institutions.
+              </p>
+              <p class="text-secondary mb-4">
+                Built on Django, PostgreSQL, Docker, and standard modular architecture, SmartCampus enables campus administrators and facility teams to maintain operational efficiency and resource transparency.
+              </p>
+
+              <h4 class="fw-bold text-dark mb-3"><i class="fa-solid fa-cubes text-primary me-2"></i>Core System Modules</h4>
+              <ul class="list-unstyled text-secondary">
+                <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i><strong>Asset Management:</strong> Real-time tracking of campus equipment, locations, categories, and operational status.</li>
+                <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i><strong>User & Authentication:</strong> Secure role-based user access, authentication, and profile controls.</li>
+                <li class="mb-2"><i class="fa-solid fa-circle-dot text-muted me-2"></i><strong>Complaint & Maintenance:</strong> Streamlined ticketing for campus repairs and facility requests.</li>
+                <li class="mb-2"><i class="fa-solid fa-circle-dot text-muted me-2"></i><strong>Inventory & Resources:</strong> Stock monitoring, material requisitions, and supply logs.</li>
+                <li class="mb-2"><i class="fa-solid fa-circle-dot text-muted me-2"></i><strong>Dashboard & Analytics:</strong> Visual reporting and operational intelligence.</li>
+              </ul>
+            </div>
+
+            <div class="col-md-5">
+              <div class="bg-light p-4 rounded-4 border">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-people-group text-primary me-2"></i>Development Team</h5>
+                <div class="d-flex flex-column gap-3">
+                  <div class="d-flex align-items-center bg-white p-3 rounded-3 border">
+                    <div class="rounded-circle bg-primary text-white me-3 d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">Al</div>
+                    <div>
+                      <span class="fw-bold text-dark d-block">Albin</span>
+                      <small class="text-muted">Asset Management Module</small>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center bg-white p-3 rounded-3 border">
+                    <div class="rounded-circle bg-info text-white me-3 d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">Ak</div>
+                    <div>
+                      <span class="fw-bold text-dark d-block">Akhil</span>
+                      <small class="text-muted">User & Authentication Module</small>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center bg-white p-3 rounded-3 border">
+                    <div class="rounded-circle bg-warning text-white me-3 d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">De</div>
+                    <div>
+                      <span class="fw-bold text-dark d-block">Denil</span>
+                      <small class="text-muted">Complaint & Maintenance Module</small>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center bg-white p-3 rounded-3 border">
+                    <div class="rounded-circle bg-danger text-white me-3 d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">Dy</div>
+                    <div>
+                      <span class="fw-bold text-dark d-block">Dyvin</span>
+                      <small class="text-muted">Inventory & Resources Module</small>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center bg-white p-3 rounded-3 border">
+                    <div class="rounded-circle bg-success text-white me-3 d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">Ki</div>
+                    <div>
+                      <span class="fw-bold text-dark d-block">Kiran</span>
+                      <small class="text-muted">Dashboard, Reports & Analytics</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

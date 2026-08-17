@@ -1,67 +1,89 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}
-Assets
+  Asset Management - SmartCampus
 {% endblock title %}
 
 {% block content %}
-
-<div class="container mt-4">
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Asset Management</h2>
-
-        <a href="{% url 'assets:asset_create' %}" class="btn btn-primary">
-            Add Asset
+<div class="asset-management-container">
+  <!-- PAGE TITLE BAR -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h3 class="fw-bold text-dark mb-1">
+          <i class="fa-solid fa-boxes-stacked text-primary me-2"></i>Asset Management
+        </h3>
+        <p class="text-muted mb-0">View, register, update, and manage all campus assets and equipment.</p>
+      </div>
+      <div>
+        <a href="{% url 'assets:asset_create' %}" class="btn btn_one px-4 py-2 text-white text-decoration-none">
+          <i class="fa-solid fa-plus me-2"></i>Add Asset
         </a>
+      </div>
     </div>
+  </div>
 
-    <table class="table table-bordered table-striped">
-        <thead>
+  <!-- ASSET TABLE CARD -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light">
             <tr>
-                <th>Asset Code</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Building</th>
-                <th>Room</th>
-                <th>Status</th>
-                <th>Actions</th>
+              <th class="ps-4 py-3 text-secondary text-uppercase fs-7 fw-semibold">Asset Code</th>
+              <th class="py-3 text-secondary text-uppercase fs-7 fw-semibold">Name</th>
+              <th class="py-3 text-secondary text-uppercase fs-7 fw-semibold">Category</th>
+              <th class="py-3 text-secondary text-uppercase fs-7 fw-semibold">Building</th>
+              <th class="py-3 text-secondary text-uppercase fs-7 fw-semibold">Room</th>
+              <th class="py-3 text-secondary text-uppercase fs-7 fw-semibold">Status</th>
+              <th class="pe-4 py-3 text-end text-secondary text-uppercase fs-7 fw-semibold">Actions</th>
             </tr>
-        </thead>
-
-        <tbody>
+          </thead>
+          <tbody>
             {% for asset in assets %}
             <tr>
-                <td>{{ asset.asset_code }}</td>
-                <td>{{ asset.name }}</td>
-                <td>{{ asset.category }}</td>
-                <td>{{ asset.building }}</td>
-                <td>{{ asset.room }}</td>
-                <td>{{ asset.get_status_display }}</td>
-
-                <td>
-                    <a href="{% url 'assets:asset_update' asset.pk %}"
-                       class="btn btn-warning btn-sm">
-                        Edit
-                    </a>
-
-                    <a href="{% url 'assets:asset_delete' asset.pk %}"
-                       class="btn btn-danger btn-sm">
-                        Delete
-                    </a>
-                </td>
+              <td class="ps-4">
+                <span class="badge bg-light text-dark border font-monospace px-2 py-1">{{ asset.asset_code }}</span>
+              </td>
+              <td class="fw-semibold text-dark">{{ asset.name }}</td>
+              <td><span class="text-secondary"><i class="fa-solid fa-tag me-1 text-muted"></i>{{ asset.category }}</span></td>
+              <td><span class="text-secondary"><i class="fa-solid fa-building me-1 text-muted"></i>{{ asset.building }}</span></td>
+              <td><span class="text-secondary"><i class="fa-solid fa-door-closed me-1 text-muted"></i>{{ asset.room }}</span></td>
+              <td>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
+                  {{ asset.get_status_display }}
+                </span>
+              </td>
+              <td class="pe-4 text-end">
+                <div class="btn-group btn-group-sm" role="group">
+                  <a href="{% url 'assets:asset_update' asset.pk %}" class="btn btn-outline-primary px-3" title="Edit Asset">
+                    <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+                  </a>
+                  <a href="{% url 'assets:asset_delete' asset.pk %}" class="btn btn-outline-danger px-3" title="Delete Asset">
+                    <i class="fa-solid fa-trash me-1"></i> Delete
+                  </a>
+                </div>
+              </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center">
-                    No assets found.
-                </td>
+              <td colspan="7" class="text-center py-5">
+                <div class="my-3">
+                  <i class="fa-solid fa-box-open display-4 text-muted opacity-50 mb-3 d-block"></i>
+                  <h5 class="fw-semibold text-dark mb-1">No Assets Registered</h5>
+                  <p class="text-muted mb-3">There are currently no campus assets recorded in the system.</p>
+                  <a href="{% url 'assets:asset_create' %}" class="btn btn-primary px-4">
+                    <i class="fa-solid fa-plus me-2"></i>Register First Asset
+                  </a>
+                </div>
+              </td>
             </tr>
             {% endfor %}
-        </tbody>
-
-    </table>
-
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
-
 {% endblock content %}
