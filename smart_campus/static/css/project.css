@@ -1,101 +1,13 @@
-/* SmartCampus Custom Project Styles */
+/* These styles are generated from project.scss. */
 
-/* Base & Typography */
-body {
-  background-color: #f8f9fa;
-  color: #333;
-}
-
-.main-content-wrapper {
-  background-color: #f8f9fa;
-}
-
-/* Brand logo styling */
-.site-logo a {
-  display: flex;
-  align-items: center;
-}
-
-/* Navigation Custom Adjustments */
-#navigation {
-  background-color: #ffffff !important;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-}
-
-#main-menu ul li a {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-#navigation #main-menu ul li ul {
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-}
-
-#navigation #main-menu ul li ul li a {
-  font-size: 14px;
-  padding: 8px 16px;
-}
-
-/* Custom Card & Utilities */
-.rounded-4 {
-  border-radius: 1rem !important;
-}
-
-.font-monospace {
-  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
-}
-
-/* Table Enhancements */
-.table-hover tbody tr:hover {
-  background-color: rgba(82, 95, 225, 0.03);
-}
-
-.fs-7 {
-  font-size: 0.75rem !important;
-}
-
-/* Form Controls */
-.form-control, .form-select {
-  border-radius: 0.5rem;
-  padding: 0.6rem 0.9rem;
-  border-color: #dee2e6;
-}
-
-.form-control:focus, .form-select:focus {
-  border-color: #525fe1;
-  box-shadow: 0 0 0 0.25rem rgba(82, 95, 225, 0.15);
-}
-
-/* Alerts */
 .alert-debug {
-  color: #055160;
-  background-color: #cff4fc;
-  border-color: #b6effb;
+  color: black;
+  background-color: white;
+  border-color: #d6e9c6;
 }
 
 .alert-error {
-  color: #842029;
-  background-color: #f8d7da;
-  border-color: #f5c2c7;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c5c7d0;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #525fe1;
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #eed3d7;
 }
