@@ -2,583 +2,248 @@
 {% load static %}
 
 {% block title %}
-  Eduleb - Education HTML Template
+  SmartCampus - Campus Operations & Resource Management System
 {% endblock title %}
 
 {% block content %}
-<!-- START HOME -->
-<section class="home_bg hb_height" style="background-image: url('{% static 'eduleb/assets/img/bg/home-bg.jpg' %}'); background-size:cover; background-position: center center;">
+<!-- START HERO SECTION -->
+<section class="home_bg" style="background-image: url('{% static 'eduleb/assets/img/bg/home-bg.jpg' %}'); background-size:cover; background-position: center center; height: auto; min-height: 580px; padding-bottom: 40px;">
   <div class="container">
-    <div class="row">
+    <div class="row align-items-center">
       <div class="col-lg-6 col-sm-12 col-xs-12">
         <div class="hero-text ht_top">
-          <h1><span>Smart Study</span> Where Knowledge Meets the Web</h1>
-          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, consectetur adipiscing elit tempor ut labore</p>
+          <h1 class="text-dark fw-bold mb-3" style="padding-top: 35px;"><span>Report. Track.</span> Resolve.</h1>
+          <p class="lead text-secondary mb-4">
+            SmartCampus makes it easy to report campus issues, track their progress, and stay informed until they are resolved.
+          </p>
         </div>
-        <div class="home_sb">
-          <form action="#" class="banner_subs">
-            <input type="text" class="form-control home_si" placeholder="Search your course here" required="required">
-            <button type="button" class="subscribe__btn">Search <i class="fa fa-paper-plane-o"></i></button>
-          </form>
+        <div class="d-flex flex-wrap gap-3 mt-3">
+          <a href="#raise-complaint" class="btn_one px-4 py-3 me-2">
+            <i class="fa-solid fa-pen-to-square me-2"></i>Raise a Complaint
+          </a>
+          <a href="#my-complaints" class="header-btn px-4 py-3">
+            <i class="fa-solid fa-list-check me-2"></i>Track My Complaints
+          </a>
         </div>					
       </div><!--- END COL -->
-      <div class="col-lg-6 col-sm-12 col-xs-12">
-        <div class="hero-text-img">
-          <img src="{% static 'eduleb/assets/img/home-img2.png' %}" class="img-fluid" alt="" />
-          <div class="home_ps">
-            <span class="ti-user"></span>
-            <h2>4500+</h2>
-            <p>Active student</p>
-          </div>
+      <div class="col-lg-6 col-sm-12 col-xs-12 mt-4 mt-lg-0" style="padding-top: 35px;">
+        <div class="hero-text-img text-center">
+          <img src="{% static 'images/home/campus-hero.png' %}" class="img-fluid rounded-4 shadow-lg" alt="Campus Hero" style="max-height: 420px; object-fit: cover; width: 100%;" />
         </div>					
       </div><!--- END COL -->						  
     </div><!--- END ROW -->
   </div><!--- END CONTAINER -->
 </section>
-<!-- END HOME -->			
+<!-- END HERO SECTION -->			
 
-<!-- START COUNTER -->
-<section class="count_area counter_feature">
+<!-- START STATISTICS -->
+<section class="count_area counter_feature py-5">
   <div class="container">
     <div class="row">
-      <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-folder sc_one"></span>
-          <h2 class="counter-num">134</h2>
-          <p>Our Online Course</p>
+      <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0">
+        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-headphone-alt sc_one fs-2 mb-2 d-inline-block"></span>
+          <h2 class="counter-num fw-bold">1248</h2>
+          <p class="text-muted fw-semibold">Complaints Raised</p>
         </div>							
       </div>
-      <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-medall-alt sc_two"></span>
-          <h2 class="counter-num">299</h2>
-          <p>Academic Programs</p>
+      <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0">
+        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-check-box sc_two fs-2 mb-2 d-inline-block"></span>
+          <h2 class="counter-num fw-bold">1180</h2>
+          <p class="text-muted fw-semibold">Issues Resolved</p>
+        </div>
+      </div><!-- END COL -->
+      <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0">
+        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-time sc_three fs-2 mb-2 d-inline-block"></span>
+          <h2 class="counter-num fw-bold">68</h2>
+          <p class="text-muted fw-semibold">Pending Complaints</p>
         </div>
       </div><!-- END COL -->
       <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-id-badge sc_three"></span>
-          <h2 class="counter-num">684</h2>
-          <p>Certified Students</p>
-        </div>
-      </div><!-- END COL -->
-      <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-user sc_four"></span>
-          <h2 class="counter-num">941</h2>
-          <p>Enrolled Students</p>
+        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-user sc_four fs-2 mb-2 d-inline-block"></span>
+          <h2 class="counter-num fw-bold">3450</h2>
+          <p class="text-muted fw-semibold">Registered Users</p>
         </div>
       </div><!-- END COL -->						
     </div><!--- END ROW -->
   </div><!--- END CONTAINER -->		
 </section>
-<!-- END COUNTER -->
+<!-- END STATISTICS -->
 
-<!-- START CATEGORY -->
+<!-- START HOW SMARTCAMPUS WORKS -->
 <section class="top_cat__area section-padding" style="background-image: url('{% static 'eduleb/assets/img/bg/shape-1.png' %}'); background-size:cover; background-position: center center;">
   <div class="container">									
-    <div class="section-title text-center">
-      <h2>Start your journey With us</h2>
-      <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
+    <div class="section-title text-center mb-5">
+      <h2 class="fw-bold">How SmartCampus Works</h2>
+      <p class="text-secondary mt-2">Follow four simple steps to get any campus issue reported and fixed efficiently.</p>
     </div>						
     <div class="row">					
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_one">01</span>
-          <h3>Expert <br />Teacher</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
+      <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s">
+        <div class="single_tp p-4 rounded-4 bg-white shadow-sm h-100">
+          <span class="sc_one font-monospace">01</span>
+          <h3 class="fw-bold fs-5 mt-2">Report an Issue</h3>
+          <p class="text-muted mt-2">Submit a complaint with the relevant details and location.</p>
         </div>
       </div><!-- END COL -->			
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.3s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_two">02</span>
-          <h3>Quality <br />Education</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
+      <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+        <div class="single_tp p-4 rounded-4 bg-white shadow-sm h-100">
+          <span class="sc_two font-monospace">02</span>
+          <h3 class="fw-bold fs-5 mt-2">Track Your Complaint</h3>
+          <p class="text-muted mt-2">Follow the progress of your complaint from submission to resolution.</p>
         </div>
       </div><!-- END COL -->			
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_three">03</span>
-          <h3>Remote <br />Learning</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
+      <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.3s">
+        <div class="single_tp p-4 rounded-4 bg-white shadow-sm h-100">
+          <span class="sc_three font-monospace">03</span>
+          <h3 class="fw-bold fs-5 mt-2">Get Updates</h3>
+          <p class="text-muted mt-2">Stay informed when your complaint is reviewed or assigned.</p>
         </div>
       </div><!-- END COL -->	
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_four">04</span>
-          <h3>Life Time <br />Support</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
+      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s">
+        <div class="single_tp p-4 rounded-4 bg-white shadow-sm h-100">
+          <span class="sc_four font-monospace">04</span>
+          <h3 class="fw-bold fs-5 mt-2">Get It Resolved</h3>
+          <p class="text-muted mt-2">View the resolution and follow the issue through to closure.</p>
         </div>
       </div><!-- END COL -->							
     </div><!-- END ROW -->
   </div><!--- END CONTAINER -->
 </section>
-<!-- END CATEGORY -->		
+<!-- END HOW SMARTCAMPUS WORKS -->		
 
-<!-- START ABOUT US -->
+<!-- START ABOUT / INTRODUCTION -->
 <section class="ab_area section-padding">
   <div class="container">									
-    <div class="row">								
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="ab_img">
-          <img src="{% static 'eduleb/assets/img/about1.png' %}" class="img-fluid" alt="image">
+    <div class="row align-items-center">								
+      <div class="col-lg-6 col-sm-12 col-xs-12 mb-4 mb-lg-0 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s">
+        <div class="ab_img text-center">
+          <img src="{% static 'images/home/complaint-reporting.jpg' %}" class="img-fluid rounded-4 shadow" alt="Complaint Reporting" style="max-height: 400px; object-fit: cover; width: 100%;" />
         </div>
       </div><!--- END COL -->						
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="ab_content">
-          <h2>We Are Providing The Online Course In Global World</h2>
-          <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-          <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-          <ul>
-            <li><span class="ti-check"></span> Get access to <b>12,000+</b> of our top courses</li>
-            <li><span class="ti-check"></span> Popular topic to learn now in our online courses for student</li>
-            <li><span class="ti-check"></span> Find the right instructor for you</li>
+      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s">
+        <div class="ab_content ps-lg-4">
+          <h2 class="fw-bold mb-3">A Smarter Way to Handle Campus Issues</h2>
+          <p class="text-secondary mb-4">
+            SmartCampus provides a centralized platform for students and staff to report campus problems and follow their resolution without relying on manual complaints or repeated follow-ups.
+          </p>
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2"><span class="ti-check text-primary me-2 fw-bold"></span> <b>Easy complaint submission</b> with location and details</li>
+            <li class="mb-2"><span class="ti-check text-primary me-2 fw-bold"></span> <b>Real-time status tracking</b> from start to finish</li>
+            <li class="mb-2"><span class="ti-check text-primary me-2 fw-bold"></span> <b>Location-based reporting</b> for quick maintenance routing</li>
+            <li class="mb-2"><span class="ti-check text-primary me-2 fw-bold"></span> <b>Transparent resolution process</b> for all campus users</li>
           </ul>
-          <a class="btn_one" href="#">View All Courses <i class="ti-arrow-top-right"></i></a>
+          <a class="btn_one px-4 py-3" href="#raise-complaint">
+            <i class="fa-solid fa-plus me-1"></i> Raise a Complaint
+          </a>
         </div>
       </div><!--- END COL -->							  
     </div><!--- END ROW -->
   </div><!--- END CONTAINER -->
 </section>
-<!-- END ABOUT US -->	
+<!-- END ABOUT / INTRODUCTION -->	
 
-<!-- START CATEGORY -->
-<section class="top_cat__area section-padding" style="background-image: url('{% static 'eduleb/assets/img/bg/section-2.jpg' %}'); background-size:cover; background-position: center center;">
+<!-- START WHAT CAN YOU REPORT -->
+<section class="top_cat__area section-padding bg-light">
   <div class="container">									
-    <div class="section-title text-center">
-      <h2>Find out by popular Categories</h2>
-      <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
+    <div class="section-title text-center mb-5">
+      <h2 class="fw-bold">What Can You Report?</h2>
+      <p class="text-secondary mt-2">Report issues across various campus categories quickly and accurately.</p>
     </div>						
-    <div class="row">													
-      <div class="col-lg-12 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="cat_list">
-          <ul>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e1.png' %}" alt="category-image" /> Digital Marketing</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e2.png' %}" alt="category-image" /> UI/UX Design</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e3.png' %}" alt="category-image" /> 3D Visual Design</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e4.png' %}" alt="category-image" /> Content Marketing</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e5.png' %}" alt="category-image" /> Photography</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e6.png' %}" alt="category-image" /> Photo Lifestyle</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e7.png' %}" alt="category-image" /> Art & Design</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e8.png' %}" alt="category-image" /> Finance & Banking</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e9.png' %}" alt="category-image" /> Graphic Design</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e2.png' %}" alt="category-image" /> Interior Design</a></li>
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e3.png' %}" alt="category-image" /> 3D Visual Design</a></li>	
-            <li><a href="#"><img src="{% static 'eduleb/assets/img/e7.png' %}" alt="category-image" /> Art & Design</a></li>							
-          </ul>
+    <div class="row g-4 justify-content-center">
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-chalkboard-user fs-2 text-primary mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Classroom Issues</h4>
         </div>
-      </div><!--- END COL -->							  
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-bolt fs-2 text-warning mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Electrical Problems</h4>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-droplet fs-2 text-info mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Water & Plumbing</h4>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-chair fs-2 text-secondary mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Furniture Issues</h4>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-broom fs-2 text-success mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Cleanliness</h4>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-wifi fs-2 text-primary mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Network & IT</h4>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-building-circle-check fs-2 text-danger mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Facilities</h4>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="p-4 bg-white rounded-4 shadow-sm text-center h-100 border">
+          <i class="fa-solid fa-ellipsis fs-2 text-muted mb-3"></i>
+          <h4 class="fw-bold fs-6 mb-0">Other Issues</h4>
+        </div>
+      </div>
     </div><!--- END ROW -->
   </div><!--- END CONTAINER -->
 </section>
-<!-- END CATEGORY -->			
+<!-- END WHAT CAN YOU REPORT -->			
 
-<!-- START COURSE -->
-<section class="home_course section-padding">
+<!-- START WHY SMARTCAMPUS -->
+<section class="section-padding py-5">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-8 col-sm-6 col-xs-12">
-        <div class="section-title">
-          <h2>Join with more than <b>80,000+ </b> <br />Courses & Learning creators.</h2>
-        </div>					
-      </div><!--- END COL -->
-      <div class="col-lg-4 col-sm-6 col-xs-12">
-        <div class="cour_btn">
-          <a href="#" class="btn_one">View all Courses <i class="ti-arrow-top-right"></i></a>
+    <div class="section-title text-center mb-5">
+      <h2 class="fw-bold">Why SmartCampus?</h2>
+      <p class="text-secondary mt-2">Designed for a seamless, transparent, and efficient campus issue management experience.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-3 col-sm-6">
+        <div class="p-4 rounded-4 bg-white shadow-sm border h-100">
+          <div class="mb-3 text-primary"><i class="fa-solid fa-feather-pointed fs-2"></i></div>
+          <h4 class="fw-bold fs-5 mb-2">Easy Reporting</h4>
+          <p class="text-muted">Report campus problems without unnecessary paperwork or repeated visits.</p>
         </div>
-      </div><!--- END COL -->
-    </div><!--- END ROW -->				
-    <div class="row">
-      <div class="col-lg-4 col-sm-6 col-xs-12">
-        <div class="single_course">
-          <div class="single_c_img">
-            <img src="{% static 'eduleb/assets/img/course/1.png' %}" class="img-fluid" alt="course-image" />
-            <span>Education</span>
-          </div>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <h4><a href="#">Complete User fundamentals beginners to advanced</a></h4>
-          <p><span class="ti-book"> </span> 12 Course</p>
-          <p><span class="ti-alarm-clock"> </span>2 Hrs 32 Min</p>
-          <div class="price">Course Fee - 99$</div>
+      </div>
+      <div class="col-lg-3 col-sm-6">
+        <div class="p-4 rounded-4 bg-white shadow-sm border h-100">
+          <div class="mb-3 text-info"><i class="fa-solid fa-eye fs-2"></i></div>
+          <h4 class="fw-bold fs-5 mb-2">Transparent Tracking</h4>
+          <p class="text-muted">Know the current status of your complaint at any time.</p>
         </div>
-      </div><!-- END COL -->
-      <div class="col-lg-4 col-sm-6 col-xs-12">
-        <div class="single_course">
-          <div class="single_c_img">
-            <img src="{% static 'eduleb/assets/img/course/2.png' %}" class="img-fluid" alt="course-image" />
-            <span>UI/UX</span>
-          </div>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <h4><a href="#">Advanced Android 12 & Kotlin Development Course</a></h4>
-          <p><span class="ti-book"> </span> 41 Course</p>
-          <p><span class="ti-alarm-clock"> </span>3 Hrs 32 Min</p>
-          <div class="price">Course Fee - 49$</div>
+      </div>
+      <div class="col-lg-3 col-sm-6">
+        <div class="p-4 rounded-4 bg-white shadow-sm border h-100">
+          <div class="mb-3 text-success"><i class="fa-solid fa-gauge-high fs-2"></i></div>
+          <h4 class="fw-bold fs-5 mb-2">Faster Resolution</h4>
+          <p class="text-muted">Help route issues directly to the appropriate staff for action.</p>
         </div>
-      </div><!-- END COL -->
-      <div class="col-lg-4 col-sm-6 col-xs-12">
-        <div class="single_course">
-          <div class="single_c_img">
-            <img src="{% static 'eduleb/assets/img/course/3.png' %}" class="img-fluid" alt="course-image" />
-            <span>Lifestyle</span>
-          </div>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <h4><a href="#">Complete HTML, CSS and Javascript Course</a></h4>
-          <p><span class="ti-book"> </span> 32 Course</p>
-          <p><span class="ti-alarm-clock"> </span>2 Hrs 32 Min</p>
-          <div class="price">Course Fee - Free</div>
+      </div>
+      <div class="col-lg-3 col-sm-6">
+        <div class="p-4 rounded-4 bg-white shadow-sm border h-100">
+          <div class="mb-3 text-warning"><i class="fa-solid fa-graduation-cap fs-2"></i></div>
+          <h4 class="fw-bold fs-5 mb-2">Better Campus</h4>
+          <p class="text-muted">Contribute to a safer, cleaner, and better-maintained campus environment.</p>
         </div>
-      </div><!-- END COL -->
-      <div class="col-lg-4 col-sm-6 col-xs-12">
-        <div class="single_course">
-          <div class="single_c_img">
-            <img src="{% static 'eduleb/assets/img/course/4.png' %}" class="img-fluid" alt="course-image" />
-            <span>Science</span>
-          </div>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <h4><a href="#">IOS and Swift Complete iOS Application Development</a></h4>
-          <p><span class="ti-book"> </span> 19 Course</p>
-          <p><span class="ti-alarm-clock"> </span>2 Hrs 32 Min</p>
-          <div class="price">Course Fee - 59$</div>
-        </div>
-      </div><!-- END COL -->
-      <div class="col-lg-4 col-sm-6 col-xs-12">
-        <div class="single_course">
-          <div class="single_c_img">
-            <img src="{% static 'eduleb/assets/img/course/5.png' %}" class="img-fluid" alt="course-image" />
-            <span>Modern</span>
-          </div>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <h4><a href="#">Learn graphics design with a best IT Trainer</a></h4>
-          <p><span class="ti-book"> </span> 22 Course</p>
-          <p><span class="ti-alarm-clock"> </span>2 Hrs 32 Min</p>
-          <div class="price">Course Fee - 79$</div>
-        </div>
-      </div><!-- END COL -->
-      <div class="col-lg-4 col-sm-6 col-xs-12">
-        <div class="single_course">
-          <div class="single_c_img">
-            <img src="{% static 'eduleb/assets/img/course/6.png' %}" class="img-fluid" alt="course-image" />
-            <span>Marketing</span>
-          </div>
-          <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
-          <h4><a href="#">Complete data science for your next business</a></h4>
-          <p><span class="ti-book"> </span> 11 Course</p>
-          <p><span class="ti-alarm-clock"> </span>2 Hrs 32 Min</p>
-          <div class="price">Course Fee - 39$</div>
-        </div>
-      </div><!-- END COL -->						
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->		
+      </div>
+    </div>
+  </div>
 </section>
-<!-- END COURSE -->	
-
-<!-- START COMPANY PARTNER LOGO  -->
-<div class="partner-logo section-padding">
-  <div class="container">
-    <div class="row part_bg">
-      <div class="col-lg-4 col-sm-4 col-xs-12">
-        <div class="partner_title">
-          <h3>Helping <span>86,000+</span> global companies take the gloves off </h3>
-        </div>					
-      </div><!-- END COL  -->
-      <div class="col-lg-8 col-sm-8 col-xs-12 text-center">
-        <div class="partner">
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/1.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/2.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/3.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/4.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/5.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/2.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/1.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/3.png' %}" alt="image"></a>
-          <a href="#"><img src="{% static 'eduleb/assets/img/clients/4.png' %}" alt="image"></a>
-        </div>
-      </div><!-- END COL  -->
-    </div><!--END  ROW  -->
-  </div><!-- END CONTAINER  -->
-</div>
-<!-- END COMPANY PARTNER LOGO -->	
-
-<!-- START VIDEO -->
-<section class="vid_area section-padding">
-  <div class="container">																
-    <div class="row">
-      <div class="col-lg-12 vp_top wow fadeInUDown" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="video-area" style="background-image: url('{% static 'eduleb/assets/img/bg/video.jpg' %}'); background-size:cover; background-position: center center;">
-          <a href="https://www.youtube.com/watch?v=RXv_uIN6e-Y" class="magnific_popup video-button"><i class="fa fa-play"></i></a>
-        </div>
-      </div><!--- END COL -->	
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->
-</section>
-<!-- END VIDEO -->			
-
-<!-- START TEAM -->
-<section class="team_area section-padding">
-  <div class="container">									
-    <div class="section-title text-center">
-      <h2>Meet our Instructors</h2>
-      <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-    </div>						
-    <div class="row">													
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="our-team">
-          <div class="team-content">
-            <a href="#"><img src="{% static 'eduleb/assets/img/team/team1.jpg' %}" alt=""></a>
-            <ul class="social-links">
-              <li><a href="#"><i class="fa-solid fa-x"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-facebook-f"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-linkedin-in"></i></a></li>
-            </ul>
-          </div>
-          <div class="team-prof">
-            <h3>Bilkis Vabi</h3>
-            <span>Web designer</span>
-          </div>
-          <div class="sth_det2">
-            <span class="ti-file"> <u>04 Course</u></span>
-            <span class="ti-user"> <u>27 Student</u></span>
-          </div>									
-        </div>
-      </div><!--- END COL -->										
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="our-team">
-          <div class="team-content">
-            <a href="#"><img src="{% static 'eduleb/assets/img/team/team2.jpg' %}" alt=""></a>
-            <ul class="social-links">
-              <li><a href="#"><i class="fa-solid fa-x"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-facebook-f"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-linkedin-in"></i></a></li>
-            </ul>
-          </div>
-          <div class="team-prof">
-            <h3>Mood Wasim</h3>
-            <span>TemplateMonster company</span>
-          </div>
-          <div class="sth_det2">
-            <span class="ti-file"> <u>06 Course</u></span>
-            <span class="ti-user"> <u>41 Student</u></span>
-          </div>							
-        </div>
-      </div><!--- END COL -->										
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="our-team">
-          <div class="team-content">
-            <a href="#"><img src="{% static 'eduleb/assets/img/team/team3.jpg' %}" alt=""></a>
-            <ul class="social-links">
-              <li><a href="#"><i class="fa-solid fa-x"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-facebook-f"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-linkedin-in"></i></a></li>
-            </ul>
-          </div>
-          <div class="team-prof">
-            <h3>Shyinn tim</h3>
-            <span>Codecanyou</span>
-          </div>
-          <div class="sth_det2">
-            <span class="ti-file"> <u>13 Course</u></span>
-            <span class="ti-user"> <u>31 Student</u></span>
-          </div>
-        </div>
-      </div><!--- END COL -->										
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="our-team">
-          <div class="team-content">
-            <a href="#"><img src="{% static 'eduleb/assets/img/team/team4.jpg' %}" alt=""></a>
-            <ul class="social-links">
-              <li><a href="#"><i class="fa-solid fa-x"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-facebook-f"></i></a></li>
-              <li><a href="#"><i class="fa-brands fa-linkedin-in"></i></a></li>
-            </ul>
-          </div>
-          <div class="team-prof">
-            <h3>Shorif shorifa</h3>
-            <span>Tsc chottor</span>
-          </div>
-          <div class="sth_det2">
-            <span class="ti-file"> <u>07 Course</u></span>
-            <span class="ti-user"> <u>24 Student</u></span>
-          </div>
-        </div>
-      </div><!--- END COL -->							  
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->
-</section>
-<!-- END TEAM -->	
-
-<!-- START PROMO -->
-<section class="ab_area section-padding">
-  <div class="container">									
-    <div class="row">													
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="ab_content">
-          <h2>Why Choose Us For Your Online Education Courses</h2>
-          <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-          <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-          <ul>
-            <li><span class="ti-check"></span> Get access to <b>12,000+</b> of our top courses</li>
-            <li><span class="ti-check"></span> Popular topic to learn now in our online courses for student</li>
-            <li><span class="ti-check"></span> Find the right instructor for you</li>
-          </ul>
-          <a class="btn_one" href="#">View All Courses <i class="ti-arrow-top-right"></i></a>
-        </div>
-      </div><!--- END COL -->	
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="ab_img">
-          <img src="{% static 'eduleb/assets/img/about3.png' %}" class="img-fluid" alt="image">
-          <div class="home_ps2">
-            <span class="ti-book"></span>
-            <h2>3300+</h2>
-            <p>Online Course</p>
-          </div>
-        </div>
-      </div><!--- END COL -->					
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->
-</section>
-<!-- END PROMO -->			
-
-<!-- START TESTIMONIALS -->
-<section class="testi_area section-padding">
-  <div class="container">
-    <div class="section-title">
-      <h2>What Student’s Say To Do <br />Their Online Course</h2>
-    </div>						
-    <div class="row">
-      <div class="col-lg-6 col-sm-12 col-xs-12">
-        <div class="ab_img">
-          <img src="{% static 'eduleb/assets/img/review.png' %}" class="img-fluid" alt="image">
-        </div>					
-      </div><!-- END COL -->						
-      <div class="col-lg-6 col-sm-12 col-xs-12">
-        <div id="testimonial-slider" class="owl-carousel">
-          <div class="testimonial">
-            <img src="{% static 'eduleb/assets/img/quote.png' %}" alt="" />
-            <div class="testimonial_content">													
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <p>Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.</p>
-            </div>
-            <div class="testi_pic_title">
-              <img src="{% static 'eduleb/assets/img/testimonial/1.png' %}" alt="">
-              <h4>Ajmain Adil</h4>
-              <p>Groton Inc</p>
-            </div>
-          </div><!-- END TESTIMONIAL -->
-          <div class="testimonial">
-            <img src="{% static 'eduleb/assets/img/quote.png' %}" alt="" />
-            <div class="testimonial_content">													
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <p>Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.</p>
-            </div>
-            <div class="testi_pic_title">
-              <img src="{% static 'eduleb/assets/img/testimonial/2.png' %}" alt="">
-              <h4>Sharukh Khan</h4>
-              <p>Red Chili Inc</p>
-            </div>
-          </div><!-- END TESTIMONIAL -->
-          <div class="testimonial">
-            <img src="{% static 'eduleb/assets/img/quote.png' %}" alt="" />
-            <div class="testimonial_content">													
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <p>Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.</p>
-            </div>
-            <div class="testi_pic_title">
-              <img src="{% static 'eduleb/assets/img/testimonial/3.png' %}" alt="">
-              <h4>Anushka sharma</h4>
-              <p>Naika Company</p>
-            </div>
-          </div><!-- END TESTIMONIAL -->
-          <div class="testimonial">
-            <img src="{% static 'eduleb/assets/img/quote.png' %}" alt="" />
-            <div class="testimonial_content">													
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <p>Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.</p>
-            </div>
-            <div class="testi_pic_title">
-              <img src="{% static 'eduleb/assets/img/testimonial/4.png' %}" alt="">
-              <h4>Ajmain Adil</h4>
-              <p>Groton Inc</p>
-            </div>
-          </div><!-- END TESTIMONIAL -->
-          <div class="testimonial">
-            <img src="{% static 'eduleb/assets/img/quote.png' %}" alt="" />
-            <div class="testimonial_content">													
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <i class="ti-star"></i>
-              <p>Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.</p>
-            </div>
-            <div class="testi_pic_title">
-              <img src="{% static 'eduleb/assets/img/testimonial/5.png' %}" alt="">
-              <h4>Ajmain Adil</h4>
-              <p>Groton Inc</p>
-            </div>
-          </div><!-- END TESTIMONIAL -->
-        </div><!-- END TESTIMONIAL SLIDER -->
-      </div><!-- END COL -->		
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->		
-</section>
-<!-- END TESTIMONIALS -->
-
-<!-- START BLOG -->
-<section id="blog" class="blog_area section-padding">
-  <div class="container">
-    <div class="section-title text-center">
-      <h2>Latest Blog & news</h2>
-      <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-    </div>	
-    <div class="row">		
-      <div class="col-lg-4 col-sm-4 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="single_blog">
-          <img src="{% static 'eduleb/assets/img/blog/1.jpg' %}" class="img-fluid" alt="image" />
-          <div class="content_box">
-            <span>May 10, 2024 | <a href="#">Education</a></span>
-            <h2><a href="#">Professional Mobile Painting and Sculpting</a></h2>
-            <a class="btn_one" href="#">Read More <i class="ti-arrow-top-right"></i></a>
-          </div>
-        </div>
-      </div><!-- END COL-->				
-      <div class="col-lg-4 col-sm-4 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="single_blog">
-          <img src="{% static 'eduleb/assets/img/blog/2.jpg' %}" class="img-fluid" alt="image" />
-          <div class="content_box">
-            <span>May 16, 2024 | <a href="#">Education</a></span>
-            <h2><a href="#">Professional Ceramic Moulding for Beginner</a></h2>
-            <a class="btn_one" href="#">Read More <i class="ti-arrow-top-right"></i></a>							
-          </div>
-        </div>
-      </div><!-- END COL-->
-      <div class="col-lg-4 col-sm-4 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.3s" data-wow-offset="0">
-        <div class="single_blog">
-          <img src="{% static 'eduleb/assets/img/blog/3.jpg' %}" class="img-fluid" alt="image" />
-          <div class="content_box">
-            <span>May 18, 2024 | <a href="#">Programing</a></span>
-            <h2><a href="#">Education Is About Create Leaders For Tomorrow </a></h2>
-            <a class="btn_one" href="#">Read More <i class="ti-arrow-top-right"></i></a>
-          </div>
-        </div>
-      </div><!-- END COL-->						
-    </div><!-- / END ROW -->
-  </div><!-- END CONTAINER  -->
-</section>	
-<!-- END BLOG -->	
+<!-- END WHY SMARTCAMPUS -->
 {% endblock content %}

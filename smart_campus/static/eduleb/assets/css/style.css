@@ -93,17 +93,7 @@ fieldset {
 }
 /*START PRELOADER DESIGN*/
 .preloaders {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  transform: translate(-50%, -50%);
-  background: #525fe1;
+  display: none !important;
 }
 .loader {
   width: 106px;
