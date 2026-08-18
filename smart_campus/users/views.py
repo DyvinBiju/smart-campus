@@ -10,6 +10,7 @@ from django.views.generic import DetailView
 from django.views.generic import RedirectView
 from django.views.generic import UpdateView
 
+from smart_campus.users.forms import UserProfileUpdateForm
 from smart_campus.users.models import User
 
 if TYPE_CHECKING:
@@ -20,6 +21,7 @@ class UserDetailView(LoginRequiredMixin, DetailView):
     model = User
     slug_field = "username"
     slug_url_kwarg = "username"
+    template_name = "users/user_detail.html"
 
 
 user_detail_view = UserDetailView.as_view()
@@ -27,7 +29,8 @@ user_detail_view = UserDetailView.as_view()
 
 class UserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = User
-    fields = ["name"]
+    form_class = UserProfileUpdateForm
+    template_name = "users/user_form.html"
     success_message = _("Information successfully updated")
 
     def get_success_url(self) -> str:
@@ -50,3 +53,4 @@ class UserRedirectView(LoginRequiredMixin, RedirectView):
 
 
 user_redirect_view = UserRedirectView.as_view()
+
