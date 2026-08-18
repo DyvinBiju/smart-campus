@@ -22,6 +22,11 @@ class TestUserAdmin:
         response = admin_client.get(url, data={"q": "test"})
         assert response.status_code == HTTPStatus.OK
 
+    def test_filter_by_role(self, admin_client):
+        url = reverse("admin:users_user_changelist")
+        response = admin_client.get(url, data={"role__exact": User.Role.STUDENT.value})
+        assert response.status_code == HTTPStatus.OK
+
     def test_add(self, admin_client):
         url = reverse("admin:users_user_add")
         response = admin_client.get(url)
@@ -30,13 +35,20 @@ class TestUserAdmin:
         response = admin_client.post(
             url,
             data={
-                "username": "test",
+                "username": "test_staff_user",
                 "password1": "My_R@ndom-P@ssw0rd",
                 "password2": "My_R@ndom-P@ssw0rd",
+                "name": "Staff Member",
+                "role": User.Role.STAFF.value,
+                "department": "Maintenance & Facilities",
+                "phone_number": "9998887776",
+                "campus_id": "STF001",
             },
         )
         assert response.status_code == HTTPStatus.FOUND
-        assert User.objects.filter(username="test").exists()
+        user = User.objects.get(username="test_staff_user")
+        assert user.role == User.Role.STAFF
+        assert user.department == "Maintenance & Facilities"
 
     def test_view_user(self, admin_client):
         user = User.objects.get(username="admin")
@@ -63,3 +75,4 @@ class TestUserAdmin:
         # The `admin` login view should redirect to the `allauth` login view
         target_url = reverse(settings.LOGIN_URL) + "?next=" + request.path
         assertRedirects(response, target_url, fetch_redirect_response=False)
+
