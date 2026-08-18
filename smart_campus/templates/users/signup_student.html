@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags i18n static %}
+
+{% block title %}
+  {% trans "Student Sign Up" %} | SmartCampus
+{% endblock title %}
+
+{% block content %}
+<!-- START SECTION TOP -->
+<section class="section-top">
+  <div class="container">
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.3s">
+        <h1>{% trans "Student Registration" %}</h1>
+        <ul>
+          <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+          <li> / {% trans "Student Sign Up" %}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END SECTION TOP -->
+
+<!-- START STUDENT SIGNUP FORM -->
+<section class="student_signup_area section-padding bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8 col-sm-11">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+          <div class="text-center mb-4">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-2" style="width: 70px; height: 70px; font-size: 30px;">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h3 class="fw-bold mb-1 text-dark">{% trans "Create Student Account" %}</h3>
+            <p class="text-muted small">
+              {% trans "Enter your student details to register and access SmartCampus facilities." %}
+            </p>
+          </div>
+
+          <form method="post" action="{% url 'users:student_signup' %}">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              {{ form.name|as_crispy_field }}
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-sm-6">
+                {{ form.campus_id|as_crispy_field }}
+              </div>
+              <div class="col-sm-6">
+                {{ form.department|as_crispy_field }}
+              </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-sm-6">
+                {{ form.year_or_semester|as_crispy_field }}
+              </div>
+              <div class="col-sm-6">
+                {{ form.email|as_crispy_field }}
+              </div>
+            </div>
+
+            <div class="row g-2 mb-4">
+              <div class="col-sm-6">
+                {{ form.password1|as_crispy_field }}
+              </div>
+              <div class="col-sm-6">
+                {{ form.password2|as_crispy_field }}
+              </div>
+            </div>
+
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary rounded-pill py-2 fw-semibold fs-6">
+                <i class="fa-solid fa-user-plus me-1"></i> {% trans "Complete Student Registration" %}
+              </button>
+            </div>
+          </form>
+
+          <div class="text-center pt-3 border-top">
+            <p class="text-muted small mb-0">
+              {% trans "Already have an account?" %}
+              <a href="{% url 'account_login' %}" class="fw-semibold text-primary">{% trans "Sign In here" %}</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END STUDENT SIGNUP FORM -->
+{% endblock content %}

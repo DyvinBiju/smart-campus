@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block title %}
+  {% trans "Faculty Dashboard" %} | SmartCampus
+{% endblock title %}
+
+{% block content %}
+<!-- START SECTION TOP -->
+<section class="section-top">
+  <div class="container">
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.3s">
+        <h1>{% trans "Faculty Dashboard" %}</h1>
+        <ul>
+          <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+          <li> / {% trans "Faculty Dashboard" %}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END SECTION TOP -->
+
+<!-- START FACULTY DASHBOARD SECTION -->
+<section class="dashboard_area section-padding bg-light">
+  <div class="container">
+    <!-- Welcome Header Banner -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-info bg-opacity-10 text-info d-inline-flex align-items-center justify-content-center" style="width: 75px; height: 75px; font-size: 32px;">
+                <i class="fa-solid fa-chalkboard-user"></i>
+              </div>
+              <div>
+                <span class="badge bg-info text-dark rounded-pill mb-1">{% trans "Faculty Portal" %}</span>
+                <h2 class="fw-bold mb-0 text-dark">
+                  {% trans "Welcome," %} {{ request.user.name|default:request.user.username }}!
+                </h2>
+                <p class="text-muted mb-0 small">
+                  {{ request.user.department|default:"Department of Academic Affairs" }} &bull; Faculty ID: {{ request.user.campus_id|default:"-" }}
+                </p>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{% url 'users:detail' request.user.username %}" class="btn btn-outline-info rounded-pill px-3">
+                <i class="fa-solid fa-user me-1"></i> {% trans "My Profile" %}
+              </a>
+              <a href="{% url 'account_logout' %}" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fa-solid fa-right-from-bracket me-1"></i> {% trans "Logout" %}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action Cards Grid -->
+    <div class="row g-4 mb-4">
+      <!-- Report an Issue Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-shadow transition">
+          <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px; font-size: 24px;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2">{% trans "Report an Issue" %}</h4>
+          <p class="text-muted small mb-4">
+            {% trans "Report classroom, laboratory, projector, electrical, or campus maintenance issues." %}
+          </p>
+          <div class="mt-auto">
+            <a href="#raise-complaint" class="btn btn-danger rounded-pill w-100 py-2">
+              <i class="fa-solid fa-bullhorn me-1"></i> {% trans "Report Issue" %}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Request Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-shadow transition">
+          <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px; font-size: 24px;">
+            <i class="fa-solid fa-box-open"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2">{% trans "Resource Request" %}</h4>
+          <p class="text-muted small mb-4">
+            {% trans "Request department equipment, lab assets, stationery, and specialized academic tools." %}
+          </p>
+          <div class="mt-auto">
+            <a href="#resource-request" class="btn btn-warning rounded-pill w-100 py-2 text-dark fw-semibold">
+              <i class="fa-solid fa-hand-holding-hand me-1"></i> {% trans "Request Resource" %}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Requests Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-shadow transition">
+          <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px; font-size: 24px;">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2">{% trans "My Requests" %}</h4>
+          <p class="text-muted small mb-4">
+            {% trans "Track the ongoing review, approval status, and resolution of your submitted requests." %}
+          </p>
+          <div class="mt-auto">
+            <a href="#my-requests" class="btn btn-success rounded-pill w-100 py-2">
+              <i class="fa-solid fa-clock-rotate-left me-1"></i> {% trans "View Requests" %}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Profile Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-shadow transition">
+          <div class="rounded-circle bg-info bg-opacity-10 text-info d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px; font-size: 24px;">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2">{% trans "My Profile" %}</h4>
+          <p class="text-muted small mb-4">
+            {% trans "Manage your faculty profile details, contact number, and authentication password." %}
+          </p>
+          <div class="mt-auto">
+            <a href="{% url 'users:detail' request.user.username %}" class="btn btn-info text-white rounded-pill w-100 py-2">
+              <i class="fa-solid fa-user-pen me-1"></i> {% trans "Manage Profile" %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Requests Placeholder Section -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white" id="my-requests">
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h4 class="fw-bold text-dark mb-0">
+              <i class="fa-solid fa-clipboard-check text-info me-2"></i>{% trans "Faculty Requests & Resource Tracking" %}
+            </h4>
+            <span class="badge bg-light text-muted border">{% trans "Initial Stage" %}</span>
+          </div>
+          <div class="text-center py-5">
+            <div class="text-muted mb-3" style="font-size: 40px;">
+              <i class="fa-regular fa-folder-open"></i>
+            </div>
+            <h5 class="text-dark fw-semibold">{% trans "No Active Resource Requests" %}</h5>
+            <p class="text-muted small mb-3">
+              {% trans "Your department resource requisitions and maintenance issues will be tracked here in real-time." %}
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+              <a href="#raise-complaint" class="btn btn-outline-danger rounded-pill px-4">
+                <i class="fa-solid fa-plus me-1"></i> {% trans "Report Issue" %}
+              </a>
+              <a href="#resource-request" class="btn btn-outline-warning rounded-pill px-4 text-dark">
+                <i class="fa-solid fa-box me-1"></i> {% trans "Request Resource" %}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END FACULTY DASHBOARD SECTION -->
+{% endblock content %}

@@ -23,7 +23,7 @@ class UserAdmin(auth_admin.UserAdmin):
         (None, {"fields": ("username", "password")}),
         (
             _("Personal info"),
-            {"fields": ("name", "email", "phone_number", "department", "campus_id")},
+            {"fields": ("name", "email", "phone_number", "department", "campus_id", "year_or_semester")},
         ),
         (
             _("Campus Role & Access"),
@@ -56,6 +56,7 @@ class UserAdmin(auth_admin.UserAdmin):
                     "department",
                     "phone_number",
                     "campus_id",
+                    "year_or_semester",
                     "password1",
                     "password2",
                 ),

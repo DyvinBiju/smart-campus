@@ -36,19 +36,21 @@ def test_user_roles_and_permissions():
     assert faculty.is_student is False
     assert faculty.can_manage_campus_operations is False
 
-    staff = User(username="maintenance_bob", role=User.Role.STAFF)
-    assert staff.is_staff_member is True
-    assert staff.can_manage_campus_operations is True
+    maintenance = User(username="maintenance_bob", role=User.Role.MAINTENANCE)
+    assert maintenance.is_maintenance_staff is True
+    assert maintenance.is_staff_member is True
+    assert maintenance.can_manage_campus_operations is True
 
     admin = User(username="campus_admin", role=User.Role.ADMIN)
     assert admin.is_admin_user is True
     assert admin.can_manage_campus_operations is True
 
     django_staff = User(username="dj_staff", is_staff=True)
-    assert django_staff.is_staff_member is True
+    assert django_staff.is_maintenance_staff is True
     assert django_staff.can_manage_campus_operations is True
 
     django_super = User(username="dj_super", is_superuser=True)
     assert django_super.is_admin_user is True
     assert django_super.can_manage_campus_operations is True
+
 

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block title %}
+  {% trans "Maintenance Staff Dashboard" %} | SmartCampus
+{% endblock title %}
+
+{% block content %}
+<!-- START SECTION TOP -->
+<section class="section-top">
+  <div class="container">
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.3s">
+        <h1>{% trans "Maintenance Staff Dashboard" %}</h1>
+        <ul>
+          <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+          <li> / {% trans "Maintenance Dashboard" %}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END SECTION TOP -->
+
+<!-- START MAINTENANCE DASHBOARD SECTION -->
+<section class="dashboard_area section-padding bg-light">
+  <div class="container">
+    <!-- Welcome Header Banner -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center" style="width: 75px; height: 75px; font-size: 32px;">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+              </div>
+              <div>
+                <span class="badge bg-warning text-dark rounded-pill mb-1">{% trans "Operations & Maintenance" %}</span>
+                <h2 class="fw-bold mb-0 text-dark">
+                  {% trans "Welcome," %} {{ request.user.name|default:request.user.username }}!
+                </h2>
+                <p class="text-muted mb-0 small">
+                  {{ request.user.department|default:"Campus Maintenance Unit" }} &bull; Staff ID: {{ request.user.campus_id|default:"-" }}
+                </p>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{% url 'users:detail' request.user.username %}" class="btn btn-outline-dark rounded-pill px-3">
+                <i class="fa-solid fa-user me-1"></i> {% trans "Profile" %}
+              </a>
+              <a href="{% url 'account_logout' %}" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="fa-solid fa-right-from-bracket me-1"></i> {% trans "Logout" %}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action Cards Grid -->
+    <div class="row g-4 mb-4">
+      <!-- Assigned Issues Card -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-shadow transition">
+          <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px; font-size: 24px;">
+            <i class="fa-solid fa-toolbox"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2">{% trans "Assigned Issues" %}</h4>
+          <p class="text-muted small mb-4">
+            {% trans "View active campus complaints and repair work orders assigned to your maintenance team." %}
+          </p>
+          <div class="mt-auto">
+            <a href="#assigned-issues" class="btn btn-primary rounded-pill w-100 py-2">
+              <i class="fa-solid fa-list-check me-1"></i> {% trans "View Assigned Tasks" %}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Update Issue Status Card -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-shadow transition">
+          <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px; font-size: 24px;">
+            <i class="fa-solid fa-rotate"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2">{% trans "Update Issue Status" %}</h4>
+          <p class="text-muted small mb-4">
+            {% trans "Mark repairs In-Progress, upload resolution notes, or close completed maintenance tickets." %}
+          </p>
+          <div class="mt-auto">
+            <a href="#update-status" class="btn btn-success rounded-pill w-100 py-2">
+              <i class="fa-solid fa-pen-to-square me-1"></i> {% trans "Update Status" %}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile & Security Card -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-shadow transition">
+          <div class="rounded-circle bg-dark bg-opacity-10 text-dark d-inline-flex align-items-center justify-content-center mb-3" style="width: 55px; height: 55px; font-size: 24px;">
+            <i class="fa-solid fa-id-badge"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2">{% trans "Staff Profile" %}</h4>
+          <p class="text-muted small mb-4">
+            {% trans "View your staff credentials, update contact phone number, and manage your account password." %}
+          </p>
+          <div class="mt-auto">
+            <a href="{% url 'users:detail' request.user.username %}" class="btn btn-dark rounded-pill w-100 py-2">
+              <i class="fa-solid fa-user-pen me-1"></i> {% trans "Manage Profile" %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assigned Issues Placeholder Table Section -->
+    <div class="row" id="assigned-issues">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h4 class="fw-bold text-dark mb-0">
+              <i class="fa-solid fa-wrench text-warning me-2"></i>{% trans "Work Order Queue & Assigned Issues" %}
+            </h4>
+            <span class="badge bg-light text-muted border">{% trans "Initial Stage" %}</span>
+          </div>
+          <div class="text-center py-5">
+            <div class="text-muted mb-3" style="font-size: 40px;">
+              <i class="fa-solid fa-check-double"></i>
+            </div>
+            <h5 class="text-dark fw-semibold">{% trans "No Pending Tasks Assigned" %}</h5>
+            <p class="text-muted small mb-0">
+              {% trans "When campus complaints and maintenance requests are assigned to your staff ID, they will appear here." %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END MAINTENANCE DASHBOARD SECTION -->
+{% endblock content %}

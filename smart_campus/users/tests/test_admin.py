@@ -39,7 +39,7 @@ class TestUserAdmin:
                 "password1": "My_R@ndom-P@ssw0rd",
                 "password2": "My_R@ndom-P@ssw0rd",
                 "name": "Staff Member",
-                "role": User.Role.STAFF.value,
+                "role": User.Role.MAINTENANCE.value,
                 "department": "Maintenance & Facilities",
                 "phone_number": "9998887776",
                 "campus_id": "STF001",
@@ -47,7 +47,7 @@ class TestUserAdmin:
         )
         assert response.status_code == HTTPStatus.FOUND
         user = User.objects.get(username="test_staff_user")
-        assert user.role == User.Role.STAFF
+        assert user.role == User.Role.MAINTENANCE
         assert user.department == "Maintenance & Facilities"
 
     def test_view_user(self, admin_client):

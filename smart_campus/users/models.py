@@ -14,7 +14,7 @@ class User(AbstractUser):
     class Role(models.TextChoices):
         STUDENT = "STUDENT", _("Student")
         FACULTY = "FACULTY", _("Faculty / Teacher")
-        STAFF = "STAFF", _("Staff / Maintenance")
+        MAINTENANCE = "MAINTENANCE", _("Maintenance Staff")
         ADMIN = "ADMIN", _("Administrator")
 
     # First and last name do not cover name patterns around the globe
@@ -34,6 +34,12 @@ class User(AbstractUser):
         max_length=50,
         help_text=_("Student Roll Number or Faculty/Staff Employee ID."),
     )
+    year_or_semester = models.CharField(
+        _("Year / Semester"),
+        blank=True,
+        max_length=50,
+        help_text=_("e.g. 3rd Year / Semester 5 (for students)."),
+    )
 
     first_name = None  # type: ignore[assignment]
     last_name = None  # type: ignore[assignment]
@@ -49,9 +55,14 @@ class User(AbstractUser):
         return self.role == self.Role.FACULTY
 
     @property
+    def is_maintenance_staff(self) -> bool:
+        """Check if user is a maintenance staff member or has Django staff status."""
+        return self.role == self.Role.MAINTENANCE or self.is_staff
+
+    @property
     def is_staff_member(self) -> bool:
-        """Check if user is staff / maintenance member or has Django staff status."""
-        return self.role == self.Role.STAFF or self.is_staff
+        """Alias for is_maintenance_staff."""
+        return self.is_maintenance_staff
 
     @property
     def is_admin_user(self) -> bool:
@@ -61,7 +72,7 @@ class User(AbstractUser):
     @property
     def can_manage_campus_operations(self) -> bool:
         """Check if user has elevated permissions to manage campus assets, complaints, or inventory."""
-        return self.is_staff_member or self.is_admin_user
+        return self.is_maintenance_staff or self.is_admin_user
 
     def __str__(self) -> str:
         return self.name or self.username
