@@ -1,31 +1,67 @@
 {% extends "base.html" %}
-
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags i18n static %}
 
 {% block title %}
-
-
-  {{ user.username }}
-
-
+  {% trans "Edit Profile" %} - {{ user.username }} | SmartCampus
 {% endblock title %}
+
 {% block content %}
-  <h1>
-  
-  
-    {{ user.username }}
-  
-  
-</h1>
-<form class="form-horizontal"
-      method="post"
-      action="{% url 'users:update' %}">
-  {% csrf_token %}
-  {{ form|crispy }}
-  <div class="control-group">
-    <div class="controls">
-      <button type="submit" class="btn btn-primary">Update</button>
+<!-- START SECTION TOP -->
+<section class="section-top">
+  <div class="container">
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.3s">
+        <h1>{% trans "Edit Profile" %}</h1>
+        <ul>
+          <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+          <li><a href="{% url 'users:detail' user.username %}">{% trans "Profile" %}</a></li>
+          <li> / {% trans "Edit" %}</li>
+        </ul>
+      </div>
     </div>
   </div>
-</form>
+</section>
+<!-- END SECTION TOP -->
+
+<!-- START PROFILE EDIT SECTION -->
+<section class="user_edit_area section-padding bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+          <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px; font-size: 24px;">
+              <i class="fa-solid fa-user-pen"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-1 text-dark">{% trans "Update Your Information" %}</h3>
+              <p class="text-muted mb-0 small">
+                {% trans "Keep your contact and campus information up-to-date." %}
+              </p>
+            </div>
+          </div>
+
+          <form method="post" action="{% url 'users:update' %}">
+            {% csrf_token %}
+
+            <div class="mb-4">
+              {{ form|crispy }}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <a href="{% url 'users:detail' user.username %}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fa-solid fa-arrow-left me-1"></i> {% trans "Cancel" %}
+              </a>
+              <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
+                <i class="fa-solid fa-check me-1"></i> {% trans "Save Changes" %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END PROFILE EDIT SECTION -->
 {% endblock content %}
+

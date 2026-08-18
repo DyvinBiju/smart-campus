@@ -1,44 +1,193 @@
 {% extends "base.html" %}
-
-{% load static %}
+{% load static i18n %}
 
 {% block title %}
-  User: 
-  
-    {{ object.username }}
-  
-  
+  {% trans "Profile" %} - {{ object.name|default:object.username }} | SmartCampus
 {% endblock title %}
+
 {% block content %}
+<!-- START SECTION TOP -->
+<section class="section-top">
   <div class="container">
-    <div class="row">
-      <div class="col-sm-12">
-        <h2>
-        
-        
-          {{ object.username }}
-        
-      </h2>
-      {% if object.name %}
-        <p>{{ object.name }}</p>
-      {% endif %}
-    </div>
-  </div>
-  {% if object == request.user %}
-    <!-- Action buttons -->
-    <div class="row">
-      <div class="col-sm-12">
-        <a class="btn btn-primary" href="{% url 'users:update' %}" role="button">My Info</a>
-        <a class="btn btn-primary"
-           href="{% url 'account_email' %}"
-           role="button">E-Mail</a>
-        <a class="btn btn-primary"
-           href="{% url 'mfa_index' %}"
-           role="button">MFA</a>
-        <!-- Your Stuff: Custom user template urls -->
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.3s">
+        <h1>{% trans "User Profile" %}</h1>
+        <ul>
+          <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+          <li> / {% trans "Profile" %} ({{ object.username }})</li>
+        </ul>
       </div>
     </div>
-    <!-- End Action buttons -->
-  {% endif %}
-</div>
+  </div>
+</section>
+<!-- END SECTION TOP -->
+
+<!-- START PROFILE SECTION -->
+<section class="user_profile_area section-padding bg-light">
+  <div class="container">
+    <div class="row">
+      <!-- Left Column: User Card -->
+      <div class="col-lg-4 col-md-5 mb-4">
+        <div class="card border-0 shadow-sm rounded-4 text-center p-4 bg-white">
+          <div class="user-avatar-wrapper mb-3">
+            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width: 110px; height: 110px; font-size: 48px;">
+              <i class="fa-solid fa-user-graduate"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold mb-1">{{ object.name|default:object.username }}</h3>
+          <p class="text-muted mb-2">@{{ object.username }}</p>
+
+          <div class="mb-3">
+            {% if object.role == "ADMIN" %}
+              <span class="badge bg-danger px-3 py-2 rounded-pill fs-6"><i class="fa-solid fa-shield-halved me-1"></i> {% trans "Administrator" %}</span>
+            {% elif object.role == "STAFF" %}
+              <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fs-6"><i class="fa-solid fa-screwdriver-wrench me-1"></i> {% trans "Staff / Maintenance" %}</span>
+            {% elif object.role == "FACULTY" %}
+              <span class="badge bg-info text-dark px-3 py-2 rounded-pill fs-6"><i class="fa-solid fa-chalkboard-user me-1"></i> {% trans "Faculty / Teacher" %}</span>
+            {% else %}
+              <span class="badge bg-primary px-3 py-2 rounded-pill fs-6"><i class="fa-solid fa-graduation-cap me-1"></i> {% trans "Student" %}</span>
+            {% endif %}
+          </div>
+
+          <p class="small text-muted mb-0">
+            <i class="fa-regular fa-calendar-check me-1"></i> {% trans "Member since" %} {{ object.date_joined|date:"M Y" }}
+          </p>
+
+          {% if object == request.user %}
+            <div class="mt-4 pt-3 border-top d-grid gap-2">
+              <a href="{% url 'users:update' %}" class="btn btn-outline-primary rounded-pill">
+                <i class="fa-solid fa-user-pen me-1"></i> {% trans "Edit Profile Info" %}
+              </a>
+              <a href="{% url 'account_change_password' %}" class="btn btn-outline-secondary rounded-pill">
+                <i class="fa-solid fa-key me-1"></i> {% trans "Change Password" %}
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Right Column: Profile Details & Management -->
+      <div class="col-lg-8 col-md-7">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h4 class="fw-bold mb-0 text-dark">
+              <i class="fa-solid fa-id-card text-primary me-2"></i>{% trans "Campus Information" %}
+            </h4>
+            {% if object == request.user %}
+              <a href="{% url 'users:update' %}" class="btn btn-sm btn-primary rounded-pill px-3">
+                <i class="fa-solid fa-pen-to-square me-1"></i> {% trans "Edit" %}
+              </a>
+            {% endif %}
+          </div>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Full Name" %}</span>
+                <strong class="fs-6 text-dark">{{ object.name|default:"Not specified" }}</strong>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Campus Role" %}</span>
+                <strong class="fs-6 text-dark">{{ object.get_role_display }}</strong>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Department / Program" %}</span>
+                <strong class="fs-6 text-dark">{{ object.department|default:"Not specified" }}</strong>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Roll Number / Employee ID" %}</span>
+                <strong class="fs-6 text-dark">{{ object.campus_id|default:"Not specified" }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+          <h4 class="fw-bold mb-3 pb-2 border-bottom text-dark">
+            <i class="fa-solid fa-address-book text-primary me-2"></i>{% trans "Contact & Account Details" %}
+          </h4>
+
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Email Address" %}</span>
+                <strong class="fs-6 text-dark">{{ object.email|default:"Not specified" }}</strong>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Phone Number" %}</span>
+                <strong class="fs-6 text-dark">{{ object.phone_number|default:"Not specified" }}</strong>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Account Status" %}</span>
+                {% if object.is_active %}
+                  <span class="badge bg-success">{% trans "Active" %}</span>
+                {% else %}
+                  <span class="badge bg-secondary">{% trans "Inactive" %}</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3">
+                <span class="text-muted small d-block">{% trans "Last Login" %}</span>
+                <strong class="fs-6 text-dark">
+                  {% if object.last_login %}
+                    {{ object.last_login|date:"M d, Y H:i" }}
+                  {% else %}
+                    {% trans "Never" %}
+                  {% endif %}
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if object == request.user %}
+          <!-- Account Security & Settings Panel -->
+          <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <h4 class="fw-bold mb-3 pb-2 border-bottom text-dark">
+              <i class="fa-solid fa-lock text-primary me-2"></i>{% trans "Account Security & Credentials" %}
+            </h4>
+            <p class="text-muted small mb-3">
+              {% trans "Manage your login credentials, email associations, and multi-factor security settings." %}
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="{% url 'account_change_password' %}" class="btn btn-outline-dark rounded-pill">
+                <i class="fa-solid fa-key me-1"></i> {% trans "Change Password" %}
+              </a>
+              <a href="{% url 'account_email' %}" class="btn btn-outline-dark rounded-pill">
+                <i class="fa-solid fa-envelope me-1"></i> {% trans "Manage Email" %}
+              </a>
+              <a href="{% url 'mfa_index' %}" class="btn btn-outline-dark rounded-pill">
+                <i class="fa-solid fa-shield-halved me-1"></i> {% trans "MFA Security" %}
+              </a>
+              {% if user.is_staff %}
+                <a href="{% url 'admin:index' %}" class="btn btn-outline-danger rounded-pill">
+                  <i class="fa-solid fa-gear me-1"></i> {% trans "Admin Panel" %}
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END PROFILE SECTION -->
 {% endblock content %}
+
