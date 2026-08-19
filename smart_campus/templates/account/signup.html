@@ -1,0 +1,47 @@
+{% extends "allauth/layouts/entrance.html" %}
+{% load i18n static %}
+
+{% block head_title %}
+  {% trans "Sign Up - Select Registration Type" %}
+{% endblock head_title %}
+
+{% block content %}
+<div class="text-center mb-4">
+  <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-2" style="width: 65px; height: 65px; font-size: 28px;">
+    <i class="fa-solid fa-user-plus"></i>
+  </div>
+  <h3 class="fw-bold mb-1 text-dark">{% trans "Create Your Account" %}</h3>
+  <p class="text-muted small">
+    {% trans "Select your campus role below to continue with the appropriate registration form." %}
+  </p>
+</div>
+
+<div class="d-flex flex-column gap-3 mb-4">
+  <a href="{% url 'users:student_signup' %}" class="btn btn-outline-primary p-3 rounded-4 text-start d-flex align-items-center gap-3 text-decoration-none shadow-sm transition">
+    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; font-size: 22px;">
+      <i class="fa-solid fa-graduation-cap"></i>
+    </div>
+    <div>
+      <h6 class="fw-bold mb-0 text-dark">{% trans "Student Registration" %}</h6>
+      <p class="text-muted small mb-0">{% trans "For enrolled students to report and track campus issues." %}</p>
+    </div>
+  </a>
+
+  <a href="{% url 'users:faculty_signup' %}" class="btn btn-outline-info p-3 rounded-4 text-start d-flex align-items-center gap-3 text-decoration-none shadow-sm transition">
+    <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; font-size: 22px;">
+      <i class="fa-solid fa-chalkboard-user"></i>
+    </div>
+    <div>
+      <h6 class="fw-bold mb-0 text-dark">{% trans "Faculty / Teacher Registration" %}</h6>
+      <p class="text-muted small mb-0">{% trans "For faculty members and teaching staff." %}</p>
+    </div>
+  </a>
+</div>
+
+<div class="text-center pt-3 border-top">
+  <p class="text-muted small mb-0">
+    {% trans "Already have an account?" %}
+    <a href="{% url 'account_login' %}" class="fw-semibold text-primary">{% trans "Sign In" %}</a>
+  </p>
+</div>
+{% endblock content %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Inventory & Resources - SmartCampus
+{% endblock title %}
+
+{% block content %}
+<section class="section-padding bg-light">
+  <div class="container">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+      <div>
+        <h1 class="fw-bold mb-2">Inventory &amp; Resources</h1>
+        <p class="text-secondary mb-0">Manage campus stock and resources.</p>
+      </div>
+      <a href="{% url 'inventory:create' %}" class="btn_one px-4 py-3">
+        <i class="fa-solid fa-plus me-2"></i>Add Inventory Item
+      </a>
+    </div>
+
+    <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
+      <form method="get" action="{% url 'inventory:list' %}">
+        <div class="row g-3 align-items-end">
+          <div class="col-lg-5">
+            <label for="inventory-search" class="form-label fw-semibold">Search</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input id="inventory-search" type="search" name="search" value="{{ search }}" class="form-control" placeholder="Search inventory items" />
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label for="inventory-category" class="form-label fw-semibold">Category</label>
+            <select id="inventory-category" name="category" class="form-select">
+              <option value="">All Categories</option>
+              {% for category_option in categories %}
+                <option value="{{ category_option.pk }}"{% if selected_category == category_option.pk|stringformat:"s" %} selected{% endif %}>{{ category_option.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <label for="inventory-status" class="form-label fw-semibold">Stock Status</label>
+            <select id="inventory-status" name="status" class="form-select">
+              <option value="">All Status</option>
+              <option value="available"{% if selected_status == "available" %} selected{% endif %}>Available</option>
+              <option value="low"{% if selected_status == "low" %} selected{% endif %}>Low Stock</option>
+              <option value="out"{% if selected_status == "out" %} selected{% endif %}>Out of Stock</option>
+            </select>
+          </div>
+          <div class="col-lg-1 d-grid">
+            <button type="submit" class="btn_one border-0 py-2" title="Apply filters" aria-label="Apply filters">
+              <i class="fa-solid fa-filter"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-4 shadow-sm overflow-hidden">
+      {% if items %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" class="px-4 py-3">Item Name</th>
+                <th scope="col" class="py-3">Category</th>
+                <th scope="col" class="py-3">Quantity</th>
+                <th scope="col" class="py-3">Unit</th>
+                <th scope="col" class="py-3">Minimum Quantity</th>
+                <th scope="col" class="py-3">Stock Status</th>
+                <th scope="col" class="py-3 text-end pe-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+                <tr>
+                  <td class="px-4 fw-semibold">{{ item.name }}</td>
+                  <td>{{ item.category }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.unit }}</td>
+                  <td>{{ item.minimum_quantity }}</td>
+                  <td>
+                    {% if item.stock_status == "Available" %}
+                      <span class="badge bg-success">Available</span>
+                    {% elif item.stock_status == "Low Stock" %}
+                      <span class="badge bg-warning text-dark">Low Stock</span>
+                    {% else %}
+                      <span class="badge bg-danger">Out of Stock</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end pe-4 text-nowrap">
+                    <a href="{% url 'inventory:detail' item.pk %}" class="btn btn-sm btn-outline-primary" title="View {{ item.name }}" aria-label="View {{ item.name }}"><i class="fa-solid fa-eye"></i></a>
+                    <a href="{% url 'inventory:update' item.pk %}" class="btn btn-sm btn-outline-secondary" title="Edit {{ item.name }}" aria-label="Edit {{ item.name }}"><i class="fa-solid fa-pen"></i></a>
+                    <a href="{% url 'inventory:delete' item.pk %}" class="btn btn-sm btn-outline-danger" title="Delete {{ item.name }}" aria-label="Delete {{ item.name }}"><i class="fa-solid fa-trash"></i></a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center px-4 py-5">
+          <i class="fa-solid fa-box-open text-primary fs-1 mb-3"></i>
+          <h2 class="h4 fw-bold">No inventory items found.</h2>
+          {% if search or selected_category or selected_status %}
+            <p class="text-secondary mb-0">Try adjusting your search or filters.</p>
+          {% else %}
+            <p class="text-secondary mb-0">Add an inventory item to start tracking campus resources.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock content %}

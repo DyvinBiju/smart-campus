@@ -14,8 +14,15 @@ if typing.TYPE_CHECKING:
 
 
 class AccountAdapter(DefaultAccountAdapter):
+    error_messages = {
+        **DefaultAccountAdapter.error_messages,
+        "username_password_mismatch": "Invalid username/email or password.",
+        "email_password_mismatch": "Invalid username/email or password.",
+    }
+
     def is_open_for_signup(self, request: HttpRequest) -> bool:
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
+
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):

@@ -1,13 +1,15 @@
-{% load static i18n %}<!DOCTYPE html>
+{% load static i18n %}
+<!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
 <html lang="{{ LANGUAGE_CODE }}">
+
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>
     {% block title %}
-      Smart Campus - Eduleb Education HTML Template
+    Smart Campus - Eduleb Education HTML Template
     {% endblock title %}
   </title>
   <meta name="description" content="Smart Campus - Campus Operations & Resource Management System" />
@@ -15,69 +17,72 @@
   <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
 
   {% block css %}
-    <!-- Latest Bootstrap min CSS -->
-    <link rel="stylesheet" href="{% static 'eduleb/assets/bootstrap/css/bootstrap.min.css' %}" />
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-    <!-- Font Awesome CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link rel="stylesheet" href="{% static 'eduleb/assets/fonts/font-awesome.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'eduleb/assets/fonts/themify-icons.css' %}" />
-    <!-- Owl Carousel CSS -->
-    <link rel="stylesheet" href="{% static 'eduleb/assets/owlcarousel/css/owl.carousel.css' %}" />
-    <link rel="stylesheet" href="{% static 'eduleb/assets/owlcarousel/css/owl.theme.css' %}" />
-    <!-- Mobile Menu CSS -->
-    <link rel="stylesheet" href="{% static 'eduleb/assets/css/jquery-simple-mobilemenu.css' %}" />
-    <!-- Magnific Popup CSS -->
-    <link rel="stylesheet" href="{% static 'eduleb/assets/css/magnific-popup.css' %}" />
-    <!-- Animate CSS -->
-    <link rel="stylesheet" href="{% static 'eduleb/assets/css/animate.css' %}" />
-    <!-- EduLeb Main Style CSS -->
-    <link rel="stylesheet" href="{% static 'eduleb/assets/css/style.css' %}" />
-    <!-- Project specific CSS -->
-    <link rel="stylesheet" href="{% static 'css/project.css' %}" />
+  <!-- Latest Bootstrap min CSS -->
+  <link rel="stylesheet" href="{% static 'eduleb/assets/bootstrap/css/bootstrap.min.css' %}" />
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet" />
+  <!-- Font Awesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="{% static 'eduleb/assets/fonts/font-awesome.min.css' %}" />
+  <link rel="stylesheet" href="{% static 'eduleb/assets/fonts/themify-icons.css' %}" />
+  <!-- Owl Carousel CSS -->
+  <link rel="stylesheet" href="{% static 'eduleb/assets/owlcarousel/css/owl.carousel.css' %}" />
+  <link rel="stylesheet" href="{% static 'eduleb/assets/owlcarousel/css/owl.theme.css' %}" />
+  <!-- Mobile Menu CSS -->
+  <link rel="stylesheet" href="{% static 'eduleb/assets/css/jquery-simple-mobilemenu.css' %}" />
+  <!-- Magnific Popup CSS -->
+  <link rel="stylesheet" href="{% static 'eduleb/assets/css/magnific-popup.css' %}" />
+  <!-- Animate CSS -->
+  <link rel="stylesheet" href="{% static 'eduleb/assets/css/animate.css' %}" />
+  <!-- EduLeb Main Style CSS -->
+  <link rel="stylesheet" href="{% static 'eduleb/assets/css/style.css' %}" />
+  <!-- Project specific CSS -->
+  <link rel="stylesheet" href="{% static 'css/project.css' %}" />
   {% endblock css %}
 
   {% block javascript %}
-    <!-- Latest jQuery -->
-    <script defer src="{% static 'eduleb/assets/js/jquery-1.12.4.min.js' %}"></script>
-    <!-- Latest Bootstrap JS -->
-    <script defer src="{% static 'eduleb/assets/bootstrap/js/bootstrap.min.js' %}"></script>
-    <!-- Modernizr JS -->
-    <script defer src="{% static 'eduleb/assets/js/modernizr-2.8.3.min.js' %}"></script>
-    <!-- Mobile Menu JS -->
-    <script defer src="{% static 'eduleb/assets/js/jquery-simple-mobilemenu.js' %}"></script>
-    <!-- Owl Carousel JS -->
-    <script defer src="{% static 'eduleb/assets/owlcarousel/js/owl.carousel.min.js' %}"></script>
-    <!-- Magnific Popup JS -->
-    <script defer src="{% static 'eduleb/assets/js/jquery.magnific-popup.min.js' %}"></script>
-    <!-- Inview JS -->
-    <script defer src="{% static 'eduleb/assets/js/jquery.inview.min.js' %}"></script>
-    <!-- Scrolltop control JS -->
-    <script defer src="{% static 'eduleb/assets/js/scrolltopcontrol.js' %}"></script>
-    <!-- WOW JS -->
-    <script defer src="{% static 'eduleb/assets/js/wow.min.js' %}"></script>
-    <!-- Template scripts JS -->
-    <script defer src="{% static 'eduleb/assets/js/scripts.js' %}"></script>
-    <!-- Project specific Javascript -->
-    <script defer src="{% static 'js/project.js' %}"></script>
+  <!-- Latest jQuery -->
+  <script defer src="{% static 'eduleb/assets/js/jquery-1.12.4.min.js' %}"></script>
+  <!-- Latest Bootstrap Bundle JS (Includes Popper) -->
+  <script defer src="{% static 'eduleb/assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <!-- Modernizr JS -->
+  <script defer src="{% static 'eduleb/assets/js/modernizr-2.8.3.min.js' %}"></script>
+  <!-- Mobile Menu JS -->
+  <script defer src="{% static 'eduleb/assets/js/jquery-simple-mobilemenu.js' %}"></script>
+  <!-- Owl Carousel JS -->
+  <script defer src="{% static 'eduleb/assets/owlcarousel/js/owl.carousel.min.js' %}"></script>
+  <!-- Magnific Popup JS -->
+  <script defer src="{% static 'eduleb/assets/js/jquery.magnific-popup.min.js' %}"></script>
+  <!-- Inview JS -->
+  <script defer src="{% static 'eduleb/assets/js/jquery.inview.min.js' %}"></script>
+  <!-- Scrolltop control JS -->
+  <script defer src="{% static 'eduleb/assets/js/scrolltopcontrol.js' %}"></script>
+  <!-- WOW JS -->
+  <script defer src="{% static 'eduleb/assets/js/wow.min.js' %}"></script>
+  <!-- Template scripts JS -->
+  <script defer src="{% static 'eduleb/assets/js/scripts.js' %}"></script>
+  <!-- Project specific Javascript -->
+  <script defer src="{% static 'js/project.js' %}"></script>
   {% endblock javascript %}
 </head>
 
 <body class="{% block bodyclass %}{% endblock bodyclass %}">
   {% block body %}
 
-  <!-- START NAVBAR -->  
+  <!-- START NAVBAR -->
   <div id="navigation" class="navbar-light bg-faded site-navigation">
     <div class="container-fluid">
       <div class="row align-items-center">
         <div class="col-20 align-self-center">
           <div class="site-logo">
-            <a href="{% url 'home' %}"><img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo"></a>          				
+            <a href="{% url 'home' %}"><img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo"></a>
           </div>
         </div><!--- END Col -->
-        
+
         <div class="col-60 d-flex justify-content-center">
           <nav id="main-menu">
             <ul>
@@ -89,66 +94,88 @@
             </ul>
           </nav>
         </div><!--- END Col -->
-        
+
         <div class="col-20 d-none d-xl-block text-end align-self-center">
           {% if request.user.is_authenticated %}
-            <a href="{% url 'users:detail' request.user.username %}" class="header-btn me-2"><i class="fa-solid fa-user me-1"></i> {{ request.user.username }}</a>
-            <a href="{% url 'account_logout' %}" class="btn_one">Sign Out</a>
+          <span class="header-btn me-2 text-dark bg-transparent fw-semibold" style="cursor: default;"><i
+              class="fa-solid fa-user me-1 text-primary"></i> {{ request.user.name|default:request.user.username
+            }}</span>
+          <a href="{% url 'account_logout' %}" class="btn_one">Sign Out</a>
           {% else %}
-            <a href="{% url 'account_login' %}" class="header-btn me-2">Sign In</a>
-            {% if ACCOUNT_ALLOW_REGISTRATION %}
-              <a href="{% url 'account_signup' %}" class="btn_one">Sign Up</a>
-            {% endif %}
+          <a href="{% url 'account_login' %}" class="header-btn me-2">Sign In</a>
+          {% if ACCOUNT_ALLOW_REGISTRATION %}
+          <div class="dropdown d-inline-block position-relative">
+            <button class="btn_one dropdown-toggle border-0" type="button" id="signupDropdown" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              Sign Up
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 border-0 mt-2" aria-labelledby="signupDropdown"
+              style="z-index: 1050; min-width: 200px;">
+              <li><a class="dropdown-item py-2" href="{% url 'users:student_signup' %}"><i
+                    class="fa-solid fa-graduation-cap text-primary me-2"></i> Student</a></li>
+              <li>
+                <hr class="dropdown-divider my-1">
+              </li>
+              <li><a class="dropdown-item py-2" href="{% url 'users:faculty_signup' %}"><i
+                    class="fa-solid fa-chalkboard-user text-info me-2"></i> Faculty / Teacher</a></li>
+            </ul>
+          </div>
+          {% endif %}
           {% endif %}
         </div><!--- END Col -->
-        
-        <ul class="mobile_menu">						
+
+        <ul class="mobile_menu">
           <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
           <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
           <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'about' %}">Contact</a></li>
           {% if request.user.is_authenticated %}
-            <li><a href="{% url 'users:detail' request.user.username %}">My Profile</a></li>
-            <li><a href="{% url 'account_logout' %}">Sign Out</a></li>
+          <li><span class="text-white ps-3 fw-semibold"><i class="fa-solid fa-user me-1"></i> {{
+              request.user.name|default:request.user.username }}</span></li>
+          <li><a href="{% url 'account_logout' %}">Sign Out</a></li>
           {% else %}
-            <li><a href="{% url 'account_login' %}">Sign In</a></li>
-            {% if ACCOUNT_ALLOW_REGISTRATION %}
-              <li><a href="{% url 'account_signup' %}">Sign Up</a></li>
-            {% endif %}
+          <li><a href="{% url 'account_login' %}">Sign In</a></li>
+          {% if ACCOUNT_ALLOW_REGISTRATION %}
+          <li><a href="{% url 'users:student_signup' %}">Sign Up (Student)</a></li>
+          <li><a href="{% url 'users:faculty_signup' %}">Sign Up (Faculty / Teacher)</a></li>
           {% endif %}
-        </ul>			
+          {% endif %}
+        </ul>
       </div><!--- END ROW -->
     </div><!--- END CONTAINER -->
-  </div> 	  
+  </div>
   <!-- END NAVBAR -->
 
   {% if messages %}
-    <div class="container mt-3">
-      {% for message in messages %}
-        <div class="alert alert-dismissible fade show {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      {% endfor %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div
+      class="alert alert-dismissible fade show {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}"
+      role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+    {% endfor %}
+  </div>
   {% endif %}
 
   {% block main %}
-    {% block content %}
-    {% endblock content %}
+  {% block content %}
+  {% endblock content %}
   {% endblock main %}
 
   <!-- START FOOTER -->
   <div class="footer section-padding">
-    <div class="container">				
-      <div class="row">						
+    <div class="container">
+      <div class="row">
         <div class="col-lg-4 col-sm-6 col-xs-12 mb-4 mb-lg-0">
           <div class="single_footer">
-            <a href="{% url 'home' %}"><img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo"></a>         
+            <a href="{% url 'home' %}"><img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo"></a>
             <p class="mt-3">Campus Operations & Resource Management System.</p>
-          </div>			
-        </div><!--- END COL -->						
+          </div>
+        </div><!--- END COL -->
         <div class="col-lg-4 col-sm-6 col-xs-12 mb-4 mb-lg-0">
           <div class="single_footer">
             <h4>Quick Links</h4>
@@ -160,7 +187,7 @@
               <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
           </div>
-        </div><!--- END COL -->	
+        </div><!--- END COL -->
         <div class="col-lg-4 col-sm-6 col-xs-12 mb-4 mb-lg-0">
           <div class="single_footer">
             <h4>Support</h4>
@@ -169,19 +196,19 @@
               <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
           </div>
-        </div><!--- END COL -->	
-      </div><!--- END ROW -->					
+        </div><!--- END COL -->
+      </div><!--- END ROW -->
     </div><!--- END CONTAINER -->
   </div>
-  <!-- END FOOTER -->	
+  <!-- END FOOTER -->
 
-  <!-- START FOOTER COPYRIGHT -->	
+  <!-- START FOOTER COPYRIGHT -->
   <div class="foot_copy">
     <div class="footer_copyright text-center">
       <p>&copy; {% now "Y" %} SmartCampus System. All Rights Reserved.</p>
-    </div>	
+    </div>
   </div>
-  <!-- END FOOTER COPYRIGHT -->	
+  <!-- END FOOTER COPYRIGHT -->
 
   {% endblock body %}
 
@@ -191,4 +218,5 @@
   {% block inline_javascript %}
   {% endblock inline_javascript %}
 </body>
+
 </html>
