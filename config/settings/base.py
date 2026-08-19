@@ -48,17 +48,25 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 
 if os.getenv("DATABASE_URL", default=None):
     DATABASES = {"default": env.db("DATABASE_URL")}
-else:
+elif os.getenv("POSTGRES_DB", default=None):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": env.str("POSTGRES_DB"),
-            "USER": env.str("POSTGRES_USER"),
-            "PASSWORD": env.str("POSTGRES_PASSWORD"),
+            "USER": env.str("POSTGRES_USER", default="postgres"),
+            "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
             "HOST": env.str("POSTGRES_HOST", default="postgres"),
             "PORT": env.str("POSTGRES_PORT", default="5432"),
         },
     }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
 
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
@@ -116,7 +124,7 @@ AUTHENTICATION_BACKENDS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
-LOGIN_REDIRECT_URL = "users:redirect"
+LOGIN_REDIRECT_URL = "home"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "account_login"
 

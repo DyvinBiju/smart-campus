@@ -12,7 +12,6 @@ from smart_campus.users.forms import FacultySignupForm
 from smart_campus.users.forms import MaintenanceStaffCreationForm
 from smart_campus.users.forms import StudentSignupForm
 from smart_campus.users.forms import UserAdminCreationForm
-from smart_campus.users.forms import UserProfileUpdateForm
 from smart_campus.users.forms import UserSignupForm
 from smart_campus.users.models import User
 
@@ -122,24 +121,49 @@ class TestMaintenanceStaffCreationForm:
         assert staff_user.check_password("SecureP@ssword123!")
 
 
-class TestUserProfileUpdateForm:
-    def test_valid_profile_update(self, user: User):
-        form = UserProfileUpdateForm(
+
+
+class TestSignupFormNoRoleDropdown:
+    def test_student_form_has_no_role_field_and_supports_phone(self, db):
+        form = StudentSignupForm(
             data={
-                "name": "Updated Name",
-                "phone_number": "+1234567890",
-                "department": "Electrical Engineering",
-                "campus_id": "EE2024042",
-                "year_or_semester": "2nd Year / Sem 3",
+                "name": "Student Phone",
+                "campus_id": "STU999",
+                "email": "stu.phone@campus.edu",
+                "department": "Computer Science",
+                "year_or_semester": "1st Year",
+                "phone_number": "+91 9876543210",
+                "password1": "SecurePass123!",
+                "password2": "SecurePass123!",
             },
-            instance=user,
         )
+        assert "role" not in form.fields
         assert form.is_valid(), form.errors
-        updated_user = form.save()
-        assert updated_user.name == "Updated Name"
-        assert updated_user.phone_number == "+1234567890"
-        assert updated_user.department == "Electrical Engineering"
-        assert updated_user.campus_id == "EE2024042"
-        assert updated_user.year_or_semester == "2nd Year / Sem 3"
+        user = form.save()
+        assert user.role == User.Role.STUDENT
+        assert user.phone_number == "+91 9876543210"
+
+    def test_faculty_form_has_no_role_field_and_supports_phone(self, db):
+        form = FacultySignupForm(
+            data={
+                "name": "Faculty Phone",
+                "campus_id": "FAC999",
+                "email": "fac.phone@campus.edu",
+                "department": "Physics",
+                "phone_number": "+91 9123456780",
+                "password1": "SecurePass123!",
+                "password2": "SecurePass123!",
+            },
+        )
+        assert "role" not in form.fields
+        assert form.is_valid(), form.errors
+        user = form.save()
+        assert user.role == User.Role.FACULTY
+        assert user.phone_number == "+91 9123456780"
+
+    def test_user_signup_form_has_no_role_field(self):
+        form = UserSignupForm()
+        assert "role" not in form.fields
+
 
 

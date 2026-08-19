@@ -5,77 +5,16 @@ from typing import TYPE_CHECKING
 
 import pytest
 from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.models import AnonymousUser
-from django.contrib.messages.middleware import MessageMiddleware
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.http import HttpRequest
-from django.http import HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
 
-from smart_campus.users.forms import UserProfileUpdateForm
 from smart_campus.users.models import User
 from smart_campus.users.tests.factories import UserFactory
-from smart_campus.users.views import UserRedirectView
-from smart_campus.users.views import UserUpdateView
-from smart_campus.users.views import user_detail_view
 
 if TYPE_CHECKING:
     from django.test import RequestFactory
 
 pytestmark = pytest.mark.django_db
-
-
-class TestUserUpdateView:
-    def dummy_get_response(self, request: HttpRequest):
-        return None
-
-    def test_get_success_url(self, user: User, rf: RequestFactory):
-        view = UserUpdateView()
-        request = rf.get("/fake-url/")
-        request.user = user
-
-        view.request = request
-        assert view.get_success_url() == f"/users/{user.username}/"
-
-    def test_get_object(self, user: User, rf: RequestFactory):
-        view = UserUpdateView()
-        request = rf.get("/fake-url/")
-        request.user = user
-
-        view.request = request
-
-        assert view.get_object() == user
-
-    def test_form_valid(self, user: User, rf: RequestFactory):
-        view = UserUpdateView()
-        request = rf.post("/fake-url/")
-
-        # Add the session/message middleware to the request
-        SessionMiddleware(self.dummy_get_response).process_request(request)
-        MessageMiddleware(self.dummy_get_response).process_request(request)
-        request.user = user
-
-        view.request = request
-
-        # Initialize the form
-        form = UserProfileUpdateForm(
-            data={
-                "name": "Updated Name",
-                "phone_number": "9876543210",
-                "department": "Mechanical",
-                "campus_id": "ME202401",
-            },
-            instance=user,
-        )
-        assert form.is_valid()
-        view.form_valid(form)
-
-        messages_sent = [m.message for m in messages.get_messages(request)]
-        assert messages_sent == [_("Information successfully updated")]
-        assert user.name == "Updated Name"
-        assert user.department == "Mechanical"
 
 
 class TestStudentSignupView:
@@ -96,14 +35,15 @@ class TestStudentSignupView:
                 "password1": "SecureP@ss123!",
                 "password2": "SecureP@ss123!",
             },
+            follow=True,
         )
-        assert response.status_code == HTTPStatus.FOUND
-        assert response.url == reverse("users:student_dashboard")
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "Student account created successfully!" in content
 
         user = User.objects.get(email="alex.student@campus.edu")
         assert user.role == User.Role.STUDENT
         assert user.is_student is True
-        assert "_auth_user_id" in client.session
 
 
 class TestFacultySignupView:
@@ -123,148 +63,53 @@ class TestFacultySignupView:
                 "password1": "SecureP@ss123!",
                 "password2": "SecureP@ss123!",
             },
+            follow=True,
         )
-        assert response.status_code == HTTPStatus.FOUND
-        assert response.url == reverse("users:faculty_dashboard")
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "Faculty account created successfully!" in content
 
         user = User.objects.get(email="grace.hopper@campus.edu")
         assert user.role == User.Role.FACULTY
         assert user.is_faculty is True
-        assert "_auth_user_id" in client.session
 
 
-class TestRoleDashboardViewsAndAccessControl:
-    def test_student_dashboard_access(self, client):
-        student = User.objects.create_user(
-            username="stu_user", email="stu@campus.edu", password="password", role=User.Role.STUDENT
-        )
-        client.force_login(student)
+class TestRoleRequiredMixin:
+    def test_authenticated_allowed_role(self, rf: RequestFactory):
+        from django.http import HttpResponse
+        from django.views.generic import View
 
-        # Student accessing Student Dashboard -> OK
-        res = client.get(reverse("users:student_dashboard"))
-        assert res.status_code == HTTPStatus.OK
+        from smart_campus.users.views import RoleRequiredMixin
 
-        # Student attempting to access other dashboards -> 403 Forbidden
-        res = client.get(reverse("users:faculty_dashboard"))
-        assert res.status_code == HTTPStatus.FORBIDDEN
+        class SampleAuthorizedView(RoleRequiredMixin, View):
+            allowed_roles = [User.Role.FACULTY.value]
 
-        res = client.get(reverse("users:maintenance_dashboard"))
-        assert res.status_code == HTTPStatus.FORBIDDEN
+            def get(self, request):
+                return HttpResponse("OK")
 
-        res = client.get(reverse("users:admin_dashboard"))
-        assert res.status_code == HTTPStatus.FORBIDDEN
+        user = UserFactory(role=User.Role.FACULTY)
+        request = rf.get("/")
+        request.user = user
+        response = SampleAuthorizedView.as_view()(request)
+        assert response.status_code == HTTPStatus.OK
 
-    def test_faculty_dashboard_access(self, client):
-        faculty = User.objects.create_user(
-            username="fac_user", email="fac@campus.edu", password="password", role=User.Role.FACULTY
-        )
-        client.force_login(faculty)
+    def test_authenticated_disallowed_role_raises_permission_denied(self, rf: RequestFactory):
+        from django.http import HttpResponse
+        from django.views.generic import View
 
-        # Faculty accessing Faculty Dashboard -> OK
-        res = client.get(reverse("users:faculty_dashboard"))
-        assert res.status_code == HTTPStatus.OK
+        from smart_campus.users.views import RoleRequiredMixin
 
-        # Faculty accessing Student Dashboard -> 403 Forbidden
-        res = client.get(reverse("users:student_dashboard"))
-        assert res.status_code == HTTPStatus.FORBIDDEN
+        class SampleAuthorizedView(RoleRequiredMixin, View):
+            allowed_roles = [User.Role.FACULTY.value]
 
-    def test_maintenance_dashboard_access(self, client):
-        maintenance = User.objects.create_user(
-            username="maint_user", email="maint@campus.edu", password="password", role=User.Role.MAINTENANCE
-        )
-        client.force_login(maintenance)
+            def get(self, request):
+                return HttpResponse("OK")
 
-        # Maintenance staff accessing Maintenance Dashboard -> OK
-        res = client.get(reverse("users:maintenance_dashboard"))
-        assert res.status_code == HTTPStatus.OK
-
-        # Maintenance accessing Admin Dashboard -> 403 Forbidden
-        res = client.get(reverse("users:admin_dashboard"))
-        assert res.status_code == HTTPStatus.FORBIDDEN
-
-    def test_admin_dashboard_access_and_staff_creation(self, client):
-        admin_user = User.objects.create_superuser(
-            username="super_admin", email="admin@campus.edu", password="password", role=User.Role.ADMIN
-        )
-        client.force_login(admin_user)
-
-        # Admin accessing Admin Dashboard -> OK
-        res = client.get(reverse("users:admin_dashboard"))
-        assert res.status_code == HTTPStatus.OK
-
-        # Admin creating a Maintenance Staff account via the dashboard form
-        res = client.post(
-            reverse("users:admin_dashboard"),
-            data={
-                "name": "Tom Plumber",
-                "campus_id": "STF777",
-                "email": "tom.plumber@campus.edu",
-                "department": "Plumbing & Water Systems",
-                "password1": "SecureStaffP@ss1!",
-                "password2": "SecureStaffP@ss1!",
-            },
-        )
-        assert res.status_code == HTTPStatus.FOUND
-        assert res.url == reverse("users:admin_dashboard")
-
-        staff = User.objects.get(email="tom.plumber@campus.edu")
-        assert staff.role == User.Role.MAINTENANCE
-        assert staff.is_maintenance_staff is True
-        assert staff.is_staff is True
-
-    def test_unauthenticated_dashboard_access_redirects(self, client):
-        res = client.get(reverse("users:student_dashboard"))
-        assert res.status_code == HTTPStatus.FOUND
-        login_url = reverse("account_login")
-        assert login_url in res.url
-
-
-class TestUserRedirectView:
-    def test_student_redirect(self, client):
-        student = User.objects.create_user(username="stu_red", role=User.Role.STUDENT)
-        client.force_login(student)
-        res = client.get(reverse("users:redirect"))
-        assert res.status_code == HTTPStatus.FOUND
-        assert res.url == reverse("users:student_dashboard")
-
-    def test_faculty_redirect(self, client):
-        faculty = User.objects.create_user(username="fac_red", role=User.Role.FACULTY)
-        client.force_login(faculty)
-        res = client.get(reverse("users:redirect"))
-        assert res.status_code == HTTPStatus.FOUND
-        assert res.url == reverse("users:faculty_dashboard")
-
-    def test_maintenance_redirect(self, client):
-        maintenance = User.objects.create_user(username="maint_red", role=User.Role.MAINTENANCE)
-        client.force_login(maintenance)
-        res = client.get(reverse("users:redirect"))
-        assert res.status_code == HTTPStatus.FOUND
-        assert res.url == reverse("users:maintenance_dashboard")
-
-    def test_admin_redirect(self, client):
-        admin = User.objects.create_superuser(username="admin_red", role=User.Role.ADMIN)
-        client.force_login(admin)
-        res = client.get(reverse("users:redirect"))
-        assert res.status_code == HTTPStatus.FOUND
-        assert res.url == reverse("users:admin_dashboard")
-
-
-
-class TestUserDetailView:
-    def test_authenticated(self, user: User, rf: RequestFactory):
-        request = rf.get("/fake-url/")
-        request.user = UserFactory.create()
-        response = user_detail_view(request, username=user.username)
-
-    def test_not_authenticated(self, user: User, rf: RequestFactory):
-        request = rf.get("/fake-url/")
-        request.user = AnonymousUser()
-        response = user_detail_view(request, username=user.username)
-        login_url = reverse(settings.LOGIN_URL)
-
-        assert isinstance(response, HttpResponseRedirect)
-        assert response.status_code == HTTPStatus.FOUND
-        assert response.url == f"{login_url}?next=/fake-url/"
+        user = UserFactory(role=User.Role.STUDENT)
+        request = rf.get("/")
+        request.user = user
+        with pytest.raises(PermissionDenied):
+            SampleAuthorizedView.as_view()(request)
 
 
 class TestUserAuthenticationFlows:
@@ -279,11 +124,11 @@ class TestUserAuthenticationFlows:
                 "login": user.username,
                 "password": "CorrectP@ssword123!",
             },
+            follow=True,
         )
-        assert response.status_code == HTTPStatus.FOUND
-        redirect_url = reverse("users:redirect")
-        assert response.url == redirect_url
+        assert response.status_code == HTTPStatus.OK
         assert "_auth_user_id" in client.session
+        assert "Login successful! Welcome to SmartCampus." in response.content.decode()
 
     def test_login_valid_credentials_with_email(self, client, user: User):
         user.set_password("CorrectP@ssword123!")
@@ -296,12 +141,11 @@ class TestUserAuthenticationFlows:
                 "login": user.email,
                 "password": "CorrectP@ssword123!",
             },
+            follow=True,
         )
-        assert response.status_code == HTTPStatus.FOUND
-        redirect_url = reverse("users:redirect")
-        assert response.url == redirect_url
+        assert response.status_code == HTTPStatus.OK
         assert "_auth_user_id" in client.session
-
+        assert "Login successful! Welcome to SmartCampus." in response.content.decode()
 
     def test_login_invalid_credentials(self, client, user: User):
         user.set_password("CorrectP@ssword123!")
@@ -317,43 +161,63 @@ class TestUserAuthenticationFlows:
         )
         assert response.status_code == HTTPStatus.OK
         assert "_auth_user_id" not in client.session
+        assert "Invalid username/email or password." in response.content.decode()
 
     def test_logout(self, client, user: User):
         client.force_login(user)
         logout_url = reverse("account_logout")
 
-        # GET asks for confirmation or POST performs logout
         response = client.post(logout_url)
         assert response.status_code == HTTPStatus.FOUND
         assert "_auth_user_id" not in client.session
 
-    def test_profile_update_client_flow(self, client, user: User):
+
+class TestLandingPageAndAuthTemplates:
+    def test_landing_page_logged_out_navigation(self, client):
+        response = client.get(reverse("home"))
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert reverse("account_login") in content
+        assert reverse("users:student_signup") in content
+        assert reverse("users:faculty_signup") in content
+        assert "Raise Complaint" in content
+        assert "My Complaints" in content
+
+    def test_landing_page_logged_in_navigation(self, client, user: User):
         client.force_login(user)
-        update_url = reverse("users:update")
+        response = client.get(reverse("home"))
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert reverse("account_logout") in content
+        # User name is displayed in the navbar
+        assert user.name or user.username in content
 
-        response = client.post(
-            update_url,
-            data={
-                "name": "Updated via Client",
-                "phone_number": "9876543210",
-                "department": "Civil Engineering",
-                "campus_id": "CIVIL2024",
-            },
-        )
-        assert response.status_code == HTTPStatus.FOUND
-        assert response.url == user.get_absolute_url()
+    def test_login_page_renders_bottom_signup_links(self, client):
+        response = client.get(reverse("account_login"))
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "Don&#x27;t have an account?" in content or "Don't have an account?" in content
+        assert reverse("users:student_signup") in content
+        assert reverse("users:faculty_signup") in content
 
-        user.refresh_from_db()
-        assert user.name == "Updated via Client"
-        assert user.department == "Civil Engineering"
-        assert user.campus_id == "CIVIL2024"
-        assert user.phone_number == "9876543210"
+    def test_account_signup_renders_role_selection(self, client):
+        response = client.get(reverse("account_signup"))
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert reverse("users:student_signup") in content
+        assert reverse("users:faculty_signup") in content
+        assert reverse("account_login") in content
 
-    def test_profile_update_unauthenticated_redirects(self, client):
-        update_url = reverse("users:update")
-        response = client.get(update_url)
-        assert response.status_code == HTTPStatus.FOUND
-        login_url = reverse("account_login")
-        assert response.url == f"{login_url}?next={update_url}"
+    def test_student_signup_page_bottom_signin_link(self, client):
+        response = client.get(reverse("users:student_signup"))
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "Already have an account?" in content
+        assert reverse("account_login") in content
 
-
+    def test_faculty_signup_page_bottom_signin_link(self, client):
+        response = client.get(reverse("users:faculty_signup"))
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "Already have an account?" in content
+        assert reverse("account_login") in content

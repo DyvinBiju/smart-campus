@@ -80,6 +80,12 @@ class StudentSignupForm(forms.Form):
         required=True,
         widget=forms.TextInput(attrs={"placeholder": _("e.g. 3rd Year / Semester 5"), "class": "form-control"}),
     )
+    phone_number = forms.CharField(
+        label=_("Phone Number"),
+        max_length=30,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("e.g. +91 9876543210"), "class": "form-control"}),
+    )
     password1 = forms.CharField(
         label=_("Password"),
         widget=forms.PasswordInput(attrs={"placeholder": _("Enter secure password"), "class": "form-control"}),
@@ -120,6 +126,7 @@ class StudentSignupForm(forms.Form):
             department=self.cleaned_data["department"].strip(),
             campus_id=campus_id,
             year_or_semester=self.cleaned_data["year_or_semester"].strip(),
+            phone_number=self.cleaned_data.get("phone_number", "").strip(),
         )
         user.set_password(self.cleaned_data["password1"])
         user.save()
@@ -153,6 +160,12 @@ class FacultySignupForm(forms.Form):
         max_length=100,
         required=True,
         widget=forms.TextInput(attrs={"placeholder": _("e.g. Electrical Engineering"), "class": "form-control"}),
+    )
+    phone_number = forms.CharField(
+        label=_("Phone Number"),
+        max_length=30,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("e.g. +91 9876543210"), "class": "form-control"}),
     )
     password1 = forms.CharField(
         label=_("Password"),
@@ -193,6 +206,7 @@ class FacultySignupForm(forms.Form):
             role=User.Role.FACULTY,
             department=self.cleaned_data["department"].strip(),
             campus_id=campus_id,
+            phone_number=self.cleaned_data.get("phone_number", "").strip(),
         )
         user.set_password(self.cleaned_data["password1"])
         user.save()
@@ -278,23 +292,11 @@ class UserSignupForm(SignupForm):
     Standard allauth signup form for general accounts (defaults to Student).
     """
 
-    PUBLIC_ROLE_CHOICES = [
-        (User.Role.STUDENT.value, _("Student")),
-        (User.Role.FACULTY.value, _("Faculty / Teacher")),
-    ]
-
     name = forms.CharField(
         label=_("Full Name"),
         max_length=255,
         required=True,
         widget=forms.TextInput(attrs={"placeholder": _("e.g. John Doe")}),
-    )
-    role = forms.ChoiceField(
-        label=_("Campus Role"),
-        choices=PUBLIC_ROLE_CHOICES,
-        initial=User.Role.STUDENT.value,
-        required=True,
-        help_text=_("Select your role on campus. Staff and Admin accounts are provisioned separately."),
     )
     department = forms.CharField(
         label=_("Department / Program"),
@@ -324,12 +326,7 @@ class UserSignupForm(SignupForm):
     def save(self, request):
         user = super().save(request)
         user.name = self.cleaned_data.get("name", "").strip()
-
-        selected_role = self.cleaned_data.get("role", User.Role.STUDENT.value)
-        if selected_role not in [User.Role.STUDENT.value, User.Role.FACULTY.value]:
-            selected_role = User.Role.STUDENT.value
-        user.role = selected_role
-
+        user.role = User.Role.STUDENT
         user.department = self.cleaned_data.get("department", "").strip()
         user.campus_id = self.cleaned_data.get("campus_id", "").strip()
         user.year_or_semester = self.cleaned_data.get("year_or_semester", "").strip()
@@ -382,28 +379,5 @@ class UserSocialSignupForm(SocialSignupForm):
         user.save()
         return user
 
-
-class UserProfileUpdateForm(forms.ModelForm):
-    """
-    Form for regular users to update their personal details.
-    """
-
-    class Meta:
-        model = User
-        fields = ["name", "phone_number", "department", "campus_id", "year_or_semester"]
-        labels = {
-            "name": _("Full Name"),
-            "phone_number": _("Phone Number"),
-            "department": _("Department / Program"),
-            "campus_id": _("Campus / Roll ID"),
-            "year_or_semester": _("Year / Semester"),
-        }
-        widgets = {
-            "name": forms.TextInput(attrs={"class": "form-control", "placeholder": _("Your Full Name")}),
-            "phone_number": forms.TextInput(attrs={"class": "form-control", "placeholder": _("Contact Phone Number")}),
-            "department": forms.TextInput(attrs={"class": "form-control", "placeholder": _("Department or Branch")}),
-            "campus_id": forms.TextInput(attrs={"class": "form-control", "placeholder": _("Roll Number or Employee ID")}),
-            "year_or_semester": forms.TextInput(attrs={"class": "form-control", "placeholder": _("Year / Semester")}),
-        }
 
 

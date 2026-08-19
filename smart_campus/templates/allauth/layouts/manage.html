@@ -20,9 +20,6 @@
         </h1>
         <ul>
           <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
-          {% if user.is_authenticated %}
-            <li><a href="{% url 'users:detail' user.username %}">{% trans "Profile" %}</a></li>
-          {% endif %}
           <li> / {% trans "Settings" %}</li>
         </ul>
       </div>

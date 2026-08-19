@@ -6,6 +6,9 @@ from django.urls import path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
+from smart_campus.users.views import smart_campus_login_view
+
+
 urlpatterns = [
     path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
     path(
@@ -17,6 +20,7 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     # User management
     path("users/", include("smart_campus.users.urls", namespace="users")),
+    path("accounts/login/", smart_campus_login_view, name="account_login"),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
     path("assets/", include("smart_campus.assets.urls")),

@@ -42,8 +42,8 @@
   {% block javascript %}
     <!-- Latest jQuery -->
     <script defer src="{% static 'eduleb/assets/js/jquery-1.12.4.min.js' %}"></script>
-    <!-- Latest Bootstrap JS -->
-    <script defer src="{% static 'eduleb/assets/bootstrap/js/bootstrap.min.js' %}"></script>
+    <!-- Latest Bootstrap Bundle JS (Includes Popper) -->
+    <script defer src="{% static 'eduleb/assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
     <!-- Modernizr JS -->
     <script defer src="{% static 'eduleb/assets/js/modernizr-2.8.3.min.js' %}"></script>
     <!-- Mobile Menu JS -->
@@ -82,8 +82,8 @@
           <nav id="main-menu">
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
-              <li><a href="#raise-complaint">Raise Complaint</a></li>
-              <li><a href="#my-complaints">My Complaints</a></li>
+              <li><a href="#" onclick="event.preventDefault(); return false;" role="button" aria-disabled="true">Raise Complaint</a></li>
+              <li><a href="#" onclick="event.preventDefault(); return false;" role="button" aria-disabled="true">My Complaints</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
               <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
@@ -92,17 +92,16 @@
         
         <div class="col-20 d-none d-xl-block text-end align-self-center">
           {% if request.user.is_authenticated %}
-            <a href="{% url 'users:redirect' %}" class="btn btn-outline-primary rounded-pill me-2 px-3"><i class="fa-solid fa-gauge-high me-1"></i> Dashboard</a>
-            <a href="{% url 'users:detail' request.user.username %}" class="header-btn me-2"><i class="fa-solid fa-user me-1"></i> {{ request.user.name|default:request.user.username }}</a>
+            <span class="header-btn me-2 text-dark bg-transparent fw-semibold" style="cursor: default;"><i class="fa-solid fa-user me-1 text-primary"></i> {{ request.user.name|default:request.user.username }}</span>
             <a href="{% url 'account_logout' %}" class="btn_one">Sign Out</a>
           {% else %}
             <a href="{% url 'account_login' %}" class="header-btn me-2">Sign In</a>
             {% if ACCOUNT_ALLOW_REGISTRATION %}
-              <div class="dropdown d-inline-block">
+              <div class="dropdown d-inline-block position-relative">
                 <button class="btn_one dropdown-toggle border-0" type="button" id="signupDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                   Sign Up
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3 border-0 mt-2" aria-labelledby="signupDropdown">
+                <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 border-0 mt-2" aria-labelledby="signupDropdown" style="z-index: 1050; min-width: 200px;">
                   <li><a class="dropdown-item py-2" href="{% url 'users:student_signup' %}"><i class="fa-solid fa-graduation-cap text-primary me-2"></i> Student</a></li>
                   <li><hr class="dropdown-divider my-1"></li>
                   <li><a class="dropdown-item py-2" href="{% url 'users:faculty_signup' %}"><i class="fa-solid fa-chalkboard-user text-info me-2"></i> Faculty / Teacher</a></li>
@@ -114,19 +113,18 @@
         
         <ul class="mobile_menu">						
           <li><a href="{% url 'home' %}">Home</a></li>
-          <li><a href="#raise-complaint">Raise Complaint</a></li>
-          <li><a href="#my-complaints">My Complaints</a></li>
+          <li><a href="#" onclick="event.preventDefault(); return false;" role="button" aria-disabled="true">Raise Complaint</a></li>
+          <li><a href="#" onclick="event.preventDefault(); return false;" role="button" aria-disabled="true">My Complaints</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'about' %}">Contact</a></li>
           {% if request.user.is_authenticated %}
-            <li><a href="{% url 'users:redirect' %}">Dashboard</a></li>
-            <li><a href="{% url 'users:detail' request.user.username %}">My Profile</a></li>
+            <li><span class="text-white ps-3 fw-semibold"><i class="fa-solid fa-user me-1"></i> {{ request.user.name|default:request.user.username }}</span></li>
             <li><a href="{% url 'account_logout' %}">Sign Out</a></li>
           {% else %}
             <li><a href="{% url 'account_login' %}">Sign In</a></li>
             {% if ACCOUNT_ALLOW_REGISTRATION %}
               <li><a href="{% url 'users:student_signup' %}">Sign Up (Student)</a></li>
-              <li><a href="{% url 'users:faculty_signup' %}">Sign Up (Faculty)</a></li>
+              <li><a href="{% url 'users:faculty_signup' %}">Sign Up (Faculty / Teacher)</a></li>
             {% endif %}
           {% endif %}
         </ul>			
@@ -166,8 +164,8 @@
             <h4>Quick Links</h4>
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
-              <li><a href="#raise-complaint">Raise Complaint</a></li>
-              <li><a href="#my-complaints">My Complaints</a></li>
+              <li><a href="#" onclick="event.preventDefault(); return false;" role="button" aria-disabled="true">Raise Complaint</a></li>
+              <li><a href="#" onclick="event.preventDefault(); return false;" role="button" aria-disabled="true">My Complaints</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
               <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
