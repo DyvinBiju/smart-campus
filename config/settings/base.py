@@ -104,6 +104,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "smart_campus.users",
     "smart_campus.assets",
+    "smart_campus.inventory",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
