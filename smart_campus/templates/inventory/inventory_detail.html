@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {{ item.name }} - Inventory & Resources
+{% endblock title %}
+
+{% block content %}
+<section class="section-padding bg-light">
+  <div class="container">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+      <div>
+        <p class="text-primary fw-semibold mb-2"><i class="fa-solid fa-boxes-stacked me-2"></i>Inventory &amp; Resources</p>
+        <h1 class="fw-bold mb-0">{{ item.name }}</h1>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'inventory:update' item.pk %}" class="btn_one px-4 py-3"><i class="fa-solid fa-pen me-2"></i>Edit</a>
+        <a href="{% url 'inventory:delete' item.pk %}" class="btn btn-outline-danger px-4 py-3"><i class="fa-solid fa-trash me-2"></i>Delete</a>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="bg-white rounded-4 shadow-sm p-4 p-md-5 h-100">
+          <h2 class="h4 fw-bold mb-4">Resource Details</h2>
+          <div class="row g-4">
+            <div class="col-sm-6">
+              <p class="text-secondary mb-1">Category</p>
+              <p class="fw-semibold mb-0">{{ item.category }}</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="text-secondary mb-1">Unit</p>
+              <p class="fw-semibold mb-0">{{ item.unit }}</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="text-secondary mb-1">Quantity</p>
+              <p class="fw-semibold mb-0">{{ item.quantity }}</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="text-secondary mb-1">Minimum Quantity</p>
+              <p class="fw-semibold mb-0">{{ item.minimum_quantity }}</p>
+            </div>
+            <div class="col-12">
+              <p class="text-secondary mb-1">Stock Status</p>
+              {% if item.stock_status == "Available" %}
+                <span class="badge bg-success">Available</span>
+              {% elif item.stock_status == "Low Stock" %}
+                <span class="badge bg-warning text-dark">Low Stock</span>
+              {% else %}
+                <span class="badge bg-danger">Out of Stock</span>
+              {% endif %}
+            </div>
+            <div class="col-12">
+              <p class="text-secondary mb-1">Description</p>
+              <p class="mb-0">{% if item.description %}{{ item.description|linebreaksbr }}{% else %}<span class="text-muted">No description provided.</span>{% endif %}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="bg-white rounded-4 shadow-sm p-4 h-100">
+          <h2 class="h5 fw-bold mb-4">Record Information</h2>
+          <p class="text-secondary mb-1">Created</p>
+          <p class="mb-4">{{ item.created_at|date:"M d, Y, P" }}</p>
+          <p class="text-secondary mb-1">Last Updated</p>
+          <p class="mb-0">{{ item.updated_at|date:"M d, Y, P" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <a href="{% url 'inventory:list' %}" class="header-btn d-inline-block px-4 py-3 mt-4"><i class="fa-solid fa-arrow-left me-2"></i>Back to Inventory</a>
+  </div>
+</section>
+{% endblock content %}

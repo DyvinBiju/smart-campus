@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Delete Inventory Item - SmartCampus
+{% endblock title %}
+
+{% block content %}
+<section class="section-padding bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        <div class="bg-white rounded-4 shadow-sm p-4 p-md-5 text-center">
+          <div class="text-danger fs-1 mb-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h1 class="h2 fw-bold mb-3">Delete Inventory Item</h1>
+          <p class="text-secondary mb-4">Are you sure you want to delete <strong>{{ item.name }}</strong> from the inventory?</p>
+          <div class="text-start bg-light rounded-3 p-3 mb-4">
+            <p class="mb-1"><span class="text-secondary">Item:</span> <strong>{{ item.name }}</strong></p>
+            <p class="mb-0"><span class="text-secondary">Category:</span> <strong>{{ item.category }}</strong></p>
+          </div>
+          <form method="post" action="{% url 'inventory:delete' item.pk %}">
+            {% csrf_token %}
+            <div class="d-flex flex-wrap justify-content-center gap-3">
+              <button type="submit" class="btn btn-danger px-4 py-3"><i class="fa-solid fa-trash me-2"></i>Confirm Delete</button>
+              <a href="{% url 'inventory:detail' item.pk %}" class="header-btn px-4 py-3">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
