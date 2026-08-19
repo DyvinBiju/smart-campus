@@ -18,10 +18,10 @@
           </p>
         </div>
         <div class="d-flex flex-wrap gap-3 mt-3">
-          <a href="#raise-complaint" class="btn_one px-4 py-3 me-2">
+          <a href="{% url 'complaints:create' %}" class="btn_one px-4 py-3 me-2">
             <i class="fa-solid fa-pen-to-square me-2"></i>Raise a Complaint
           </a>
-          <a href="#my-complaints" class="header-btn px-4 py-3">
+          <a href="{% url 'complaints:list' %}" class="header-btn px-4 py-3">
             <i class="fa-solid fa-list-check me-2"></i>Track My Complaints
           </a>
         </div>					
@@ -135,7 +135,7 @@
             <li class="mb-2"><span class="ti-check text-primary me-2 fw-bold"></span> <b>Location-based reporting</b> for quick maintenance routing</li>
             <li class="mb-2"><span class="ti-check text-primary me-2 fw-bold"></span> <b>Transparent resolution process</b> for all campus users</li>
           </ul>
-          <a class="btn_one px-4 py-3" href="#raise-complaint">
+          <a class="btn_one px-4 py-3" href="{% url 'complaints:create' %}">
             <i class="fa-solid fa-plus me-1"></i> Raise a Complaint
           </a>
         </div>

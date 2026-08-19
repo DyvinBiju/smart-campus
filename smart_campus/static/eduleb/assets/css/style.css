@@ -239,13 +239,14 @@ margin-top: 0px;
 	width: 20%;
 }
 .site-logo{
-	width: 150px;
+	width: 240px;
 }
 .site-logo a{
 	display: block;
 }
 .site-logo img{
 	max-width: 100%;
+	height: auto;
 }
 #navigation{
 	padding: 20px 65px;
@@ -2337,7 +2338,11 @@ font-size: 18px;
 @media only screen and (max-width:960px) { 
 .single_footer{margin-bottom:30px;}
 }
-.single_footer img{margin-bottom:20px;}
+.single_footer img{
+	margin-bottom:20px;
+	max-width: 240px;
+	height: auto;
+}
 .single_footer h4 {
 	color: #0b104a;
 	margin-top: 0;

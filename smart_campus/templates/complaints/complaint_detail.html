@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  Complaint {{ complaint.complaint_id }} - SmartCampus
+{% endblock title %}
+
+{% block content %}
+<!-- START PAGE HEADER -->
+<section class="section-padding bg-light border-bottom py-4">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-primary fs-6 font-monospace px-3 py-2">{{ complaint.complaint_id }}</span>
+          {% if complaint.status == 'Submitted' %}
+            <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-inbox me-1"></i>Submitted</span>
+          {% elif complaint.status == 'Under Review' %}
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-magnifying-glass me-1"></i>Under Review</span>
+          {% elif complaint.status == 'In Progress' %}
+            <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fa-solid fa-gears me-1"></i>In Progress</span>
+          {% elif complaint.status == 'Resolved' %}
+            <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Resolved</span>
+          {% endif %}
+        </div>
+        <h2 class="fw-bold mb-0">{{ complaint.title }}</h2>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'complaints:status_update' complaint.complaint_id %}" class="btn btn-warning px-3 py-2 text-dark fw-semibold me-2">
+          <i class="fa-solid fa-pen-to-square me-1"></i> Update Status
+        </a>
+        <a href="{% url 'complaints:list' %}" class="btn btn-outline-secondary px-3 py-2">
+          <i class="fa-solid fa-arrow-left me-1"></i> Back to List
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END PAGE HEADER -->
+
+<!-- START COMPLAINT DETAILS SECTION -->
+<section class="section-padding py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4 p-md-5">
+            <h4 class="fw-bold mb-3 border-bottom pb-2">Description</h4>
+            <p class="text-secondary leading-relaxed fs-6 style-text" style="white-space: pre-line;">
+              {{ complaint.description }}
+            </p>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">Status Lifecycle</h5>
+            <div class="row text-center g-2">
+              <div class="col-3">
+                <div class="p-3 rounded-3 {% if complaint.status == 'Submitted' %}bg-info text-white fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
+                  <i class="fa-solid fa-inbox d-block fs-4 mb-1"></i>
+                  <small>Submitted</small>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-3 rounded-3 {% if complaint.status == 'Under Review' %}bg-warning text-dark fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
+                  <i class="fa-solid fa-magnifying-glass d-block fs-4 mb-1"></i>
+                  <small>Under Review</small>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-3 rounded-3 {% if complaint.status == 'In Progress' %}bg-primary text-white fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
+                  <i class="fa-solid fa-gears d-block fs-4 mb-1"></i>
+                  <small>In Progress</small>
+                </div>
+              </div>
+              <div class="col-3">
+                <div class="p-3 rounded-3 {% if complaint.status == 'Resolved' %}bg-success text-white fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
+                  <i class="fa-solid fa-circle-check d-block fs-4 mb-1"></i>
+                  <small>Resolved</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Information</h5>
+            
+            <div class="mb-3">
+              <label class="text-muted small fw-semibold d-block">Category</label>
+              <span class="fs-6 fw-bold text-dark"><i class="fa-solid fa-tag me-2 text-primary"></i>{{ complaint.get_category_display }}</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-muted small fw-semibold d-block">Location</label>
+              <span class="fs-6 fw-bold text-dark"><i class="fa-solid fa-location-dot me-2 text-danger"></i>{{ complaint.location }}</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-muted small fw-semibold d-block">Priority</label>
+              {% if complaint.priority == 'High' %}
+                <span class="badge bg-danger fs-6"><i class="fa-solid fa-circle-exclamation me-1"></i>High</span>
+              {% elif complaint.priority == 'Medium' %}
+                <span class="badge bg-warning text-dark fs-6">Medium</span>
+              {% else %}
+                <span class="badge bg-secondary fs-6">Low</span>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="text-muted small fw-semibold d-block">Created Date</label>
+              <span class="text-dark"><i class="fa-regular fa-calendar me-2 text-muted"></i>{{ complaint.created_at|date:"F d, Y - H:i" }}</span>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-muted small fw-semibold d-block">Last Updated</label>
+              <span class="text-dark"><i class="fa-regular fa-clock me-2 text-muted"></i>{{ complaint.updated_at|date:"F d, Y - H:i" }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END COMPLAINT DETAILS SECTION -->
+{% endblock content %}

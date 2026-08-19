@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  Raise a Complaint - SmartCampus
+{% endblock title %}
+
+{% block content %}
+<!-- START PAGE HEADER -->
+<section class="section-padding bg-light border-bottom py-4">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h2 class="fw-bold mb-1"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Raise a Complaint</h2>
+        <p class="text-muted mb-0">Report campus issues quickly to help maintain campus facilities and resources.</p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{% url 'complaints:list' %}" class="btn btn-outline-secondary px-3 py-2">
+          <i class="fa-solid fa-list me-1"></i> View All Complaints
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END PAGE HEADER -->
+
+<!-- START COMPLAINT FORM SECTION -->
+<section class="section-padding py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4 p-md-5">
+            <h4 class="fw-bold card-title mb-4 pb-2 border-bottom">Complaint Details</h4>
+
+            {% if form.errors %}
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong><i class="fa-solid fa-triangle-exclamation me-2"></i>Please correct the errors below:</strong>
+                <ul class="mb-0 mt-2 ps-3">
+                  {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                      <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                  {% endfor %}
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'complaints:create' %}" class="needs-validation" novalidate>
+              {% csrf_token %}
+              
+              <div class="mb-3">
+                <label for="id_title" class="form-label fw-semibold">Complaint Title <span class="text-danger">*</span></label>
+                {{ form.title }}
+                <div class="form-text">Summarize the problem concisely (e.g., Broken Window, Projector Issue).</div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="id_category" class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                  {{ form.category }}
+                </div>
+                <div class="col-md-6">
+                  <label for="id_priority" class="form-label fw-semibold">Priority <span class="text-danger">*</span></label>
+                  {{ form.priority }}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="id_location" class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
+                {{ form.location }}
+                <div class="form-text">Specify building name, floor number, classroom or lab ID.</div>
+              </div>
+
+              <div class="mb-4">
+                <label for="id_description" class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                {{ form.description }}
+                <div class="form-text">Describe the exact problem so maintenance personnel can resolve it efficiently.</div>
+              </div>
+
+              <div class="d-flex align-items-center gap-3 pt-2">
+                <button type="submit" class="btn_one px-4 py-2 border-0">
+                  <i class="fa-solid fa-paper-plane me-2"></i>Submit Complaint
+                </button>
+                <a href="{% url 'complaints:list' %}" class="btn btn-light px-4 py-2 border">Cancel</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END COMPLAINT FORM SECTION -->
+{% endblock content %}

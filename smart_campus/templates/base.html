@@ -82,8 +82,8 @@
           <nav id="main-menu">
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
-              <li><a href="#raise-complaint">Raise Complaint</a></li>
-              <li><a href="#my-complaints">My Complaints</a></li>
+              <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
+              <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
               <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
@@ -104,8 +104,8 @@
         
         <ul class="mobile_menu">						
           <li><a href="{% url 'home' %}">Home</a></li>
-          <li><a href="#raise-complaint">Raise Complaint</a></li>
-          <li><a href="#my-complaints">My Complaints</a></li>
+          <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
+          <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'about' %}">Contact</a></li>
           {% if request.user.is_authenticated %}
@@ -154,8 +154,8 @@
             <h4>Quick Links</h4>
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
-              <li><a href="#raise-complaint">Raise Complaint</a></li>
-              <li><a href="#my-complaints">My Complaints</a></li>
+              <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
+              <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
               <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
