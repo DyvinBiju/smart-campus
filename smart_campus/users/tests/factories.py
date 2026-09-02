@@ -11,6 +11,10 @@ class UserFactory(DjangoModelFactory[User]):
     username = Faker("user_name")
     email = Faker("email")
     name = Faker("name")
+    role = User.Role.STUDENT
+    phone_number = Faker("numerify", text="##########")
+    department = "Computer Science"
+    campus_id = Faker("bothify", text="CS###")
 
     @post_generation
     def password(self: User, create: bool, extracted: str | None, **kwargs):  # noqa: FBT001
@@ -34,3 +38,4 @@ class UserFactory(DjangoModelFactory[User]):
         model = User
         django_get_or_create = ["username"]
         skip_postgeneration_save = True
+

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  {{ asset.asset_code }} - {{ asset.name }} - SmartCampus
+{% endblock title %}
+
+{% block content %}
+
+<!-- START HEADER BANNER -->
+<section class="section-top">
+  <div class="container">
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title">
+        <h1>Asset Details</h1>
+        <ul>
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'assets:asset_list' %}"> / Assets</a></li>
+          <li> / {{ asset.asset_code }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END HEADER BANNER -->
+
+<!-- START ASSET DETAIL SECTION -->
+<section class="section-padding bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+
+          <!-- CARD HEADER -->
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center border-bottom pb-4 mb-4 gap-2">
+            <div>
+              <span class="text-primary fw-bold text-uppercase fs-6">
+                <i class="fa-solid fa-barcode me-1"></i>{{ asset.asset_code }}
+              </span>
+              <h2 class="fw-bold mt-1 mb-0">{{ asset.name }}</h2>
+            </div>
+            <div>
+              <span class="badge {{ asset.status_badge_class }} px-3 py-2 rounded-pill fs-6">
+                {{ asset.get_status_display }}
+              </span>
+            </div>
+          </div>
+
+          <!-- ASSET INFORMATION GRID -->
+          <div class="row g-4 mb-4">
+            
+            <!-- Category -->
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">
+                  <i class="fa-solid fa-tag me-1 text-secondary"></i>Category
+                </div>
+                <div class="fs-5 fw-bold text-dark mt-1">
+                  {{ asset.category }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Purchase Date -->
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">
+                  <i class="fa-solid fa-calendar-days me-1 text-secondary"></i>Purchase Date
+                </div>
+                <div class="fs-5 fw-bold text-dark mt-1">
+                  {% if asset.purchase_date %}
+                    {{ asset.purchase_date|date:"F d, Y" }}
+                  {% else %}
+                    <span class="text-muted fw-normal fst-italic">Not recorded</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Building -->
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">
+                  <i class="fa-solid fa-building me-1 text-secondary"></i>Building Location
+                </div>
+                <div class="fs-5 fw-bold text-dark mt-1">
+                  {{ asset.building }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Room / Area -->
+            <div class="col-sm-6">
+              <div class="p-3 bg-light rounded-3 h-100">
+                <div class="text-muted small fw-semibold text-uppercase">
+                  <i class="fa-solid fa-door-open me-1 text-secondary"></i>Room / Area
+                </div>
+                <div class="fs-5 fw-bold text-dark mt-1">
+                  {% if asset.room %}
+                    {{ asset.room }}
+                  {% else %}
+                    <span class="text-muted fw-normal fst-italic">Not specified</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- DESCRIPTION SECTION -->
+          <div class="mb-4">
+            <h5 class="fw-bold mb-2">
+              <i class="fa-solid fa-circle-info me-2 text-primary"></i>Description & Specifications
+            </h5>
+            <div class="p-3 bg-light rounded-3">
+              {% if asset.description %}
+                <p class="mb-0 text-secondary" style="white-space: pre-line;">{{ asset.description }}</p>
+              {% else %}
+                <p class="mb-0 text-muted fst-italic">No additional notes or description provided for this asset.</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- TIMESTAMPS & METADATA -->
+          <div class="border-top pt-3 mb-4">
+            <div class="row text-muted small">
+              <div class="col-sm-6 mb-1 mb-sm-0">
+                <i class="fa-regular fa-clock me-1"></i>Created: {{ asset.created_at|date:"M d, Y, h:i A" }}
+              </div>
+              <div class="col-sm-6 text-sm-end">
+                <i class="fa-solid fa-arrows-rotate me-1"></i>Last Updated: {{ asset.updated_at|date:"M d, Y, h:i A" }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS -->
+          <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pt-2">
+            <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary px-4 py-2">
+              <i class="fa-solid fa-arrow-left me-2"></i>Back to Assets
+            </a>
+            <div class="d-flex gap-2">
+              <a href="{% url 'assets:asset_update' asset.pk %}" class="btn btn-warning px-4 py-2 fw-semibold text-dark">
+                <i class="fa-solid fa-pen-to-square me-2"></i>Edit Asset
+              </a>
+              <a href="{% url 'assets:asset_delete' asset.pk %}" class="btn btn-outline-danger px-4 py-2">
+                <i class="fa-regular fa-trash-can me-2"></i>Delete
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END ASSET DETAIL SECTION -->
+
+{% endblock content %}

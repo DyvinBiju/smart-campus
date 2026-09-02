@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  Asset Management - SmartCampus
+{% endblock title %}
+
+{% block content %}
+
+<!-- START HEADER BANNER -->
+<section class="section-top">
+  <div class="container">
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title">
+        <h1>Asset Management</h1>
+        <ul>
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li> / Assets</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END HEADER BANNER -->
+
+<!-- START ASSET CONTENT -->
+<section class="section-padding bg-light">
+  <div class="container">
+
+    <!-- SUMMARY STATISTICS CARDS -->
+    <div class="row mb-4">
+      <div class="col-xl-3 col-sm-6 mb-3 mb-xl-0">
+        <div class="single-counter text-center p-3 rounded-4 shadow-sm bg-white border-bottom border-4 border-primary">
+          <i class="fa-solid fa-boxes-stacked fs-2 text-primary mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ total_count }}</h3>
+          <p class="text-muted mb-0 fw-semibold">Total Assets</p>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 mb-3 mb-xl-0">
+        <div class="single-counter text-center p-3 rounded-4 shadow-sm bg-white border-bottom border-4 border-success">
+          <i class="fa-solid fa-circle-check fs-2 text-success mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ active_count }}</h3>
+          <p class="text-muted mb-0 fw-semibold">Active & In-Use</p>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 mb-3 mb-xl-0">
+        <div class="single-counter text-center p-3 rounded-4 shadow-sm bg-white border-bottom border-4 border-warning">
+          <i class="fa-solid fa-screwdriver-wrench fs-2 text-warning mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ maintenance_count }}</h3>
+          <p class="text-muted mb-0 fw-semibold">Under Maintenance</p>
+        </div>
+      </div>
+      <div class="col-xl-3 col-sm-6 mb-3 mb-xl-0">
+        <div class="single-counter text-center p-3 rounded-4 shadow-sm bg-white border-bottom border-4 border-danger">
+          <i class="fa-solid fa-triangle-exclamation fs-2 text-danger mb-2"></i>
+          <h3 class="fw-bold mb-1">{{ damaged_count }}</h3>
+          <p class="text-muted mb-0 fw-semibold">Damaged Assets</p>
+        </div>
+      </div>
+    </div>
+    <!-- END SUMMARY STATISTICS CARDS -->
+
+    <!-- FILTER & SEARCH BAR -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+      <form method="get" class="row g-3 align-items-center">
+        <!-- Search Input -->
+        <div class="col-lg-4 col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="fa-solid fa-magnifying-glass text-muted"></i>
+            </span>
+            <input
+              type="text"
+              name="q"
+              class="form-control bg-light border-start-0"
+              placeholder="Search by code, name, location..."
+              value="{{ search_query }}"
+            />
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-lg-3 col-md-6">
+          <select name="status" class="form-select bg-light">
+            <option value="">All Statuses</option>
+            {% for code, label in status_choices %}
+              <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="col-lg-3 col-md-6">
+          <select name="category" class="form-select bg-light">
+            <option value="">All Categories</option>
+            {% for code, label in category_choices %}
+              <option value="{{ code }}" {% if selected_category == code %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="col-lg-2 col-md-6 d-flex gap-2">
+          <button type="submit" class="btn btn-primary w-100 fw-semibold py-2">
+            <i class="fa-solid fa-filter me-1"></i> Filter
+          </button>
+          {% if search_query or selected_status or selected_category %}
+            <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary py-2" title="Clear Filters">
+              <i class="fa-solid fa-rotate-left"></i>
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+    <!-- END FILTER & SEARCH BAR -->
+
+    <!-- ASSET LIST TABLE CARD -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+          <h3 class="fw-bold mb-1">Campus Assets</h3>
+          <p class="text-muted mb-0">Showing {{ assets|length }} asset{% if assets|length != 1 %}s{% endif %}</p>
+        </div>
+        <div>
+          <a href="{% url 'assets:asset_create' %}" class="btn_one d-inline-flex align-items-center">
+            <i class="fa-solid fa-plus me-2"></i> Add New Asset
+          </a>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" class="py-3">Asset Code</th>
+              <th scope="col" class="py-3">Asset Name</th>
+              <th scope="col" class="py-3">Category</th>
+              <th scope="col" class="py-3">Location</th>
+              <th scope="col" class="py-3 text-center">Status</th>
+              <th scope="col" class="py-3 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for asset in assets %}
+              <tr>
+                <!-- Asset Code -->
+                <td>
+                  <a href="{% url 'assets:asset_detail' asset.pk %}" class="fw-bold text-decoration-none text-primary">
+                    <i class="fa-solid fa-barcode me-1 text-muted"></i>{{ asset.asset_code }}
+                  </a>
+                </td>
+
+                <!-- Name -->
+                <td>
+                  <span class="fw-semibold text-dark">{{ asset.name }}</span>
+                </td>
+
+                <!-- Category -->
+                <td>
+                  <span class="badge bg-light text-dark border">
+                    <i class="fa-solid fa-tag me-1 text-secondary"></i>{{ asset.category }}
+                  </span>
+                </td>
+
+                <!-- Location -->
+                <td>
+                  <div>
+                    <i class="fa-solid fa-building me-1 text-muted"></i>{{ asset.building }}
+                    {% if asset.room %}
+                      <span class="text-muted">({{ asset.room }})</span>
+                    {% endif %}
+                  </div>
+                </td>
+
+                <!-- Status -->
+                <td class="text-center">
+                  <span class="badge {{ asset.status_badge_class }} px-3 py-2 rounded-pill">
+                    {{ asset.get_status_display }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-end">
+                  <div class="btn-group" role="group">
+                    <a
+                      href="{% url 'assets:asset_detail' asset.pk %}"
+                      class="btn btn-sm btn-outline-primary"
+                      title="View Details"
+                    >
+                      <i class="fa-regular fa-eye"></i>
+                    </a>
+                    <a
+                      href="{% url 'assets:asset_update' asset.pk %}"
+                      class="btn btn-sm btn-outline-warning"
+                      title="Edit Asset"
+                    >
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </a>
+                    <a
+                      href="{% url 'assets:asset_delete' asset.pk %}"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Delete Asset"
+                    >
+                      <i class="fa-regular fa-trash-can"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-5">
+                  <div class="text-muted">
+                    <i class="fa-solid fa-box-open fs-1 text-secondary opacity-50 mb-3 d-block"></i>
+                    <h5 class="fw-bold text-dark">No assets found</h5>
+                    <p class="mb-3">
+                      {% if search_query or selected_status or selected_category %}
+                        No assets match your search/filter criteria.
+                      {% else %}
+                        No assets have been registered in the system yet.
+                      {% endif %}
+                    </p>
+                    {% if search_query or selected_status or selected_category %}
+                      <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-rotate-left me-1"></i> Clear Filters
+                      </a>
+                    {% else %}
+                      <a href="{% url 'assets:asset_create' %}" class="btn_one btn-sm">
+                        <i class="fa-solid fa-plus me-1"></i> Add First Asset
+                      </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      {% if is_paginated %}
+        <nav class="mt-4" aria-label="Asset pagination">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">
+                  &laquo; Previous
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">
+                    {{ num }}
+                  </a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">
+                  Next &raquo;
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+
+    </div>
+    <!-- END ASSET LIST TABLE CARD -->
+
+  </div>
+</section>
+<!-- END ASSET CONTENT -->
+
+{% endblock content %}

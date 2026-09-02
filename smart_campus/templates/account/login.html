@@ -1,49 +1,100 @@
-{% extends "base.html" %}
-{% load i18n %}
-{% load crispy_forms_tags %}
+{% extends "allauth/layouts/entrance.html" %}
+{% load i18n static allauth account %}
 
-{% block title %}{% translate "Sign In" %} - SmartCampus{% endblock title %}
+{% block head_title %}
+  {% trans "Sign In" %}
+{% endblock head_title %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-header bg-primary text-white text-center py-4" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;">
-          <h3 class="fw-bold mb-1 text-white"><i class="fa-solid fa-right-to-bracket me-2"></i>Sign In</h3>
-          <p class="small text-white-50 mb-0">Access SmartCampus Operations & Student Portal</p>
-        </div>
-        <div class="card-body p-4">
-          <div class="alert alert-info border-0 rounded-3 mb-4" style="background-color: #eff6ff; color: #1e40af;">
-            <small class="fw-bold d-block"><i class="fa-solid fa-key me-1"></i> Quick Demo Accounts:</small>
-            <div class="small mt-1">
-              &bull; <strong>Student:</strong> <code>student1</code> / <code>securepassword123</code><br>
-              &bull; <strong>Admin:</strong> <code>admin1</code> / <code>securepassword123</code>
-            </div>
-          </div>
+<div class="text-center mb-4">
+  <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px; font-size: 24px;">
+    <i class="fa-solid fa-right-to-bracket"></i>
+  </div>
+  <h3 class="fw-bold mb-1 text-dark">{% trans "Sign In" %}</h3>
+  <p class="text-muted small">
+    {% trans "Access your SmartCampus account to report issues, track requests, and manage campus resources." %}
+  </p>
+</div>
 
-          <form class="login" method="POST" action="{% url 'account_login' %}">
-            {% csrf_token %}
-            {{ form|crispy }}
-            {% if redirect_field_value %}
-              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-            {% endif %}
-            
-            <div class="d-grid mt-4">
-              <button class="btn btn-primary rounded-pill py-3 fw-bold" type="submit">
-                <i class="fa-solid fa-right-to-bracket me-2"></i>Sign In
-              </button>
-            </div>
-          </form>
-
-          <div class="text-center mt-4 pt-3 border-top">
-            <p class="small text-muted mb-1">Don't have an account?</p>
-            <a href="{% url 'account_signup' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Create Account</a>
-            <a href="{% url 'dashboard:index' %}" class="btn btn-link btn-sm text-decoration-none text-muted ms-2">Continue in Preview Mode</a>
-          </div>
-        </div>
+{% url 'account_login' as login_url %}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-dismissible fade show {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} py-2 px-3 small mb-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
+    {% endfor %}
+  {% endif %}
+
+<form method="post" action="{{ login_url }}">
+  {% csrf_token %}
+
+  {% if redirect_field_value %}
+    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+  {% endif %}
+
+  <div class="mb-3">
+    <label for="id_login" class="form-label fw-semibold small text-dark">{% trans "Username or College Email" %}</label>
+    <div class="input-group">
+      <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-user text-muted"></i></span>
+      <input type="text" name="login" id="id_login" class="form-control border-start-0 ps-0" placeholder="{% trans 'Username or college email' %}" autofocus required {% if form.login.value %}value="{{ form.login.value }}"{% endif %}>
     </div>
+    {% if form.login.errors %}
+      <div class="text-danger small mt-1">{{ form.login.errors.0 }}</div>
+    {% endif %}
+  </div>
+
+  <div class="mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <label for="id_password" class="form-label fw-semibold small text-dark mb-0">{% trans "Password" %}</label>
+      {% if url_reset_password %}
+        <a href="{{ url_reset_password }}" class="small text-decoration-none text-primary">{% trans "Forgot password?" %}</a>
+      {% elif url_password_reset %}
+        <a href="{{ url_password_reset }}" class="small text-decoration-none text-primary">{% trans "Forgot password?" %}</a>
+      {% endif %}
+    </div>
+    <div class="input-group">
+      <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
+      <input type="password" name="password" id="id_password" class="form-control border-start-0 ps-0" placeholder="{% trans 'Enter your password' %}" required>
+    </div>
+    {% if form.password.errors %}
+      <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+    {% endif %}
+  </div>
+
+  {% if form.remember %}
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" name="remember" id="id_remember" {% if form.remember.value %}checked{% endif %}>
+      <label class="form-check-label small text-muted" for="id_remember">
+        {% trans "Remember me" %}
+      </label>
+    </div>
+  {% endif %}
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger py-2 px-3 small mb-3">
+      {{ form.non_field_errors.0 }}
+    </div>
+  {% endif %}
+
+  <div class="d-grid mb-3">
+    <button type="submit" class="btn btn-primary rounded-pill py-2 fw-semibold fs-6">
+      <i class="fa-solid fa-right-to-bracket me-1"></i> {% trans "Sign In" %}
+    </button>
+  </div>
+</form>
+
+<div class="text-center pt-3 border-top mt-3">
+  <p class="text-muted small mb-2">
+    {% trans "Don't have an account?" %}
+  </p>
+  <div class="d-flex justify-content-center gap-2 flex-wrap">
+    <a href="{% url 'users:student_signup' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-semibold">
+      <i class="fa-solid fa-graduation-cap me-1"></i> {% trans "Sign Up as Student" %}
+    </a>
+    <a href="{% url 'users:faculty_signup' %}" class="btn btn-outline-info btn-sm rounded-pill px-3 py-1 fw-semibold">
+      <i class="fa-solid fa-chalkboard-user me-1"></i> {% trans "Sign Up as Faculty" %}
+    </a>
   </div>
 </div>
 {% endblock content %}

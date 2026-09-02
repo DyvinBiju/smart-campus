@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if item %}Edit Inventory Item{% else %}Add Inventory Item{% endif %} - SmartCampus
+{% endblock title %}
+
+{% block content %}
+<section class="section-padding bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-xl-8 col-lg-9">
+        <div class="mb-4">
+          <h1 class="fw-bold mb-2">{% if item %}Edit Inventory Item{% else %}Add Inventory Item{% endif %}</h1>
+          <p class="text-secondary mb-0">{% if item %}Update the details for this campus resource.{% else %}Add a resource to the campus inventory.{% endif %}</p>
+        </div>
+
+        <div class="bg-white rounded-4 shadow-sm p-4 p-md-5">
+          <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="row g-4">
+              <div class="col-md-6">
+                <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">Name</label>
+                {{ form.name }}
+                {% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="col-md-6">
+                <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">Category</label>
+                {{ form.category }}
+                {% for error in form.category.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="col-md-4">
+                <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold">Quantity</label>
+                {{ form.quantity }}
+                {% for error in form.quantity.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="col-md-4">
+                <label for="{{ form.minimum_quantity.id_for_label }}" class="form-label fw-semibold">Minimum Quantity</label>
+                {{ form.minimum_quantity }}
+                {% for error in form.minimum_quantity.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="col-md-4">
+                <label for="{{ form.unit.id_for_label }}" class="form-label fw-semibold">Unit</label>
+                {{ form.unit }}
+                {% for error in form.unit.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+              <div class="col-12">
+                <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">Description</label>
+                {{ form.description }}
+                {% for error in form.description.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+              </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 mt-4 pt-3 border-top">
+              <button type="submit" class="btn_one border-0 px-4 py-3"><i class="fa-solid fa-check me-2"></i>Save</button>
+              {% if item %}
+                <a href="{% url 'inventory:detail' item.pk %}" class="header-btn px-4 py-3">Cancel</a>
+              {% else %}
+                <a href="{% url 'inventory:list' %}" class="header-btn px-4 py-3">Cancel</a>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

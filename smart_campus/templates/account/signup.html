@@ -1,39 +1,47 @@
-{% extends "base.html" %}
-{% load i18n %}
-{% load crispy_forms_tags %}
+{% extends "allauth/layouts/entrance.html" %}
+{% load i18n static %}
 
-{% block title %}{% translate "Sign Up" %} - SmartCampus{% endblock title %}
+{% block head_title %}
+  {% trans "Sign Up - Select Registration Type" %}
+{% endblock head_title %}
 
 {% block content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-header bg-primary text-white text-center py-4" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;">
-          <h3 class="fw-bold mb-1 text-white"><i class="fa-solid fa-user-plus me-2"></i>Create Account</h3>
-          <p class="small text-white-50 mb-0">Join SmartCampus Operations & Student Portal</p>
-        </div>
-        <div class="card-body p-4">
-          <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
-            {% csrf_token %}
-            {{ form|crispy }}
-            {% if redirect_field_value %}
-              <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-            {% endif %}
-            <div class="d-grid mt-4">
-              <button class="btn btn-primary rounded-pill py-3 fw-bold" type="submit">
-                <i class="fa-solid fa-user-plus me-2"></i>Sign Up
-              </button>
-            </div>
-          </form>
-
-          <div class="text-center mt-4 pt-3 border-top">
-            <p class="small text-muted mb-1">Already have an account?</p>
-            <a href="{% url 'account_login' %}" class="btn btn-outline-primary btn-sm rounded-pill px-4">Sign In</a>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="text-center mb-4">
+  <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center mb-2" style="width: 65px; height: 65px; font-size: 28px;">
+    <i class="fa-solid fa-user-plus"></i>
   </div>
+  <h3 class="fw-bold mb-1 text-dark">{% trans "Create Your Account" %}</h3>
+  <p class="text-muted small">
+    {% trans "Select your campus role below to continue with the appropriate registration form." %}
+  </p>
+</div>
+
+<div class="d-flex flex-column gap-3 mb-4">
+  <a href="{% url 'users:student_signup' %}" class="btn btn-outline-primary p-3 rounded-4 text-start d-flex align-items-center gap-3 text-decoration-none shadow-sm transition">
+    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; font-size: 22px;">
+      <i class="fa-solid fa-graduation-cap"></i>
+    </div>
+    <div>
+      <h6 class="fw-bold mb-0 text-dark">{% trans "Student Registration" %}</h6>
+      <p class="text-muted small mb-0">{% trans "For enrolled students to report and track campus issues." %}</p>
+    </div>
+  </a>
+
+  <a href="{% url 'users:faculty_signup' %}" class="btn btn-outline-info p-3 rounded-4 text-start d-flex align-items-center gap-3 text-decoration-none shadow-sm transition">
+    <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center flex-shrink-0" style="width: 50px; height: 50px; font-size: 22px;">
+      <i class="fa-solid fa-chalkboard-user"></i>
+    </div>
+    <div>
+      <h6 class="fw-bold mb-0 text-dark">{% trans "Faculty / Teacher Registration" %}</h6>
+      <p class="text-muted small mb-0">{% trans "For faculty members and teaching staff." %}</p>
+    </div>
+  </a>
+</div>
+
+<div class="text-center pt-3 border-top">
+  <p class="text-muted small mb-0">
+    {% trans "Already have an account?" %}
+    <a href="{% url 'account_login' %}" class="fw-semibold text-primary">{% trans "Sign In" %}</a>
+  </p>
 </div>
 {% endblock content %}

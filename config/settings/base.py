@@ -53,8 +53,8 @@ elif os.getenv("POSTGRES_DB", default=None):
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": env.str("POSTGRES_DB"),
-            "USER": env.str("POSTGRES_USER"),
-            "PASSWORD": env.str("POSTGRES_PASSWORD"),
+            "USER": env.str("POSTGRES_USER", default="postgres"),
+            "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
             "HOST": env.str("POSTGRES_HOST", default="postgres"),
             "PORT": env.str("POSTGRES_PORT", default="5432"),
         },
@@ -66,6 +66,7 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
 
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
@@ -103,6 +104,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "smart_campus.users",
     "smart_campus.assets",
+    "smart_campus.inventory",
     "smart_campus.dashboard",
     # Your stuff: custom apps go here
 ]
@@ -288,11 +290,11 @@ REDIS_SSL = REDIS_URL.startswith("rediss://")
 # ------------------------------------------------------------------------------
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
 # https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_LOGIN_METHODS = {"username"}
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 # https://docs.allauth.org/en/latest/account/configuration.html
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION = "none"
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_ADAPTER = "smart_campus.users.adapters.AccountAdapter"
 # https://docs.allauth.org/en/latest/account/forms.html

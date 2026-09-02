@@ -276,3 +276,5 @@ smart_campus/media/
 .envs/*
 !.envs/.local/
 .envs/.production/
+
+db.sqlite3

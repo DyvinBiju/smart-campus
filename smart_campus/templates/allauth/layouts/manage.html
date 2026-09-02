@@ -1,11 +1,46 @@
 {% extends "base.html" %}
+{% load i18n static %}
 
 {% block title %}
   {% block head_title %}
-  {% endblock head_title %}
+    {% trans "Account Management" %}
+  {% endblock head_title %} | SmartCampus
 {% endblock title %}
 
 {% block main %}
-  {% block content %}
-  {% endblock content %}
+<!-- START SECTION TOP -->
+<section class="section-top">
+  <div class="container">
+    <div class="col-lg-10 offset-lg-1 text-center">
+      <div class="section-top-title wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.3s">
+        <h1>
+          {% block page_title %}
+            {% trans "Account Settings" %}
+          {% endblock page_title %}
+        </h1>
+        <ul>
+          <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+          <li> / {% trans "Settings" %}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END SECTION TOP -->
+
+<!-- START MANAGE CONTENT SECTION -->
+<section class="manage_account_area section-padding bg-light">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+          {% block content %}
+          {% endblock content %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END MANAGE CONTENT SECTION -->
 {% endblock main %}
+
