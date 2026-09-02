@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Sign Out" %} - SmartCampus{% endblock title %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 text-center">
+      <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="avatar bg-light text-primary rounded-circle d-inline-flex align-items-center justify-content-center fw-bold fs-2 shadow-sm mb-3 mx-auto" style="width: 80px; height: 80px;">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </div>
+        <h3 class="fw-bold mb-2 text-dark">Sign Out</h3>
+        <p class="text-muted mb-4">Are you sure you want to sign out of your SmartCampus account?</p>
+        <form method="post" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+          {% endif %}
+          <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'dashboard:index' %}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+            <button class="btn btn-danger rounded-pill px-4 fw-bold" type="submit">Sign Out</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

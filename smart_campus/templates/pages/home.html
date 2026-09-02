@@ -206,6 +206,82 @@
 </section>
 <!-- END WHAT CAN YOU REPORT -->			
 
+<!-- START RAISE COMPLAINT SECTION -->
+<section id="raise-complaint" class="section-padding bg-white">
+  <div class="container">
+    <div class="section-title text-center mb-5">
+      <h2 class="fw-bold">Raise a Campus Complaint</h2>
+      <p class="text-secondary mt-2">Encountered a problem on campus? Fill out the form below to report it directly to administration.</p>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="p-4 p-md-5 rounded-4 shadow-sm bg-light border">
+          <form action="{% url 'dashboard:submit-complaint' %}" method="POST">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label for="title" class="form-label fw-semibold text-dark">Complaint Title <span class="text-danger">*</span></label>
+                <input type="text" name="title" id="title" class="form-control form-control-lg" placeholder="e.g., Water leakage in Hostel Block C, Smart board issue" required />
+              </div>
+              <div class="col-md-4">
+                <label for="category" class="form-label fw-semibold text-dark">Category</label>
+                <select name="category" id="category" class="form-select form-select-lg">
+                  <option value="COMPLAINT" selected>Classroom / Hostel</option>
+                  <option value="MAINTENANCE">Electrical & Plumbing</option>
+                  <option value="ASSET">Hardware & IT Assets</option>
+                  <option value="INVENTORY">Supplies & Furniture</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label for="user_name" class="form-label fw-semibold text-dark">Your Name / Student ID</label>
+                <input type="text" name="user_name" id="user_name" class="form-control" placeholder="Enter your name or leave blank for logged in profile" value="{% if request.user.is_authenticated %}{{ request.user.name|default:request.user.username }}{% endif %}" />
+              </div>
+              <div class="col-12">
+                <label for="description" class="form-label fw-semibold text-dark">Issue Description</label>
+                <textarea name="description" id="description" rows="4" class="form-control" placeholder="Describe the location, urgency, and details of the problem..."></textarea>
+              </div>
+              <div class="col-12 text-end mt-4">
+                <button type="submit" class="btn_one px-5 py-3 border-0">
+                  <i class="fa-solid fa-paper-plane me-2"></i>Submit Complaint
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END RAISE COMPLAINT SECTION -->
+
+<!-- START MY COMPLAINTS TRACKING SECTION -->
+<section id="my-complaints" class="section-padding bg-light">
+  <div class="container">
+    <div class="section-title text-center mb-4">
+      <h2 class="fw-bold">Track Complaints & Campus Updates</h2>
+      <p class="text-secondary mt-2">View real-time resolution metrics and manage your reported complaints.</p>
+    </div>
+    <div class="row justify-content-center text-center">
+      <div class="col-md-8">
+        <div class="p-4 rounded-4 bg-white shadow-sm border mb-4">
+          <i class="fa-solid fa-user-graduate fs-1 text-primary mb-3"></i>
+          <h4 class="fw-bold mb-2">Student & User Portal</h4>
+          <p class="text-muted mb-4">Access your full complaints audit log, review status updates, and download operation reports in your interactive portal dashboard.</p>
+          <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'dashboard:student' %}" class="btn_one px-4 py-3">
+              <i class="fa-solid fa-gauge me-2"></i>Open Student Dashboard
+            </a>
+            <a href="{% url 'dashboard:admin' %}" class="header-btn px-4 py-3">
+              <i class="fa-solid fa-user-shield me-2"></i>Admin Dashboard View
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- END MY COMPLAINTS TRACKING SECTION -->
+
 <!-- START WHY SMARTCAMPUS -->
 <section class="section-padding py-5">
   <div class="container">
@@ -247,3 +323,4 @@
 </section>
 <!-- END WHY SMARTCAMPUS -->
 {% endblock content %}
+

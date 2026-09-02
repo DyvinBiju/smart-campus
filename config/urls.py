@@ -20,6 +20,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
     path("assets/", include("smart_campus.assets.urls")),
+    path("dashboard/", include("smart_campus.dashboard.urls", namespace="dashboard")),
     # ...
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
