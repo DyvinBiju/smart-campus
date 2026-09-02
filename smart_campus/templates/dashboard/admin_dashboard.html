@@ -1,0 +1,412 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block active_admin_overview %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  .filter-bar {
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+  }
+
+  .trend-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+
+  .status-dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+  }
+</style>
+{% endblock extra_css %}
+
+{% block dashboard_content %}
+<!-- Header Title & Action Buttons -->
+<div class="page-title-box flex-wrap gap-2">
+  <div>
+    <h4>Campus Operations & Analytics</h4>
+    <p class="text-muted mb-0">High-level statistics, reports generators, and module integrations monitor.</p>
+  </div>
+  <div>
+    <a href="{% url 'dashboard:reports' %}?date_range={{ filters.date_range }}&category={{ filters.category }}&format=print"
+      target="_blank" class="btn btn-outline-primary me-2 rounded-pill px-4">
+      <i class="fa-solid fa-print me-1"></i> Print Report
+    </a>
+    <a href="{% url 'dashboard:reports' %}?date_range={{ filters.date_range }}&category={{ filters.category }}&format=csv"
+      class="btn btn-primary rounded-pill px-4">
+      <i class="fa-solid fa-file-csv me-1"></i> Export CSV
+    </a>
+  </div>
+</div>
+
+<!-- Interactive Filters Bar -->
+<form method="GET" class="filter-bar">
+  <div class="row align-items-end g-3">
+    <div class="col-md-3">
+      <label for="date_range" class="form-label small fw-semibold text-muted">Date Filter</label>
+      <select name="date_range" id="date_range" class="form-select">
+        <option value="all" {% if filters.date_range == "all" %}selected{% endif %}>All Time</option>
+        <option value="today" {% if filters.date_range == "today" %}selected{% endif %}>Today</option>
+        <option value="7_days" {% if filters.date_range == "7_days" %}selected{% endif %}>Last 7 Days</option>
+        <option value="30_days" {% if filters.date_range == "30_days" %}selected{% endif %}>Last 30 Days</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="category" class="form-label small fw-semibold text-muted">Activity Type</label>
+      <select name="category" id="category" class="form-select">
+        <option value="all" {% if filters.category == "all" %}selected{% endif %}>All Types</option>
+        <option value="COMPLAINT" {% if filters.category == "COMPLAINT" %}selected{% endif %}>Complaints</option>
+        <option value="MAINTENANCE" {% if filters.category == "MAINTENANCE" %}selected{% endif %}>Maintenance Tasks
+        </option>
+        <option value="ASSET" {% if filters.category == "ASSET" %}selected{% endif %}>Assets Updates</option>
+        <option value="INVENTORY" {% if filters.category == "INVENTORY" %}selected{% endif %}>Inventory Updates</option>
+        <option value="USER" {% if filters.category == "USER" %}selected{% endif %}>User Directory Logs</option>
+        <option value="SYSTEM" {% if filters.category == "SYSTEM" %}selected{% endif %}>System Logs</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="status" class="form-label small fw-semibold text-muted">Status</label>
+      <select name="status" id="status" class="form-select">
+        <option value="all" {% if filters.status == "all" %}selected{% endif %}>All Statuses</option>
+        <option value="pending" {% if filters.status == "pending" %}selected{% endif %}>Pending / Open</option>
+        <option value="in_progress" {% if filters.status == "in_progress" %}selected{% endif %}>In Progress</option>
+        <option value="resolved" {% if filters.status == "resolved" %}selected{% endif %}>Resolved / Closed</option>
+      </select>
+    </div>
+
+    <div class="col-md-3 d-flex gap-2">
+      <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-1"></i> Apply</button>
+      <a href="{% url 'dashboard:index' %}" class="btn btn-outline-secondary w-100">Reset</a>
+    </div>
+  </div>
+</form>
+
+<!-- Module Connection Directory Health Indicators -->
+<div class="dash-card mb-4 bg-light border-0">
+  <div class="p-3 d-flex flex-wrap gap-4 align-items-center justify-content-between">
+    <div class="fw-bold text-dark"><i class="fa-solid fa-network-wired me-2 text-primary"></i> Module Integration
+      Status:</div>
+    <div class="d-flex flex-wrap gap-3">
+      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
+        <span class="status-dot bg-success"></span>
+        <span class="small text-muted">Users Directory: <strong>Active</strong></span>
+      </div>
+      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
+        {% if modules.assets.available %}
+        <span class="status-dot bg-success"></span>
+        <span class="small text-muted">Assets App: <strong>Connected</strong></span>
+        {% else %}
+        <span class="status-dot bg-secondary"></span>
+        <span class="small text-muted">Assets App: <strong class="text-warning">Integration Pending</strong></span>
+        {% endif %}
+      </div>
+      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
+        {% if modules.inventory.available %}
+        <span class="status-dot bg-success"></span>
+        <span class="small text-muted">Inventory App: <strong>Connected</strong></span>
+        {% else %}
+        <span class="status-dot bg-secondary"></span>
+        <span class="small text-muted">Inventory App: <strong class="text-warning">Integration Pending</strong></span>
+        {% endif %}
+      </div>
+      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
+        {% if modules.complaints.available %}
+        <span class="status-dot bg-success"></span>
+        <span class="small text-muted">Complaints App: <strong>Connected</strong></span>
+        {% else %}
+        <span class="status-dot bg-secondary"></span>
+        <span class="small text-muted">Complaints App: <strong class="text-warning">Integration Pending</strong></span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 1: Key Operational Metric Cards -->
+<div class="row">
+  <!-- Total Complaints -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dash-card">
+      <div class="dash-card-body p-3">
+        <div class="widget-icon bg-secondary text-white mb-2"
+          style="width: 38px; height: 38px; font-size: 1rem; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-folder-open"></i>
+        </div>
+        <div class="widget-title" style="font-size: 0.75rem;">Total Complaints</div>
+        <div class="widget-value" style="font-size: 1.5rem; font-weight: 700;">{{ complaints_stats.total }}</div>
+        <div class="small text-muted" style="font-size: 0.7rem;">All-time logged</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Complaints -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dash-card">
+      <div class="dash-card-body p-3">
+        <div class="widget-icon bg-warning text-dark mb-2"
+          style="width: 38px; height: 38px; font-size: 1rem; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-clock"></i>
+        </div>
+        <div class="widget-title" style="font-size: 0.75rem;">Pending Complaints</div>
+        <div class="widget-value text-warning" style="font-size: 1.5rem; font-weight: 700;">{{ complaints_stats.pending }}</div>
+        <div class="small text-muted" style="font-size: 0.7rem;">Awaiting resolution</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolved Complaints -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dash-card">
+      <div class="dash-card-body p-3">
+        <div class="widget-icon bg-success text-white mb-2"
+          style="width: 38px; height: 38px; font-size: 1rem; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="widget-title" style="font-size: 0.75rem;">Resolved Complaints</div>
+        <div class="widget-value text-success" style="font-size: 1.5rem; font-weight: 700;">{{ complaints_stats.resolved }}</div>
+        <div class="small text-muted" style="font-size: 0.7rem;">Completed tasks</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assets -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dash-card">
+      <div class="dash-card-body p-3">
+        <div class="widget-icon bg-info text-white mb-2"
+          style="width: 38px; height: 38px; font-size: 1rem; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-cubes"></i>
+        </div>
+        <div class="widget-title" style="font-size: 0.75rem;">Total Assets</div>
+        <div class="widget-value text-info" style="font-size: 1.5rem; font-weight: 700;">{{ assets_stats.total }}</div>
+        <div class="small text-muted" style="font-size: 0.7rem;">Active: {{ assets_stats.active }} &middot; Maint: {{ assets_stats.maintenance }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Items -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dash-card">
+      <div class="dash-card-body p-3">
+        <div class="widget-icon bg-primary text-white mb-2"
+          style="width: 38px; height: 38px; font-size: 1rem; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-warehouse"></i>
+        </div>
+        <div class="widget-title" style="font-size: 0.75rem;">Inventory Items</div>
+        <div class="widget-value text-primary" style="font-size: 1.5rem; font-weight: 700;">{{ inventory_stats.total }}
+        </div>
+        <div class="small text-danger" style="font-size: 0.7rem;">Low stock: {{ inventory_stats.low_stock }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maintenance Issues -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="dash-card">
+      <div class="dash-card-body p-3">
+        <div class="widget-icon bg-danger text-white mb-2"
+          style="width: 38px; height: 38px; font-size: 1rem; border-radius: 0.5rem; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-screwdriver-wrench"></i>
+        </div>
+        <div class="widget-title" style="font-size: 0.75rem;">Maintenance Tasks</div>
+        <div class="widget-value text-danger" style="font-size: 1.5rem; font-weight: 700;">{{ complaints_stats.in_progress }}</div>
+        <div class="small text-muted" style="font-size: 0.7rem;">Currently in progress</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 2: Charts and Activity logs -->
+<div class="row">
+  <!-- Chart Column -->
+  <div class="col-lg-8">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span><i class="fa-solid fa-chart-line me-2 text-primary"></i> Complaints and Tasks Trends</span>
+      </div>
+      <div class="dash-card-body">
+        <div class="trend-chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Logs Column -->
+  <div class="col-lg-4">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span><i class="fa-solid fa-list-check me-2 text-primary"></i> System Activity Audit</span>
+      </div>
+      <div class="dash-card-body p-0" style="max-height: 380px; overflow-y: auto;">
+        <div class="list-group list-group-flush">
+          {% for act in recent_activities %}
+          <div class="list-group-item py-3">
+            <div class="d-flex justify-content-between mb-1 align-items-center">
+              <span class="badge 
+                    {% if act.activity_type == 'COMPLAINT' %}bg-danger text-white
+                    {% elif act.activity_type == 'MAINTENANCE' %}bg-warning text-dark
+                    {% elif act.activity_type == 'ASSET' %}bg-info text-white
+                    {% elif act.activity_type == 'INVENTORY' %}bg-secondary text-white
+                    {% elif act.activity_type == 'USER' %}bg-primary text-white
+                    {% else %}bg-dark text-white{% endif %}">
+                {{ act.get_activity_type_display }}
+              </span>
+              <small class="text-muted" style="font-size: 0.7rem;">{{ act.timestamp|timesince }} ago</small>
+            </div>
+            <h6 class="small fw-bold text-dark mb-1">{{ act.title }}</h6>
+            <p class="small text-muted mb-1" style="font-size: 0.75rem;">{{ act.description }}</p>
+            <div class="d-flex align-items-center justify-content-between mt-1" style="font-size: 0.7rem;">
+              <span class="text-muted">By: <strong>{{ act.user_name }}</strong></span>
+              {% if act.status %}
+              <span class="badge bg-light text-dark border">{{ act.status }}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-4 text-muted">
+            No recent activities found.
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Row 3: Modular Integration Details & Walkthrough guides -->
+<div class="row">
+  <!-- Assets Module Details card -->
+  <div class="col-md-6">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span><i class="fa-solid fa-cubes me-2 text-info"></i> Asset Integration Hub</span>
+      </div>
+      <div class="dash-card-body">
+        {% if modules.assets.available %}
+        <p class="text-success small"><i class="fa-solid fa-circle-check"></i> Connected to Real Asset Registry model.
+        </p>
+        <p class="small">The dashboard is successfully extracting device metadata and statuses from the assets app
+          database.</p>
+        {% else %}
+        <div class="text-center py-2">
+          <i class="fa-solid fa-square-rss text-muted mb-3" style="font-size: 2.5rem;"></i>
+          <h6>Integration Pending</h6>
+          <p class="small text-muted">
+            The Assets app model `Asset` is currently unmigrated or unconfigured.
+            Our dashboard's modular structure will automatically bind to it when its developer creates the model class
+            and runs database migrations.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Inventory Module Details card -->
+  <div class="col-md-6">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span><i class="fa-solid fa-warehouse me-2 text-secondary"></i> Inventory Integration Hub</span>
+      </div>
+      <div class="dash-card-body">
+        {% if modules.inventory.available %}
+        <p class="text-success small"><i class="fa-solid fa-circle-check"></i> Connected to Real InventoryItem model.
+        </p>
+        <p class="small">Stock level charts are automatically populated from the inventory catalog database.</p>
+        {% else %}
+        <div class="text-center py-2">
+          <i class="fa-solid fa-network-wired text-muted mb-3" style="font-size: 2.5rem;"></i>
+          <h6>Integration Pending</h6>
+          <p class="small text-muted">
+            The Inventory app model `InventoryItem` is currently not configured.
+            When configured, the stock levels, reorder quantities, and catalog reports will render dynamically in this
+            widget.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js CDN for Interactive Dashboards -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script>
+  // Initialize chart once page loads
+  window.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    const labels = {{ trends.labels| safe
+  }};
+  const complaintsData = {{ trends.complaints| safe }};
+  const assetsData = {{ trends.assets| safe }};
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Complaints/Maintenance Tasks',
+          data: complaintsData,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.05)',
+          tension: 0.3,
+          fill: true,
+          borderWidth: 3,
+        },
+        {
+          label: 'Equipment Status Updates',
+          data: assetsData,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37, 99, 235, 0.05)',
+          tension: 0.3,
+          fill: true,
+          borderWidth: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              family: 'DM Sans',
+              weight: '600'
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: '#f1f5f9'
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          }
+        }
+      }
+    }
+  });
+    });
+</script>
+{% endblock dashboard_content %}

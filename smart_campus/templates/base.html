@@ -77,25 +77,26 @@
   <div id="navigation" class="navbar-light bg-faded site-navigation">
     <div class="container-fluid">
       <div class="row align-items-center">
-        <div class="col-20 align-self-center">
+        <div class="col-lg-3 col-6 align-self-center">
           <div class="site-logo">
             <a href="{% url 'home' %}"><img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo"></a>
           </div>
         </div><!--- END Col -->
-
-        <div class="col-60 d-flex justify-content-center">
+        
+        <div class="col-lg-6 col-12 d-flex justify-content-center">
           <nav id="main-menu">
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
-              <li><a href="#raise-complaint">Raise Complaint</a></li>
-              <li><a href="#my-complaints">My Complaints</a></li>
+              <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+              <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
+              <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
+              <li><a href="{% url 'dashboard:student' %}#complaint-log-section">Complaints</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
-              <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
           </nav>
         </div><!--- END Col -->
-
-        <div class="col-20 d-none d-xl-block text-end align-self-center">
+        
+        <div class="col-lg-3 d-none d-lg-block text-end align-self-center">
           {% if request.user.is_authenticated %}
           <span class="header-btn me-2 text-dark bg-transparent fw-semibold" style="cursor: default;"><i
               class="fa-solid fa-user me-1 text-primary"></i> {{ request.user.name|default:request.user.username
@@ -126,11 +127,12 @@
 
         <ul class="mobile_menu">
           <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
           <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
-          <li><a href="#raise-complaint">Raise Complaint</a></li>
-          <li><a href="#my-complaints">My Complaints</a></li>
+          <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
+          <li><a href="{% url 'dashboard:student' %}#complaint-log-section">Complaints</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
-          <li><a href="{% url 'about' %}">Contact</a></li>
+          <li><a href="{% url 'about' %}#contact">Contact</a></li>
           {% if request.user.is_authenticated %}
           <li><span class="text-white ps-3 fw-semibold"><i class="fa-solid fa-user me-1"></i> {{
               request.user.name|default:request.user.username }}</span></li>
@@ -181,10 +183,11 @@
             <h4>Quick Links</h4>
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
-              <li><a href="#raise-complaint">Raise Complaint</a></li>
-              <li><a href="#my-complaints">My Complaints</a></li>
+              <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+              <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
+              <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
+              <li><a href="{% url 'dashboard:student' %}#complaint-log-section">Complaints</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
-              <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
           </div>
         </div><!--- END COL -->
@@ -192,8 +195,8 @@
           <div class="single_footer">
             <h4>Support</h4>
             <ul>
-              <li><a href="{% url 'about' %}">Help</a></li>
-              <li><a href="{% url 'about' %}">Contact</a></li>
+              <li><a href="{% url 'about' %}">Help Center</a></li>
+              <li><a href="{% url 'about' %}#contact">Contact Desk</a></li>
             </ul>
           </div>
         </div><!--- END COL -->
