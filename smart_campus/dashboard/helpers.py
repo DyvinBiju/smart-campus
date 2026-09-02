@@ -190,9 +190,22 @@ def seed_mock_activities():
     )
 
 def get_assets_metrics(filters=None):
-    # Total, Active, Maintenance based on Activity model
+    AssetModel = is_model_available("assets", "Asset")
+    if AssetModel:
+        try:
+            total = AssetModel.objects.count()
+            active = AssetModel.objects.filter(status__iexact="ACTIVE").count()
+            maintenance = AssetModel.objects.filter(status__in=["UNDER_MAINTENANCE", "DAMAGED"]).count()
+            return {
+                "total": total,
+                "active": active,
+                "maintenance": maintenance
+            }
+        except DatabaseError:
+            pass
+
+    # Fallback to Activity model based metrics
     assets_qs = Activity.objects.filter(activity_type='ASSET')
-    
     if filters and filters.get("start_date"):
         assets_qs = assets_qs.filter(timestamp__gte=filters["start_date"])
         
@@ -207,8 +220,21 @@ def get_assets_metrics(filters=None):
     }
 
 def get_inventory_metrics(filters=None):
+    InventoryItemModel = is_model_available("inventory", "InventoryItem")
+    if InventoryItemModel:
+        try:
+            total = InventoryItemModel.objects.count()
+            # Low stock items where quantity <= minimum_quantity
+            from django.db.models import F
+            low_stock = InventoryItemModel.objects.filter(quantity__lte=F("minimum_quantity")).count()
+            return {
+                "total": total,
+                "low_stock": low_stock
+            }
+        except DatabaseError:
+            pass
+
     inv_qs = Activity.objects.filter(activity_type='INVENTORY')
-    
     if filters and filters.get("start_date"):
         inv_qs = inv_qs.filter(timestamp__gte=filters["start_date"])
         

@@ -430,15 +430,9 @@
           {% endif %}
         </li>
         <li>
-          {% if request.user.is_authenticated %}
-            <a href="{% url 'users:detail' request.user.username %}">
-              <i class="fa-solid fa-user-circle"></i> Profile Details
-            </a>
-          {% else %}
-            <a href="{% if current_role == 'admin' %}{% url 'users:detail' 'admin1' %}{% else %}{% url 'users:detail' 'student1' %}{% endif %}">
-              <i class="fa-solid fa-user-circle"></i> Profile (Preview)
-            </a>
-          {% endif %}
+          <span class="sidebar-link-text text-white-50 px-3 py-2 d-block small">
+            <i class="fa-solid fa-user-circle me-2"></i>{% if request.user.is_authenticated %}{{ request.user.username }}{% else %}{{ user_stats.name }}{% endif %}
+          </span>
         </li>
         {% if request.user.is_authenticated %}
           <li>
