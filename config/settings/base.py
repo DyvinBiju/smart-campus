@@ -52,7 +52,7 @@ elif os.getenv("POSTGRES_DB", default=None):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": env.str("POSTGRES_DB"),
+            "NAME": env.str("POSTGRES_DB", default="smart_campus"),
             "USER": env.str("POSTGRES_USER", default="postgres"),
             "PASSWORD": env.str("POSTGRES_PASSWORD", default="postgres"),
             "HOST": env.str("POSTGRES_HOST", default="postgres"),
