@@ -88,9 +88,10 @@
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
               <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
-              <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
+              <li><a href="{% url 'complaints:list' %}">Complaints</a></li>
+              <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
+              <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
-              <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
           </nav>
         </div><!--- END Col -->
@@ -126,9 +127,10 @@
 
         <ul class="mobile_menu">
           <li><a href="{% url 'home' %}">Home</a></li>
-          <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
           <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
           <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
+          <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
+          <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'about' %}">Contact</a></li>
           {% if request.user.is_authenticated %}

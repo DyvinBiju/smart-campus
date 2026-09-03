@@ -49,17 +49,29 @@
             <form method="post" action="{% url 'complaints:status_update' complaint.complaint_id %}">
               {% csrf_token %}
 
-              <div class="mb-4">
-                <label for="id_status" class="form-label fw-semibold">New Status <span class="text-danger">*</span></label>
+              <div class="mb-3">
+                <label for="id_status" class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
                 {{ form.status }}
-                <div class="form-text mt-2">
+                <div class="form-text mt-1">
                   Select status: <strong>Submitted</strong> &rarr; <strong>Under Review</strong> &rarr; <strong>In Progress</strong> &rarr; <strong>Resolved</strong>
                 </div>
               </div>
 
+              <div class="mb-3">
+                <label for="id_assigned_to" class="form-label fw-semibold">Assign Technician / Maintenance Staff</label>
+                {{ form.assigned_to }}
+                <div class="form-text">Assign a staff member responsible for working on this ticket.</div>
+              </div>
+
+              <div class="mb-4">
+                <label for="id_resolution_notes" class="form-label fw-semibold">Resolution / Action Notes</label>
+                {{ form.resolution_notes }}
+                <div class="form-text">Record work done, root cause, or resolution comments.</div>
+              </div>
+
               <div class="d-flex align-items-center gap-3 pt-2">
                 <button type="submit" class="btn btn-warning px-4 py-2 text-dark fw-semibold border-0">
-                  <i class="fa-solid fa-check me-2"></i>Update Status
+                  <i class="fa-solid fa-check me-2"></i>Save & Update
                 </button>
                 <a href="{% url 'complaints:detail' complaint.complaint_id %}" class="btn btn-light px-4 py-2 border">Cancel</a>
               </div>

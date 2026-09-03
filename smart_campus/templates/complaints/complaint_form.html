@@ -68,6 +68,12 @@
               </div>
 
               <div class="mb-3">
+                <label for="id_asset" class="form-label fw-semibold">Affected Asset (Optional)</label>
+                {{ form.asset }}
+                <div class="form-text">Select a specific campus asset if applicable (e.g. projector, computer, microscope).</div>
+              </div>
+
+              <div class="mb-3">
                 <label for="id_location" class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
                 {{ form.location }}
                 <div class="form-text">Specify building name, floor number, classroom or lab ID.</div>

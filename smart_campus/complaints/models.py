@@ -66,6 +66,36 @@ class Complaint(models.Model):
         related_name="complaints",
         verbose_name=_("Submitted By"),
     )
+    asset = models.ForeignKey(
+        "assets.Asset",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="complaints",
+        verbose_name=_("Affected Asset"),
+    )
+    assigned_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assigned_complaints",
+        verbose_name=_("Assigned To"),
+    )
+    assigned_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Assigned Date"),
+    )
+    resolution_notes = models.TextField(
+        blank=True,
+        verbose_name=_("Resolution Notes"),
+    )
+    resolved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Resolved Date"),
+    )
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name=_("Created Date"),
@@ -99,3 +129,39 @@ class Complaint(models.Model):
                 num = 1
             self.complaint_id = f"CMP-{num:04d}"
         super().save(*args, **kwargs)
+
+
+class ComplaintResource(models.Model):
+    """
+    Junction model tracking inventory items consumed to resolve a complaint.
+    """
+
+    complaint = models.ForeignKey(
+        Complaint,
+        on_delete=models.CASCADE,
+        related_name="resources_used",
+        verbose_name=_("Complaint"),
+    )
+    inventory_item = models.ForeignKey(
+        "inventory.InventoryItem",
+        on_delete=models.PROTECT,
+        related_name="complaint_usages",
+        verbose_name=_("Inventory Item"),
+    )
+    quantity_used = models.PositiveIntegerField(
+        default=1,
+        verbose_name=_("Quantity Used"),
+    )
+    used_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Date Used"),
+    )
+
+    class Meta:
+        verbose_name = _("Complaint Resource")
+        verbose_name_plural = _("Complaint Resources")
+        ordering = ["-used_at"]
+
+    def __str__(self):
+        return f"{self.quantity_used} x {self.inventory_item.name} ({self.complaint.complaint_id})"
+

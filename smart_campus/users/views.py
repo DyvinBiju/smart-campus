@@ -16,10 +16,13 @@ from smart_campus.users.forms import StudentSignupForm
 from smart_campus.users.models import User
 
 
+from django.utils.http import url_has_allowed_host_and_scheme
+
+
 class SmartCampusLoginView(LoginView):
     """
     Custom LoginView that authenticates the user normally,
-    and keeps the user on the login page with a success message.
+    and redirects to 'next' URL if specified, or stays on login page with success message.
     """
 
     def dispatch(self, request, *args, **kwargs):
@@ -27,8 +30,18 @@ class SmartCampusLoginView(LoginView):
 
     def form_valid(self, form):
         messages.success(self.request, _("Login successful! Welcome to SmartCampus."))
+        next_url = self.request.POST.get("next") or self.request.GET.get("next")
+        if next_url and url_has_allowed_host_and_scheme(
+            url=next_url,
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
+        ):
+            redirect_url = next_url
+        else:
+            redirect_url = reverse("account_login")
+
         try:
-            return form.login(self.request, redirect_url=reverse("account_login"))
+            return form.login(self.request, redirect_url=redirect_url)
         except ImmediateHttpResponse as e:
             return e.response
 
