@@ -55,8 +55,10 @@ def complaint_list(request):
     status_filter = request.GET.get("status", "").strip()
     scope_filter = request.GET.get("scope", "").strip()
 
-    # Role-based Queryset filtering
-    if user.is_superuser or user.role in [User.Role.ADMIN, User.Role.MAINTENANCE]:
+    is_admin_or_staff = user.is_superuser or user.role in [User.Role.ADMIN, User.Role.MAINTENANCE] or user.is_staff
+
+    # Role-based Queryset filtering: Admin/Maintenance sees all complaints; regular users see only their own.
+    if is_admin_or_staff:
         complaints = Complaint.objects.select_related("user", "asset", "assigned_to").all()
         if scope_filter == "my":
             complaints = complaints.filter(user=user)
@@ -91,6 +93,7 @@ def complaint_list(request):
 
     context = {
         "complaints": complaints,
+        "is_admin_or_staff": is_admin_or_staff,
         "search_query": search_query,
         "category_filter": category_filter,
         "priority_filter": priority_filter,

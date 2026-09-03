@@ -1,7 +1,9 @@
 import csv
 from datetime import datetime, timedelta
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import AnonymousUser
+from django.db import models
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.timezone import now
@@ -20,42 +22,30 @@ from .helpers import (
 
 def get_current_role_and_user(request):
     """
-    Determines if the active preview mode is staff/admin and returns the corresponding user.
+    Determines user staff/admin status and returns (is_staff, user).
     """
-    # Trigger auto-seeding to ensure database has records
     seed_mock_activities()
-    
     user = request.user
     if user.is_authenticated:
-        is_staff = user.is_staff or user.is_superuser
+        is_staff = user.is_staff or user.is_superuser or user.is_admin_user or user.is_maintenance_staff
     else:
-        # Bypassing login: check session variable (default to admin for preview)
-        preview_role = request.session.get("preview_role", "admin")
-        is_staff = (preview_role == "admin")
-        
-        # Resolve to seed user accounts
-        try:
-            if is_staff:
-                user = User.objects.get(username="admin1")
-            else:
-                user = User.objects.get(username="student1")
-        except User.DoesNotExist:
-            user = AnonymousUser()
+        user = AnonymousUser()
+        is_staff = False
             
     return is_staff, user
 
-class DashboardIndexView(View):
+class DashboardIndexView(LoginRequiredMixin, View):
     """
     Landing redirector. Directs staff/admins to the Admin Operations dashboard,
-    and regular users (Students) to the Student portal dashboard.
+    and regular users (Students/Faculty) to the Student portal dashboard.
     """
     def get(self, request, *args, **kwargs):
-        is_staff, _ = get_current_role_and_user(request)
-        if is_staff:
+        user = request.user
+        if user.is_admin_user or user.is_maintenance_staff:
             return redirect("dashboard:admin")
         return redirect("dashboard:student")
 
-class StudentDashboardView(TemplateView):
+class StudentDashboardView(LoginRequiredMixin, TemplateView):
     """
     Portal for regular campus users (Students / non-admin staff).
     Displays personal stats, raised complaints summaries, and recent activity updates.
@@ -99,12 +89,19 @@ class StudentDashboardView(TemplateView):
         })
         return context
 
-class AdminDashboardView(TemplateView):
+class AdminDashboardView(LoginRequiredMixin, TemplateView):
     """
     Operations dashboard for Admin/Staff. Provides campus-wide metrics,
     charts, interactive filters (date range, category, status), and module health status.
     """
     template_name = "dashboard/admin_dashboard.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not (request.user.is_admin_user or request.user.is_maintenance_staff or request.user.is_staff):
+            return redirect("dashboard:student")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -140,7 +137,7 @@ class AdminDashboardView(TemplateView):
         
         # User Stats
         total_users = User.objects.count()
-        staff_users = User.objects.filter(is_staff=True).count()
+        staff_users = User.objects.filter(models.Q(is_staff=True) | models.Q(role__in=[User.Role.ADMIN, User.Role.MAINTENANCE])).count()
         student_users = total_users - staff_users
         
         # Query recent activities audit feed
@@ -195,16 +192,23 @@ class AdminDashboardView(TemplateView):
                 "assets": assets_trend,
             },
             "recent_activities": recent_activities,
-            "preview_mode": not self.request.user.is_authenticated,
+            "preview_mode": False,
             "current_role": "admin"
         })
         return context
 
-class ReportExportView(View):
+class ReportExportView(LoginRequiredMixin, View):
     """
     Generates operational reports displaying all project activities.
     Supports print layout and CSV export.
     """
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not (request.user.is_admin_user or request.user.is_maintenance_staff or request.user.is_staff):
+            return redirect("dashboard:student")
+        return super().dispatch(request, *args, **kwargs)
+
     def get(self, request, *args, **kwargs):
         # Ensure database is seeded
         seed_mock_activities()
@@ -286,17 +290,17 @@ class ReportExportView(View):
             from django.shortcuts import render
             return render(request, "dashboard/reports_export.html", context)
 
-class SwitchRoleView(View):
+class SwitchRoleView(LoginRequiredMixin, View):
     """
-    Enables developer/teammate testing to switch between admin and student preview roles without logging in.
+    Enables authenticated user to switch between views if authorized.
     """
     def get(self, request, *args, **kwargs):
         new_role = request.GET.get("role", "admin")
-        if new_role in ["admin", "student"]:
-            request.session["preview_role"] = new_role
-        return redirect("dashboard:index")
+        if new_role == "admin" and (request.user.is_admin_user or request.user.is_maintenance_staff or request.user.is_staff):
+            return redirect("dashboard:admin")
+        return redirect("dashboard:student")
 
-class SubmitComplaintView(View):
+class SubmitComplaintView(LoginRequiredMixin, View):
     """
     Handles complaint submission from the Home page or Student Portal.
     """
@@ -310,12 +314,9 @@ class SubmitComplaintView(View):
             messages.error(request, "Complaint title is required.")
             return redirect(request.META.get("HTTP_REFERER", "/#raise-complaint"))
             
-        user = request.user if request.user.is_authenticated else None
+        user = request.user
         if not user_name:
-            if user:
-                user_name = user.name or user.username
-            else:
-                user_name = "Campus User"
+            user_name = user.name or user.username
                 
         # Save activity
         log_activity(

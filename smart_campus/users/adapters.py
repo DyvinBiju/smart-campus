@@ -13,6 +13,8 @@ if typing.TYPE_CHECKING:
     from smart_campus.users.models import User
 
 
+from django.contrib import messages
+
 class AccountAdapter(DefaultAccountAdapter):
     error_messages = {
         **DefaultAccountAdapter.error_messages,
@@ -22,6 +24,19 @@ class AccountAdapter(DefaultAccountAdapter):
 
     def is_open_for_signup(self, request: HttpRequest) -> bool:
         return getattr(settings, "ACCOUNT_ALLOW_REGISTRATION", True)
+
+    def add_message(
+        self,
+        request: HttpRequest,
+        level: int,
+        message_template: str,
+        message_context: dict[str, typing.Any] | None = None,
+        extra_tags: str = "",
+    ) -> None:
+        if "signed_up" in message_template:
+            messages.success(request, "Account created successfully. Welcome to SmartCampus!")
+            return
+        super().add_message(request, level, message_template, message_context, extra_tags)
 
 
 

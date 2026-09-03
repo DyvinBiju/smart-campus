@@ -89,11 +89,13 @@
           <nav id="main-menu">
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
+              {% if request.user.is_authenticated %}
               <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+              {% endif %}
+              {% if not request.user.is_authenticated or not request.user.is_admin_user and not request.user.is_maintenance_staff %}
               <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
+              {% endif %}
               <li><a href="{% url 'complaints:list' %}">Complaints</a></li>
-              <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
-              <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
             </ul>
           </nav>
@@ -139,11 +141,13 @@
 
         <ul class="mobile_menu">
           <li><a href="{% url 'home' %}">Home</a></li>
+          {% if request.user.is_authenticated %}
           <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+          {% endif %}
+          {% if not request.user.is_authenticated or not request.user.is_admin_user and not request.user.is_maintenance_staff %}
           <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
+          {% endif %}
           <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
-          <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
-          <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
           <li><a href="{% url 'about' %}#contact">Contact</a></li>
 
@@ -179,6 +183,23 @@
     </div>
     {% endfor %}
   </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(function () {
+        var alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(function (alert) {
+          if (window.bootstrap && bootstrap.Alert) {
+            var bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+          } else {
+            alert.classList.remove('show');
+            alert.classList.add('fade');
+            setTimeout(function () { alert.remove(); }, 500);
+          }
+        });
+      }, 3000);
+    });
+  </script>
   {% endif %}
 
   {% block main %}
@@ -204,11 +225,13 @@
             <h4>Quick Links</h4>
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
+              {% if request.user.is_authenticated %}
               <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
+              {% endif %}
+              {% if not request.user.is_authenticated or not request.user.is_admin_user and not request.user.is_maintenance_staff %}
               <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
+              {% endif %}
               <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
-              <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
-              <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
             </ul>
           </div>

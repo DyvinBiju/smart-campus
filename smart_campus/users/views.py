@@ -19,17 +19,20 @@ from smart_campus.users.models import User
 from django.utils.http import url_has_allowed_host_and_scheme
 
 
+from django.contrib.auth import login
+
 class SmartCampusLoginView(LoginView):
     """
     Custom LoginView that authenticates the user normally,
-    and redirects to 'next' URL if specified, or stays on login page with success message.
+    and redirects to 'next' URL if specified, or user's role-based dashboard with a success message.
     """
 
     def dispatch(self, request, *args, **kwargs):
         return FormView.dispatch(self, request, *args, **kwargs)
 
     def form_valid(self, form):
-        messages.success(self.request, _("Login successful! Welcome to SmartCampus."))
+        user = form.user
+        messages.success(self.request, _(f"Welcome back, {user.username}!"))
         next_url = self.request.POST.get("next") or self.request.GET.get("next")
         if next_url and url_has_allowed_host_and_scheme(
             url=next_url,
@@ -38,7 +41,10 @@ class SmartCampusLoginView(LoginView):
         ):
             redirect_url = next_url
         else:
-            redirect_url = reverse("account_login")
+            if user.is_admin_user or user.is_maintenance_staff:
+                redirect_url = reverse("dashboard:admin")
+            else:
+                redirect_url = reverse("dashboard:student")
 
         try:
             return form.login(self.request, redirect_url=redirect_url)
@@ -75,12 +81,13 @@ class StudentSignupView(FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        form.save()
+        user = form.save()
+        login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(
             self.request,
-            _("Student account created successfully! You can now sign in using your credentials."),
+            _("Account created successfully. Welcome to SmartCampus!"),
         )
-        return redirect("users:student_signup")
+        return redirect("dashboard:student")
 
 
 student_signup_view = StudentSignupView.as_view()
@@ -94,12 +101,13 @@ class FacultySignupView(FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        form.save()
+        user = form.save()
+        login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(
             self.request,
-            _("Faculty account created successfully! You can now sign in using your credentials."),
+            _("Account created successfully. Welcome to SmartCampus!"),
         )
-        return redirect("users:faculty_signup")
+        return redirect("dashboard:student")
 
 
 faculty_signup_view = FacultySignupView.as_view()

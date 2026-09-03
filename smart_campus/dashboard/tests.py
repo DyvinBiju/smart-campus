@@ -11,33 +11,42 @@ class DashboardViewTests(TestCase):
         self.student = User.objects.get(username="student1")
         self.admin = User.objects.get(username="admin1")
 
+    def test_anonymous_user_cannot_access_student_dashboard(self):
+        """
+        Unauthenticated users must be redirected to the login page.
+        """
+        response = self.client.get(reverse("dashboard:student"))
+        self.assertRedirects(response, f"{reverse('account_login')}?next={reverse('dashboard:student')}")
+
+    def test_anonymous_user_cannot_access_admin_dashboard(self):
+        """
+        Unauthenticated users must be redirected to the login page.
+        """
+        response = self.client.get(reverse("dashboard:admin"))
+        self.assertRedirects(response, f"{reverse('account_login')}?next={reverse('dashboard:admin')}")
+
     def test_switch_role_and_redirect(self):
         """
-        Verify switching roles works and sets the correct session variable.
+        Verify switching views for authenticated admin.
         """
-        # Switch to student role
+        self.client.force_login(self.admin)
         response = self.client.get(reverse("dashboard:switch-role") + "?role=student")
-        self.assertRedirects(response, reverse("dashboard:index"), target_status_code=302)
-        self.assertEqual(self.client.session["preview_role"], "student")
+        self.assertRedirects(response, reverse("dashboard:student"))
         
-        # Switch to admin role
         response = self.client.get(reverse("dashboard:switch-role") + "?role=admin")
-        self.assertRedirects(response, reverse("dashboard:index"), target_status_code=302)
-        self.assertEqual(self.client.session["preview_role"], "admin")
+        self.assertRedirects(response, reverse("dashboard:admin"))
 
     def test_dashboard_index_redirects_based_on_role(self):
         """
-        Index page should redirect to the admin or student dashboard depending on simulated role.
+        Index page should redirect to admin dashboard for admin and student dashboard for student.
         """
-        # Default is admin
+        # Admin logged in
+        self.client.force_login(self.admin)
         response = self.client.get(reverse("dashboard:index"))
         self.assertRedirects(response, reverse("dashboard:admin"))
         
-        # Switch session to student
-        session = self.client.session
-        session["preview_role"] = "student"
-        session.save()
-        
+        # Student logged in
+        self.client.force_login(self.student)
         response = self.client.get(reverse("dashboard:index"))
         self.assertRedirects(response, reverse("dashboard:student"))
 
@@ -45,11 +54,7 @@ class DashboardViewTests(TestCase):
         """
         Student dashboard should render complaints related to the student user.
         """
-        # Force student role preview
-        session = self.client.session
-        session["preview_role"] = "student"
-        session.save()
-        
+        self.client.force_login(self.student)
         response = self.client.get(reverse("dashboard:student"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "dashboard/student_dashboard.html")
@@ -66,11 +71,7 @@ class DashboardViewTests(TestCase):
         """
         Admin dashboard should display campus-wide metrics from the Activity model.
         """
-        # Force admin role preview
-        session = self.client.session
-        session["preview_role"] = "admin"
-        session.save()
-        
+        self.client.force_login(self.admin)
         response = self.client.get(reverse("dashboard:admin"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "dashboard/admin_dashboard.html")
@@ -88,6 +89,7 @@ class DashboardViewTests(TestCase):
         """
         Reports view should render print layout with executive summary and list of activities.
         """
+        self.client.force_login(self.admin)
         response = self.client.get(reverse("dashboard:reports") + "?format=print")
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "dashboard/reports_export.html")
@@ -99,6 +101,7 @@ class DashboardViewTests(TestCase):
         """
         Reports view should generate and export CSV files with all activities.
         """
+        self.client.force_login(self.admin)
         response = self.client.get(reverse("dashboard:reports") + "?format=csv")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "text/csv")
