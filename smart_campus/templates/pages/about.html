@@ -2,171 +2,141 @@
 {% load static %}
 
 {% block title %}
-  About - Eduleb Education HTML Template
+  About - SmartCampus Operations Management
 {% endblock title %}
 
 {% block content %}
 <!-- START SECTION TOP -->
-<section class="section-top">
+<section class="section-top bg-light py-5 border-bottom">
   <div class="container">
     <div class="col-lg-10 offset-lg-1 text-center">
-      <div class="section-top-title wow fadeInRight" data-wow-duration="1s" data-wow-delay="0.3s" data-wow-offset="0">
-        <h1>About</h1>
-        <ul>
-          <li><a href="{% url 'home' %}">Home</a></li>
-          <li> / About</li>
+      <div class="section-top-title">
+        <h1 class="fw-bold text-dark mb-2">About SmartCampus</h1>
+        <ul class="list-inline text-muted small">
+          <li class="list-inline-item"><a href="{% url 'home' %}" class="text-decoration-none text-primary">Home</a></li>
+          <li class="list-inline-item">/</li>
+          <li class="list-inline-item fw-semibold text-dark">About & Contact Support</li>
         </ul>
-      </div><!-- //.HERO-TEXT -->
-    </div><!--- END COL -->
-  </div><!--- END CONTAINER -->
+      </div>
+    </div>
+  </div>
 </section>	
 <!-- END SECTION TOP -->
 
-<!-- START CATEGORY -->
-<section class="top_cat__area section-padding" style="background-image: url('{% static 'eduleb/assets/img/bg/shape-1.png' %}'); background-size:cover; background-position: center center;">
+<!-- START MISSION & OVERVIEW -->
+<section class="ab_area section-padding py-5">
   <div class="container">									
-    <div class="section-title text-center">
-      <h2>Start your journey With us</h2>
-      <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-    </div>						
-    <div class="row">					
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_one">01</span>
-          <h3>Expert <br />Teacher</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
+    <div class="row align-items-center">								
+      <div class="col-lg-6 col-sm-12 mb-4 mb-lg-0">
+        <div class="ab_img text-center">
+          <img src="{% static 'images/home/complaint-reporting.jpg' %}" class="img-fluid rounded-4 shadow" alt="SmartCampus System" style="max-height: 380px; object-fit: cover; width: 100%;" />
         </div>
-      </div><!-- END COL -->			
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.3s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_two">02</span>
-          <h3>Quality <br />Education</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
-        </div>
-      </div><!-- END COL -->			
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_three">03</span>
-          <h3>Remote <br />Learning</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
-        </div>
-      </div><!-- END COL -->	
-      <div class="col-lg-3 col-sm-6 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.4s" data-wow-offset="0">
-        <div class="single_tp">
-          <span class="sc_four">04</span>
-          <h3>Life Time <br />Support</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
-        </div>
-      </div><!-- END COL -->							
-    </div><!-- END ROW -->
-  </div><!--- END CONTAINER -->
-</section>
-<!-- END CATEGORY -->		
-
-<!-- START ABOUT US -->
-<section class="ab_area section-padding">
-  <div class="container">									
-    <div class="row">								
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="ab_img">
-          <img src="{% static 'eduleb/assets/img/about1.png' %}" class="img-fluid" alt="image">
-        </div>
-      </div><!--- END COL -->						
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.1s" data-wow-offset="0">
-        <div class="ab_content">
-          <h2>We Are Providing The Online Course In Global World</h2>
-          <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-          <p>We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.</p>
-          <ul>
-            <li><span class="ti-check"></span> Get access to <b>12,000+</b> of our top courses</li>
-            <li><span class="ti-check"></span> Popular topic to learn now in our online courses for student</li>
-            <li><span class="ti-check"></span> Find the right instructor for you</li>
+      </div>						
+      <div class="col-lg-6 col-sm-12">
+        <div class="ab_content ps-lg-4">
+          <h2 class="fw-bold mb-3 text-dark">Streamlining Campus Operations & Resources</h2>
+          <p class="text-secondary mb-3">
+            SmartCampus is a comprehensive campus operations management platform built to bridge the gap between students, faculty, and administrative maintenance staff.
+          </p>
+          <p class="text-secondary mb-4">
+            Our goal is to digitize complaint reporting, asset management, and inventory auditing to ensure a safe, efficient, and well-maintained academic environment.
+          </p>
+          <ul class="list-unstyled mb-4">
+            <li class="mb-2"><i class="fa-solid fa-circle-check text-primary me-2"></i> <strong>Centralized Complaint Desk:</strong> Real-time ticket tracking from submission to resolution.</li>
+            <li class="mb-2"><i class="fa-solid fa-circle-check text-primary me-2"></i> <strong>Resource & Asset Monitoring:</strong> Live oversight of laboratory, classroom, and IT infrastructure.</li>
+            <li class="mb-2"><i class="fa-solid fa-circle-check text-primary me-2"></i> <strong>Executive Audit Reports:</strong> Instant PDF print layouts and CSV data exports.</li>
           </ul>
-          <a class="btn_one" href="#">View All Courses <i class="ti-arrow-top-right"></i></a>
+          <div class="d-flex gap-3 flex-wrap">
+            <a class="btn_one px-4 py-3" href="{% url 'home' %}#raise-complaint">
+              <i class="fa-solid fa-plus me-1"></i> File a Complaint
+            </a>
+            <a class="header-btn px-4 py-3" href="{% url 'dashboard:index' %}">
+              <i class="fa-solid fa-gauge me-1"></i> View Dashboard
+            </a>
+          </div>
         </div>
-      </div><!--- END COL -->							  
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->
+      </div>							  
+    </div>
+  </div>
 </section>
-<!-- END ABOUT US -->	
+<!-- END MISSION & OVERVIEW -->	
 
-<!-- START VIDEO -->
-<section class="vid_area va2" style="background-image: url('{% static 'eduleb/assets/img/bg/video.jpg' %}'); background-size:cover; background-position: center center;">
-  <div class="container">																
-    <div class="row">
-      <div class="col-lg-12 vp_top wow fadeInUDown" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="video-area2">
-          <a href="https://www.youtube.com/watch?v=RXv_uIN6e-Y" class="magnific_popup video-button"><i class="fa fa-play"></i></a>
-        </div>
-      </div><!--- END COL -->	
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->
-</section>
-<!-- END VIDEO -->
-
-<!-- START COUNTER -->
-<section class="count_area counter_feature">
+<!-- START CONTACT & HELPDESK SECTION -->
+<section id="contact" class="section-padding bg-light py-5">
   <div class="container">
-    <div class="row">
-      <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-folder sc_one"></span>
-          <h2 class="counter-num">134</h2>
-          <p>Our Online Course</p>
-        </div>							
-      </div>
-      <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-medall-alt sc_two"></span>
-          <h2 class="counter-num">299</h2>
-          <p>Academic Programs</p>
-        </div>
-      </div><!-- END COL -->
-      <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-id-badge sc_three"></span>
-          <h2 class="counter-num">684</h2>
-          <p>Certified Students</p>
-        </div>
-      </div><!-- END COL -->
-      <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter">
-          <span class="ti-user sc_four"></span>
-          <h2 class="counter-num">941</h2>
-          <p>Enrolled Students</p>
-        </div>
-      </div><!-- END COL -->						
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->		
-</section>
-<!-- END COUNTER -->
+    <div class="section-title text-center mb-5">
+      <h2 class="fw-bold">Contact Campus Support & Helpdesk</h2>
+      <p class="text-secondary mt-2">Have a question or require immediate technical assistance? Reach out to our campus operations team.</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      <!-- Contact Details -->
+      <div class="col-lg-4 col-md-5">
+        <div class="p-4 bg-white rounded-4 shadow-sm border h-100">
+          <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-headset text-primary me-2"></i> Support Desk Info</h4>
+          
+          <div class="d-flex mb-4">
+            <div class="me-3 text-primary fs-3"><i class="fa-solid fa-location-dot"></i></div>
+            <div>
+              <h6 class="fw-bold mb-1 text-dark">Location</h6>
+              <p class="small text-muted mb-0">Central Administration Building, Room 104, Campus Main Gate</p>
+            </div>
+          </div>
 
-<!-- START INSTRUCTOR+FREE COURSE -->
-<section class="insfreecourse section-padding">
-  <div class="container">									
-    <div class="row">								
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="single_ins" style="background-image: url('{% static 'eduleb/assets/img/ins1.png' %}'); background-size:cover; background-position: center center;">
-          <div class="single_ins_content">
-            <h4>Build Your Career</h4>
-            <h1>Become an Instructor</h1>
-            <p>Learn at your own pace, move the between multiple courses. </p>
-            <a class="btn_one" href="#">Apply now <i class="ti-arrow-top-right"></i></a>
+          <div class="d-flex mb-4">
+            <div class="me-3 text-primary fs-3"><i class="fa-solid fa-envelope"></i></div>
+            <div>
+              <h6 class="fw-bold mb-1 text-dark">Email Support</h6>
+              <p class="small text-muted mb-0">support@campus.edu / admin1@campus.edu</p>
+            </div>
+          </div>
+
+          <div class="d-flex mb-4">
+            <div class="me-3 text-primary fs-3"><i class="fa-solid fa-phone"></i></div>
+            <div>
+              <h6 class="fw-bold mb-1 text-dark">Emergency Helpline</h6>
+              <p class="small text-muted mb-0">+1 (800) 555-CAMPUS / Ext. 4357</p>
+            </div>
+          </div>
+
+          <div class="d-flex">
+            <div class="me-3 text-primary fs-3"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <h6 class="fw-bold mb-1 text-dark">Operating Hours</h6>
+              <p class="small text-muted mb-0">Monday – Saturday: 8:00 AM – 6:00 PM</p>
+            </div>
           </div>
         </div>
-      </div><!--- END COL -->				
-      <div class="col-lg-6 col-sm-12 col-xs-12 wow fadeInUp" data-wow-duration="1s" data-wow-delay="0.2s" data-wow-offset="0">
-        <div class="single_ins" style="background-image: url('{% static 'eduleb/assets/img/ins2.png' %}'); background-size:cover; background-position: center center;">
-          <div class="single_ins_content">
-            <h4>Build Your Career</h4>
-            <h1>Get Free Courses</h1>
-            <p>Learn at your own pace, move the between multiple courses. </p>
-            <a class="btn_one" href="#">Contact now <i class="ti-arrow-top-right"></i></a>
-          </div>
+      </div>
+
+      <!-- Quick Message Form -->
+      <div class="col-lg-6 col-md-7">
+        <div class="p-4 p-md-5 bg-white rounded-4 shadow-sm border h-100">
+          <h4 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-paper-plane text-primary me-2"></i> Send Us a Message</h4>
+          <form onsubmit="alert('Thank you for contacting SmartCampus Support! Our team will respond shortly.'); return false;">
+            <div class="mb-3">
+              <label for="contact_name" class="form-label small fw-semibold">Your Name</label>
+              <input type="text" id="contact_name" class="form-control" placeholder="Enter your full name" required />
+            </div>
+            <div class="mb-3">
+              <label for="contact_email" class="form-label small fw-semibold">Email Address</label>
+              <input type="email" id="contact_email" class="form-control" placeholder="name@campus.edu" required />
+            </div>
+            <div class="mb-3">
+              <label for="contact_subject" class="form-label small fw-semibold">Subject</label>
+              <input type="text" id="contact_subject" class="form-control" placeholder="e.g. General Inquiry, IT Support" required />
+            </div>
+            <div class="mb-4">
+              <label for="contact_message" class="form-label small fw-semibold">Message</label>
+              <textarea id="contact_message" rows="4" class="form-control" placeholder="Type your message details here..." required></textarea>
+            </div>
+            <button type="submit" class="btn_one w-100 py-3 border-0">
+              <i class="fa-solid fa-paper-plane me-2"></i>Send Message
+            </button>
+          </form>
         </div>
-      </div><!--- END COL -->								  
-    </div><!--- END ROW -->
-  </div><!--- END CONTAINER -->
+      </div>
+    </div>
+  </div>
 </section>
-<!-- END INSTRUCTOR+FREE COURSE -->				
+<!-- END CONTACT & HELPDESK SECTION -->
 {% endblock content %}

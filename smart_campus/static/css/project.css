@@ -1,5 +1,74 @@
-/* These styles are generated from project.scss. */
+/* Modern SmartCampus Project Custom Styles */
 
+/* Remove default bullet points & reset list styles */
+#main-menu ul, 
+.mobile_menu, 
+.single_footer ul,
+.sidebar-menu {
+  list-style: none !important;
+  list-style-type: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Header Navigation Styling */
+#main-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#main-menu ul {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 1.25rem !important;
+}
+
+#main-menu ul li {
+  list-style: none !important;
+  display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#main-menu ul li a {
+  display: inline-block !important;
+  text-decoration: none !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  color: #1e293b !important;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+#main-menu ul li a:hover,
+#main-menu ul li a:focus {
+  color: #2563eb !important;
+  background-color: rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Footer Quick Links styling */
+.single_footer ul li {
+  list-style: none !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.single_footer ul li a {
+  text-decoration: none !important;
+  color: #64748b !important;
+  transition: color 0.2s ease !important;
+}
+
+.single_footer ul li a:hover {
+  color: #2563eb !important;
+}
+
+/* Alert notifications styling */
 .alert-debug {
   color: black;
   background-color: white;

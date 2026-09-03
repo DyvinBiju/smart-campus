@@ -28,7 +28,7 @@
   <!-- Font Awesome CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   <link rel="stylesheet" href="{% static 'eduleb/assets/fonts/font-awesome.min.css' %}" />
-  <link rel="stylesheet" href="{% static 'eduleb/assets/fonts/themify-icons.css' %}" />
+  <link rel="stylesheet" href="{% static 'eduleb/assets/fonts/themify_icons.css' %}" />
   <!-- Owl Carousel CSS -->
   <link rel="stylesheet" href="{% static 'eduleb/assets/owlcarousel/css/owl.carousel.css' %}" />
   <link rel="stylesheet" href="{% static 'eduleb/assets/owlcarousel/css/owl.theme.css' %}" />
@@ -77,16 +77,19 @@
   <div id="navigation" class="navbar-light bg-faded site-navigation">
     <div class="container-fluid">
       <div class="row align-items-center">
-        <div class="col-20 align-self-center">
+        <div class="col-lg-3 col-6 align-self-center">
           <div class="site-logo">
-            <a href="{% url 'home' %}"><img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo"></a>
+            <a href="{% url 'home' %}">
+              <img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo">
+            </a>
           </div>
         </div><!--- END Col -->
 
-        <div class="col-60 d-flex justify-content-center">
+        <div class="col-lg-6 col-12 d-flex justify-content-center">
           <nav id="main-menu">
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
+              <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
               <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
               <li><a href="{% url 'complaints:list' %}">Complaints</a></li>
               <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
@@ -96,29 +99,38 @@
           </nav>
         </div><!--- END Col -->
 
-        <div class="col-20 d-none d-xl-block text-end align-self-center">
+        <div class="col-lg-3 d-none d-lg-block text-end align-self-center">
           {% if request.user.is_authenticated %}
-          <span class="header-btn me-2 text-dark bg-transparent fw-semibold" style="cursor: default;"><i
-              class="fa-solid fa-user me-1 text-primary"></i> {{ request.user.name|default:request.user.username
-            }}</span>
+          <span class="header-btn me-2 text-dark bg-transparent fw-semibold" style="cursor: default;">
+            <i class="fa-solid fa-user me-1 text-primary"></i>
+            {{ request.user.name|default:request.user.username }}
+          </span>
           <a href="{% url 'account_logout' %}" class="btn_one">Sign Out</a>
           {% else %}
           <a href="{% url 'account_login' %}" class="header-btn me-2">Sign In</a>
           {% if ACCOUNT_ALLOW_REGISTRATION %}
           <div class="dropdown d-inline-block position-relative">
-            <button class="btn_one dropdown-toggle border-0" type="button" id="signupDropdown" data-bs-toggle="dropdown"
-              aria-expanded="false">
+            <button class="btn_one dropdown-toggle border-0" type="button" id="signupDropdown"
+              data-bs-toggle="dropdown" aria-expanded="false">
               Sign Up
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 border-0 mt-2" aria-labelledby="signupDropdown"
-              style="z-index: 1050; min-width: 200px;">
-              <li><a class="dropdown-item py-2" href="{% url 'users:student_signup' %}"><i
-                    class="fa-solid fa-graduation-cap text-primary me-2"></i> Student</a></li>
+            <ul class="dropdown-menu dropdown-menu-end shadow rounded-3 border-0 mt-2"
+              aria-labelledby="signupDropdown" style="z-index: 1050; min-width: 200px;">
+              <li>
+                <a class="dropdown-item py-2" href="{% url 'users:student_signup' %}">
+                  <i class="fa-solid fa-graduation-cap text-primary me-2"></i>
+                  Student
+                </a>
+              </li>
               <li>
                 <hr class="dropdown-divider my-1">
               </li>
-              <li><a class="dropdown-item py-2" href="{% url 'users:faculty_signup' %}"><i
-                    class="fa-solid fa-chalkboard-user text-info me-2"></i> Faculty / Teacher</a></li>
+              <li>
+                <a class="dropdown-item py-2" href="{% url 'users:faculty_signup' %}">
+                  <i class="fa-solid fa-chalkboard-user text-info me-2"></i>
+                  Faculty / Teacher
+                </a>
+              </li>
             </ul>
           </div>
           {% endif %}
@@ -127,15 +139,21 @@
 
         <ul class="mobile_menu">
           <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
           <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
           <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
           <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
           <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
           <li><a href="{% url 'about' %}">About</a></li>
-          <li><a href="{% url 'about' %}">Contact</a></li>
+          <li><a href="{% url 'about' %}#contact">Contact</a></li>
+
           {% if request.user.is_authenticated %}
-          <li><span class="text-white ps-3 fw-semibold"><i class="fa-solid fa-user me-1"></i> {{
-              request.user.name|default:request.user.username }}</span></li>
+          <li>
+            <span class="text-white ps-3 fw-semibold">
+              <i class="fa-solid fa-user me-1"></i>
+              {{ request.user.name|default:request.user.username }}
+            </span>
+          </li>
           <li><a href="{% url 'account_logout' %}">Sign Out</a></li>
           {% else %}
           <li><a href="{% url 'account_login' %}">Sign In</a></li>
@@ -174,28 +192,34 @@
       <div class="row">
         <div class="col-lg-4 col-sm-6 col-xs-12 mb-4 mb-lg-0">
           <div class="single_footer">
-            <a href="{% url 'home' %}"><img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo"></a>
+            <a href="{% url 'home' %}">
+              <img src="{% static 'eduleb/assets/img/logo.png' %}" alt="SmartCampus Logo">
+            </a>
             <p class="mt-3">Campus Operations & Resource Management System.</p>
           </div>
         </div><!--- END COL -->
+
         <div class="col-lg-4 col-sm-6 col-xs-12 mb-4 mb-lg-0">
           <div class="single_footer">
             <h4>Quick Links</h4>
             <ul>
               <li><a href="{% url 'home' %}">Home</a></li>
+              <li><a href="{% url 'dashboard:index' %}">Dashboard</a></li>
               <li><a href="{% url 'complaints:create' %}">Raise Complaint</a></li>
               <li><a href="{% url 'complaints:list' %}">Complaints List</a></li>
+              <li><a href="{% url 'assets:asset_list' %}">Assets</a></li>
+              <li><a href="{% url 'inventory:list' %}">Inventory</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
-              <li><a href="{% url 'about' %}">Contact</a></li>
             </ul>
           </div>
         </div><!--- END COL -->
+
         <div class="col-lg-4 col-sm-6 col-xs-12 mb-4 mb-lg-0">
           <div class="single_footer">
             <h4>Support</h4>
             <ul>
-              <li><a href="{% url 'about' %}">Help</a></li>
-              <li><a href="{% url 'about' %}">Contact</a></li>
+              <li><a href="{% url 'about' %}">Help Center</a></li>
+              <li><a href="{% url 'about' %}#contact">Contact Desk</a></li>
             </ul>
           </div>
         </div><!--- END COL -->

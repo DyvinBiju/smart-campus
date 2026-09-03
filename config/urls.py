@@ -34,7 +34,7 @@ urlpatterns = [
         include("smart_campus.complaints.urls", namespace="complaints"),
     ),
     path("inventory/", include("smart_campus.inventory.urls")),
-
+    path("dashboard/", include("smart_campus.dashboard.urls", namespace="dashboard")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
 ]
