@@ -94,7 +94,7 @@ class ComplaintViewsTests(TestCase):
         self.client.force_login(self.staff)
         url = reverse("complaints:status_update", kwargs={"complaint_id": self.complaint.complaint_id})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
         post_data = {"status": Complaint.Status.IN_PROGRESS}
         response = self.client.post(url, post_data)
@@ -246,11 +246,15 @@ class IntegratedModuleTests(TestCase):
         )
 
     def test_complaint_status_update_and_asset_status_sync(self):
+        self.complaint.assigned_to = self.tech_user
+        from django.utils import timezone
+        self.complaint.assigned_at = timezone.now()
+        self.complaint.save()
+
         url = reverse("complaints:status_update", kwargs={"complaint_id": self.complaint.complaint_id})
         
         post_data = {
             "status": Complaint.Status.IN_PROGRESS,
-            "assigned_to": self.tech_user.pk,
             "resolution_notes": "Replacing HDMI cable",
         }
         response = self.client.post(url, post_data)
@@ -266,7 +270,6 @@ class IntegratedModuleTests(TestCase):
 
         post_data_resolved = {
             "status": Complaint.Status.RESOLVED,
-            "assigned_to": self.tech_user.pk,
             "resolution_notes": "Replaced HDMI cable successfully",
         }
         response = self.client.post(url, post_data_resolved)
@@ -446,5 +449,113 @@ class ComplaintAuthenticationAndAuthorizationTests(TestCase):
         url = reverse("complaints:detail", kwargs={"complaint_id": self.complaint.complaint_id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+
+
+class RoleBasedWorkflowTests(TestCase):
+    def setUp(self):
+        from smart_campus.inventory.models import InventoryCategory, InventoryItem
+
+        self.admin = User.objects.create_user(
+            username="campus_admin",
+            email="admin@campus.edu",
+            password="Password123!",
+            role=User.Role.ADMIN,
+        )
+        self.staff = User.objects.create_user(
+            username="maint_tech_1",
+            email="tech1@campus.edu",
+            password="Password123!",
+            role=User.Role.MAINTENANCE,
+            is_available=True,
+        )
+        self.student = User.objects.create_user(
+            username="student_john",
+            email="john@campus.edu",
+            password="Password123!",
+            role=User.Role.STUDENT,
+        )
+        self.category = InventoryCategory.objects.create(name="Electrical")
+        self.item = InventoryItem.objects.create(
+            name="LED Tube 20W",
+            category=self.category,
+            quantity=5,
+            minimum_quantity=1,
+            unit="pcs",
+        )
+        self.complaint = Complaint.objects.create(
+            title="Classroom Light flickering",
+            description="Tube light flickering constantly",
+            category=Complaint.Category.ELECTRICAL,
+            location="Block B Room 104",
+            priority=Complaint.Priority.HIGH,
+            user=self.student,
+        )
+
+    def test_admin_assigns_maintenance_staff(self):
+        """Admin assigns available staff member to complaint."""
+        self.client.force_login(self.admin)
+        url = reverse("complaints:assign_staff", kwargs={"complaint_id": self.complaint.complaint_id})
+        response = self.client.post(url, {"assigned_to": self.staff.pk})
+        self.assertEqual(response.status_code, 302)
+
+        self.complaint.refresh_from_db()
+        self.assertEqual(self.complaint.assigned_to, self.staff)
+        self.assertEqual(self.complaint.status, Complaint.Status.ASSIGNED)
+        self.assertIsNotNone(self.complaint.assigned_at)
+        self.assertTrue(self.complaint.history.filter(status=Complaint.Status.ASSIGNED).exists())
+
+    def test_maintenance_staff_issues_available_inventory(self):
+        """Maintenance staff issues available inventory item directly for repair."""
+        self.client.force_login(self.staff)
+        url = reverse("complaints:use_inventory", kwargs={"complaint_id": self.complaint.complaint_id})
+        response = self.client.post(url, {
+            "inventory_item": self.item.pk,
+            "quantity_used": 2,
+        })
+        self.assertEqual(response.status_code, 302)
+
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.quantity, 3)
+        self.assertEqual(self.complaint.resources_used.count(), 1)
+
+    def test_maintenance_staff_requests_action_and_admin_approves(self):
+        """Staff requests maintenance action and Admin approves it."""
+        from smart_campus.complaints.models import MaintenanceRequest
+
+        # 1. Staff requests unavailable item or action
+        self.client.force_login(self.staff)
+        req_url = reverse("complaints:request_action", kwargs={"complaint_id": self.complaint.complaint_id})
+        response = self.client.post(req_url, {
+            "request_type": MaintenanceRequest.RequestType.UNAVAILABLE_RESOURCE,
+            "inventory_item": self.item.pk,
+            "quantity_requested": 3,
+            "reason": "Need replacement LED bulbs for classroom fixture.",
+        })
+        self.assertEqual(response.status_code, 302)
+
+        self.complaint.refresh_from_db()
+        self.assertEqual(self.complaint.status, Complaint.Status.ACTION_REQUIRED)
+        self.assertEqual(self.complaint.maintenance_requests.count(), 1)
+
+        maint_req = self.complaint.maintenance_requests.first()
+        self.assertEqual(maint_req.status, MaintenanceRequest.Status.PENDING)
+
+        # 2. Admin approves request
+        self.client.force_login(self.admin)
+        decide_url = reverse("complaints:request_decide", kwargs={"request_id": maint_req.pk})
+        response = self.client.post(decide_url, {
+            "status": "APPROVED",
+            "admin_notes": "Approved for immediate issue.",
+        })
+        self.assertEqual(response.status_code, 302)
+
+        maint_req.refresh_from_db()
+        self.complaint.refresh_from_db()
+        self.item.refresh_from_db()
+
+        self.assertEqual(maint_req.status, MaintenanceRequest.Status.APPROVED)
+        self.assertEqual(self.item.quantity, 2)
+        self.assertEqual(self.complaint.status, Complaint.Status.IN_PROGRESS)
+
 
 

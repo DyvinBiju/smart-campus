@@ -1,0 +1,171 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  {{ page_title }} - SmartCampus Control Center
+{% endblock title %}
+
+{% block active_users_manage %}active{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-7">
+      <div class="d-flex align-items-center mb-4 gap-3">
+        <a href="{% url 'users:manage' %}" class="btn btn-outline-secondary btn-sm" title="Back to User Management">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <h3 class="fw-bold text-dark mb-0">{{ page_title }}</h3>
+          <p class="text-muted small mb-0">Configure user identity, access role, and account parameters.</p>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>
+          {% for error in form.non_field_errors %}
+            {{ error }}<br>
+          {% endfor %}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+
+      <div class="dash-card">
+        <div class="dash-card-body p-4">
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold text-dark">
+                Full Name <span class="text-danger">*</span>
+              </label>
+              {{ form.name }}
+              {% if form.name.errors %}
+                <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold text-dark">
+                Email Address <span class="text-danger">*</span>
+              </label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-md-6">
+                <label for="{{ form.role.id_for_label }}" class="form-label fw-semibold text-dark">
+                  Campus Role <span class="text-danger">*</span>
+                </label>
+                {{ form.role }}
+                {% if form.role.errors %}
+                  <div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="{{ form.campus_id.id_for_label }}" class="form-label fw-semibold text-dark">
+                  Campus ID / Employee No
+                </label>
+                {{ form.campus_id }}
+                {% if form.campus_id.errors %}
+                  <div class="text-danger small mt-1">{{ form.campus_id.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-md-6">
+                <label for="{{ form.department.id_for_label }}" class="form-label fw-semibold text-dark">
+                  Department / Program
+                </label>
+                {{ form.department }}
+                {% if form.department.errors %}
+                  <div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="{{ form.year_or_semester.id_for_label }}" class="form-label fw-semibold text-dark">
+                  Year / Semester
+                </label>
+                {{ form.year_or_semester }}
+                {% if form.year_or_semester.errors %}
+                  <div class="text-danger small mt-1">{{ form.year_or_semester.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.phone_number.id_for_label }}" class="form-label fw-semibold text-dark">
+                Phone Number
+              </label>
+              {{ form.phone_number }}
+              {% if form.phone_number.errors %}
+                <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            {% if form.password1 %}
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-md-6">
+                  <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold text-dark">
+                    Initial Password <span class="text-danger">*</span>
+                  </label>
+                  {{ form.password1 }}
+                  {% if form.password1.errors %}
+                    <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-12 col-md-6">
+                  <label for="{{ form.password2.id_for_label }}" class="form-label fw-semibold text-dark">
+                    Confirm Initial Password <span class="text-danger">*</span>
+                  </label>
+                  {{ form.password2 }}
+                  {% if form.password2.errors %}
+                    <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+
+            {% if form.is_active or form.is_available %}
+              <div class="p-3 bg-light rounded border mb-4">
+                <div class="fw-semibold text-dark mb-2">Operational Controls & Status</div>
+                {% if form.is_active %}
+                  <div class="form-check form-switch mb-2">
+                    {{ form.is_active }}
+                    <label class="form-check-label fw-medium text-dark" for="{{ form.is_active.id_for_label }}">
+                      Account Active Status
+                    </label>
+                    <div class="form-text small">Deactivating prevents login without deleting historical user records.</div>
+                  </div>
+                {% endif %}
+
+                {% if form.is_available %}
+                  <div class="form-check form-switch mb-0">
+                    {{ form.is_available }}
+                    <label class="form-check-label fw-medium text-dark" for="{{ form.is_available.id_for_label }}">
+                      Available for Assignment (Maintenance Staff)
+                    </label>
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-end gap-2 pt-2">
+              <a href="{% url 'users:manage' %}" class="btn btn-outline-secondary px-4 fw-semibold">Cancel</a>
+              <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                <i class="fa-solid fa-floppy-disk me-2"></i>{{ button_text }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock dashboard_content %}

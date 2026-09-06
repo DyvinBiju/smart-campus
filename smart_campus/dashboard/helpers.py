@@ -6,12 +6,12 @@ from .models import Activity
 
 def is_model_available(app_label, model_name):
     try:
-        if not apps.is_installed(app_label):
-            return None
-        model = apps.get_model(app_label, model_name)
-        table_name = model._meta.db_table
-        if table_name in connection.introspection.table_names():
-            return model
+        clean_label = app_label.split(".")[-1]
+        model = apps.get_model(clean_label, model_name)
+        if model:
+            table_name = model._meta.db_table
+            if table_name in connection.introspection.table_names():
+                return model
     except (LookupError, ValueError, DatabaseError):
         pass
     return None
@@ -191,7 +191,7 @@ def seed_mock_activities():
 
 def get_assets_metrics(filters=None):
     AssetModel = is_model_available("assets", "Asset")
-    if AssetModel:
+    if AssetModel and AssetModel.objects.exists():
         try:
             total = AssetModel.objects.count()
             active = AssetModel.objects.filter(status__iexact="ACTIVE").count()
@@ -221,7 +221,7 @@ def get_assets_metrics(filters=None):
 
 def get_inventory_metrics(filters=None):
     InventoryItemModel = is_model_available("inventory", "InventoryItem")
-    if InventoryItemModel:
+    if InventoryItemModel and InventoryItemModel.objects.exists():
         try:
             total = InventoryItemModel.objects.count()
             # Low stock items where quantity <= minimum_quantity
@@ -247,6 +247,38 @@ def get_inventory_metrics(filters=None):
     }
 
 def get_complaints_metrics(user=None, filters=None):
+    ComplaintModel = is_model_available("complaints", "Complaint")
+    if ComplaintModel and ComplaintModel.objects.exists():
+        try:
+            qs = ComplaintModel.objects.all()
+            if user and not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
+                qs = qs.filter(user=user)
+
+            if filters and filters.get("start_date"):
+                qs = qs.filter(created_at__gte=filters["start_date"])
+
+            total = qs.count()
+            pending = qs.filter(status__in=["Submitted", "Under Review", "Action Required"]).count()
+            in_progress = qs.filter(status__in=["Assigned", "Under Inspection", "In Progress"]).count()
+            resolved = qs.filter(status__in=["Resolved", "Closed"]).count()
+            unassigned = qs.filter(assigned_to__isnull=True).count()
+
+            # Pending requests count if MaintenanceRequest model available
+            MaintReqModel = is_model_available("complaints", "MaintenanceRequest")
+            pending_requests = MaintReqModel.objects.filter(status="PENDING").count() if MaintReqModel else 0
+
+            return {
+                "total": total,
+                "pending": pending,
+                "in_progress": in_progress,
+                "resolved": resolved,
+                "unassigned": unassigned,
+                "pending_requests": pending_requests,
+                "requires_action": unassigned + pending_requests,
+            }
+        except DatabaseError:
+            pass
+
     complaint_qs = Activity.objects.filter(activity_type__in=['COMPLAINT', 'MAINTENANCE'])
     
     if user:
@@ -274,5 +306,151 @@ def get_complaints_metrics(user=None, filters=None):
         "total": total,
         "pending": pending,
         "in_progress": in_progress,
-        "resolved": resolved
+        "resolved": resolved,
+        "unassigned": pending,
+        "pending_requests": 0,
+        "requires_action": pending,
     }
+
+
+def get_maintenance_staff_metrics(user):
+    """
+    Calculates operational metrics specific to the logged-in Maintenance Staff member.
+    """
+    ComplaintModel = is_model_available("complaints", "Complaint")
+    if ComplaintModel and user and user.is_authenticated:
+        try:
+            user_complaints = ComplaintModel.objects.filter(assigned_to=user)
+            assigned_total = user_complaints.count()
+            pending_inspection = user_complaints.filter(status__in=["Submitted", "Under Review", "Assigned"]).count()
+            in_progress = user_complaints.filter(status__in=["Under Inspection", "In Progress", "Action Required"]).count()
+            high_priority = user_complaints.filter(priority="High").count()
+
+            MaintReqModel = is_model_available("complaints", "MaintenanceRequest")
+            my_requests_count = MaintReqModel.objects.filter(requested_by=user).count() if MaintReqModel else 0
+
+            return {
+                "assigned_total": assigned_total,
+                "pending_inspection": pending_inspection,
+                "in_progress": in_progress,
+                "high_priority": high_priority,
+                "my_requests_count": my_requests_count,
+            }
+        except DatabaseError:
+            pass
+
+    return {
+        "assigned_total": 0,
+        "pending_inspection": 0,
+        "in_progress": 0,
+        "high_priority": 0,
+        "my_requests_count": 0,
+    }
+
+
+def get_realtime_audit_activities(start_date=None, category_filter="all", status_filter="all", limit=12):
+    """
+    Aggregates real-time audit logs across Complaints, ComplaintHistory,
+    StockTransactions, Assets, and central Activity models into a unified audit feed.
+    """
+    activities = []
+
+    # 1. Complaint History Audit Logs
+    HistoryModel = is_model_available("complaints", "ComplaintHistory")
+    if HistoryModel and category_filter in ["all", "COMPLAINT", "MAINTENANCE"]:
+        try:
+            h_qs = HistoryModel.objects.select_related("complaint", "changed_by").all()
+            if start_date:
+                h_qs = h_qs.filter(timestamp__gte=start_date)
+            for h in h_qs.order_by("-timestamp")[:limit]:
+                user_str = (h.changed_by.name or h.changed_by.username) if h.changed_by else "System"
+                activities.append({
+                    "activity_type": "COMPLAINT",
+                    "get_activity_type_display": "Complaint Activity",
+                    "timestamp": h.timestamp,
+                    "title": f"{h.complaint.complaint_id}: {h.complaint.title}",
+                    "description": h.comment or f"Status changed to {h.status}",
+                    "user_name": user_str,
+                    "status": h.status,
+                })
+        except Exception:
+            pass
+
+    # 2. Stock Transactions Audit Logs
+    StockTxModel = is_model_available("inventory", "StockTransaction")
+    if StockTxModel and category_filter in ["all", "INVENTORY"]:
+        try:
+            st_qs = StockTxModel.objects.select_related("item", "created_by").all()
+            if start_date:
+                st_qs = st_qs.filter(created_at__gte=start_date)
+            for st in st_qs.order_by("-created_at")[:limit]:
+                user_str = (st.created_by.name or st.created_by.username) if st.created_by else "Inventory System"
+                activities.append({
+                    "activity_type": "INVENTORY",
+                    "get_activity_type_display": "Inventory Update",
+                    "timestamp": st.created_at,
+                    "title": f"{st.get_transaction_type_display()}: {st.item.name}",
+                    "description": f"{st.quantity} {st.item.unit} - {st.notes or 'Stock transaction recorded'}",
+                    "user_name": user_str,
+                    "status": st.item.stock_status,
+                })
+        except Exception:
+            pass
+
+    # 3. Asset Creation & Status Updates
+    AssetModel = is_model_available("assets", "Asset")
+    if AssetModel and category_filter in ["all", "ASSET"]:
+        try:
+            a_qs = AssetModel.objects.all()
+            if start_date:
+                a_qs = a_qs.filter(created_at__gte=start_date)
+            for ast in a_qs.order_by("-created_at")[:limit]:
+                activities.append({
+                    "activity_type": "ASSET",
+                    "get_activity_type_display": "Asset Update",
+                    "timestamp": ast.created_at,
+                    "title": f"Asset Logged: {ast.name} ({ast.asset_code})",
+                    "description": f"Location: {ast.building} {ast.room or ''} | Category: {ast.category}",
+                    "user_name": "Admin Staff",
+                    "status": ast.get_status_display(),
+                })
+        except Exception:
+            pass
+
+    # 4. Central Activity Model Logs
+    try:
+        act_qs = Activity.objects.all()
+        if start_date:
+            act_qs = act_qs.filter(timestamp__gte=start_date)
+        if category_filter != "all":
+            act_qs = act_qs.filter(activity_type__iexact=category_filter)
+        if status_filter != "all":
+            act_qs = act_qs.filter(status__iexact=status_filter)
+        for act in act_qs.order_by("-timestamp")[:limit]:
+            activities.append({
+                "activity_type": act.activity_type,
+                "get_activity_type_display": act.get_activity_type_display(),
+                "timestamp": act.timestamp,
+                "title": act.title,
+                "description": act.description,
+                "user_name": act.user_name or "System",
+                "status": act.status,
+            })
+    except Exception:
+        pass
+
+    # Sort all aggregated activities by timestamp descending
+    activities.sort(key=lambda x: x["timestamp"], reverse=True)
+
+    # Filter by status_filter if specified and not 'all'
+    if status_filter and status_filter != "all":
+        status_lower = status_filter.lower()
+        activities = [
+            a for a in activities
+            if status_lower in (a.get("status") or "").lower()
+        ]
+
+    return activities[:limit]
+
+
+

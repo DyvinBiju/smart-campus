@@ -27,7 +27,7 @@ class UserAdmin(auth_admin.UserAdmin):
         ),
         (
             _("Campus Role & Access"),
-            {"fields": ("role",)},
+            {"fields": ("role", "is_available")},
         ),
         (
             _("Permissions"),
@@ -53,6 +53,7 @@ class UserAdmin(auth_admin.UserAdmin):
                     "name",
                     "email",
                     "role",
+                    "is_available",
                     "department",
                     "phone_number",
                     "campus_id",
@@ -63,7 +64,7 @@ class UserAdmin(auth_admin.UserAdmin):
             },
         ),
     )
-    list_display = ["username", "name", "email", "role", "is_staff", "is_superuser", "is_active"]
+    list_display = ["username", "name", "email", "role", "is_available", "is_staff", "is_superuser", "is_active"]
     list_filter = ["role", "is_staff", "is_superuser", "is_active", "department"]
     search_fields = ["username", "name", "email", "phone_number", "department", "campus_id"]
     ordering = ["username"]

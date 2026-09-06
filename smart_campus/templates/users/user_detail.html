@@ -1,0 +1,243 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  User Profile: {{ managed_user.name|default:managed_user.username }} - SmartCampus Control Center
+{% endblock title %}
+
+{% block active_users_manage %}active{% endblock %}
+
+{% block dashboard_content %}
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'users:manage' %}" class="btn btn-outline-secondary btn-sm" title="Back to Users">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <div>
+        <h3 class="fw-bold text-dark mb-1">
+          {{ managed_user.name|default:managed_user.username }}
+        </h3>
+        <p class="text-muted small mb-0">
+          User Account Details & Operational Lifecycle History
+        </p>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'users:edit' managed_user.pk %}" class="btn btn-outline-primary px-3">
+        <i class="fa-solid fa-user-pen me-2"></i>Edit Profile
+      </a>
+      {% if managed_user.pk != request.user.pk %}
+        <form method="post" action="{% url 'users:toggle_active' managed_user.pk %}" onsubmit="return confirm('Are you sure you want to toggle account status?');">
+          {% csrf_token %}
+          <button type="submit" class="btn {% if managed_user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} px-3">
+            <i class="fa-solid {% if managed_user.is_active %}fa-user-slash{% else %}fa-user-check{% endif %} me-2"></i>
+            {% if managed_user.is_active %}Deactivate Account{% else %}Activate Account{% endif %}
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: User Summary Card & Metadata -->
+    <div class="col-12 col-lg-4">
+      <div class="dash-card text-center p-4 mb-4">
+        <div class="avatar bg-primary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center fw-bold fs-2 mb-3 shadow" style="width: 80px; height: 80px;">
+          {{ managed_user.username|first|upper }}
+        </div>
+        <h4 class="fw-bold text-dark mb-1">{{ managed_user.name|default:managed_user.username }}</h4>
+        <div class="text-muted small mb-3">@{{ managed_user.username }}</div>
+
+        <div class="d-flex justify-content-center gap-2 mb-4">
+          {% if managed_user.role == 'ADMIN' or managed_user.is_superuser %}
+            <span class="badge bg-danger text-white rounded-pill px-3 py-2">Administrator</span>
+          {% elif managed_user.role == 'MAINTENANCE' or managed_user.is_staff %}
+            <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Maintenance Staff</span>
+          {% elif managed_user.role == 'FACULTY' %}
+            <span class="badge bg-info text-dark rounded-pill px-3 py-2">Faculty / Teacher</span>
+          {% else %}
+            <span class="badge bg-secondary text-white rounded-pill px-3 py-2">Student</span>
+          {% endif %}
+
+          {% if managed_user.is_active %}
+            <span class="badge bg-success text-white rounded-pill px-3 py-2">Active</span>
+          {% else %}
+            <span class="badge bg-secondary text-white rounded-pill px-3 py-2">Inactive</span>
+          {% endif %}
+        </div>
+
+        <hr class="my-3">
+
+        <div class="text-start">
+          <div class="mb-3">
+            <span class="text-muted small d-block">Email Address</span>
+            <span class="fw-semibold text-dark">{{ managed_user.email }}</span>
+          </div>
+
+          <div class="mb-3">
+            <span class="text-muted small d-block">Phone Number</span>
+            <span class="fw-semibold text-dark">{{ managed_user.phone_number|default:"Not provided" }}</span>
+          </div>
+
+          <div class="mb-3">
+            <span class="text-muted small d-block">Campus ID / Employee No</span>
+            <span class="fw-semibold text-dark">{{ managed_user.campus_id|default:"Not specified" }}</span>
+          </div>
+
+          <div class="mb-3">
+            <span class="text-muted small d-block">Department / Program</span>
+            <span class="fw-semibold text-dark">{{ managed_user.department|default:"Not assigned" }}</span>
+          </div>
+
+          {% if managed_user.year_or_semester %}
+            <div class="mb-3">
+              <span class="text-muted small d-block">Year / Semester</span>
+              <span class="fw-semibold text-dark">{{ managed_user.year_or_semester }}</span>
+            </div>
+          {% endif %}
+
+          <div class="mb-0">
+            <span class="text-muted small d-block">Account Created</span>
+            <span class="fw-semibold text-dark">{{ managed_user.date_joined|date:"F d, Y \a\t H:i" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Operational Stats, Submitted Complaints, Maintenance Workload -->
+    <div class="col-12 col-lg-8">
+      <!-- Activity Summary Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-sm-4">
+          <div class="dash-card p-3">
+            <div class="widget-title mb-1">Submitted Complaints</div>
+            <div class="widget-value h3 mb-0 text-primary">{{ total_submitted_count }}</div>
+            <div class="small text-muted mt-1">{{ open_submitted_count }} open, {{ resolved_submitted_count }} resolved</div>
+          </div>
+        </div>
+
+        {% if managed_user.is_maintenance_staff or managed_user.is_admin_user %}
+          <div class="col-6 col-sm-4">
+            <div class="dash-card p-3">
+              <div class="widget-title mb-1">Assigned Maintenance</div>
+              <div class="widget-value h3 mb-0 text-warning">{{ total_assigned_count }}</div>
+              <div class="small text-muted mt-1">{{ active_assigned_count }} active, {{ completed_assigned_count }} completed</div>
+            </div>
+          </div>
+
+          <div class="col-6 col-sm-4">
+            <div class="dash-card p-3">
+              <div class="widget-title mb-1">Staff Availability</div>
+              <div class="widget-value h4 mb-0 fw-bold {% if managed_user.is_available %}text-success{% else %}text-danger{% endif %} mt-2">
+                <i class="fa-solid {% if managed_user.is_available %}fa-circle-check{% else %}fa-circle-pause{% endif %} me-1"></i>
+                {% if managed_user.is_available %}Available{% else %}Unavailable{% endif %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Submitted Complaints History -->
+      <div class="dash-card mb-4">
+        <div class="dash-card-header">
+          <span><i class="fa-solid fa-list-check me-2 text-primary"></i>Submitted Complaints History</span>
+          <span class="badge bg-light text-dark border">{{ total_submitted_count }} Total</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cmp in submitted_complaints %}
+                <tr>
+                  <td class="fw-bold text-primary">{{ cmp.complaint_id }}</td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ cmp.title }}</div>
+                    <div class="small text-muted">{{ cmp.location }}</div>
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ cmp.category }}</span></td>
+                  <td>
+                    <span class="badge {% if cmp.priority == 'High' %}bg-danger{% elif cmp.priority == 'Medium' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                      {{ cmp.priority }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary text-white">{{ cmp.status }}</span>
+                  </td>
+                  <td class="text-end">
+                    <a href="{% url 'complaints:detail' cmp.complaint_id %}" class="btn btn-sm btn-outline-primary">
+                      <i class="fa-solid fa-eye"></i> View
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center py-4 text-muted">
+                    No complaints submitted by this user.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Maintenance Assignments (If Staff) -->
+      {% if managed_user.is_maintenance_staff or managed_user.is_admin_user %}
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span><i class="fa-solid fa-clipboard-check me-2 text-warning"></i>Assigned Work Orders</span>
+            <span class="badge bg-light text-dark border">{{ total_assigned_count }} Total</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Task Title</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Assigned Date</th>
+                  <th class="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for task in assigned_complaints %}
+                  <tr>
+                    <td class="fw-bold text-primary">{{ task.complaint_id }}</td>
+                    <td class="fw-semibold text-dark">{{ task.title }}</td>
+                    <td class="small text-muted">{{ task.location }}</td>
+                    <td>
+                      <span class="badge bg-info text-dark">{{ task.status }}</span>
+                    </td>
+                    <td class="small text-muted">{{ task.assigned_at|date:"M d, Y"|default:"—" }}</td>
+                    <td class="text-end">
+                      <a href="{% url 'complaints:detail' task.complaint_id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> Manage
+                      </a>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">
+                      No maintenance work orders currently assigned to this user.
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock dashboard_content %}

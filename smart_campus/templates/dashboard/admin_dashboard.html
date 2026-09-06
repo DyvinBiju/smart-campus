@@ -49,6 +49,26 @@
   </div>
 </div>
 
+<!-- REQUIRES ACTION Callout Banner -->
+{% if complaints_stats.requires_action > 0 %}
+<div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4 d-flex flex-wrap align-items-center justify-content-between">
+  <div class="d-flex align-items-center gap-3">
+    <div class="bg-warning text-dark p-3 rounded-circle fs-4">
+      <i class="fa-solid fa-bell-concierge"></i>
+    </div>
+    <div>
+      <h5 class="fw-bold text-dark mb-1">Attention Required: Operational Action Items</h5>
+      <p class="mb-0 text-secondary small">
+        There are <strong>{{ complaints_stats.unassigned }} unassigned complaints</strong> awaiting staff assignment and <strong>{{ complaints_stats.pending_requests }} pending maintenance requests</strong> awaiting administrative decision.
+      </p>
+    </div>
+  </div>
+  <a href="{% url 'complaints:admin_manage' %}" class="btn btn-warning px-4 py-2 fw-semibold text-dark rounded-pill mt-3 mt-md-0">
+    <i class="fa-solid fa-user-gear me-1"></i> Go to Admin Action Hub ({{ complaints_stats.requires_action }})
+  </a>
+</div>
+{% endif %}
+
 <!-- Interactive Filters Bar -->
 <form method="GET" class="filter-bar">
   <div class="row align-items-end g-3">
@@ -92,47 +112,6 @@
     </div>
   </div>
 </form>
-
-<!-- Module Connection Directory Health Indicators -->
-<div class="dash-card mb-4 bg-light border-0">
-  <div class="p-3 d-flex flex-wrap gap-4 align-items-center justify-content-between">
-    <div class="fw-bold text-dark"><i class="fa-solid fa-network-wired me-2 text-primary"></i> Module Integration
-      Status:</div>
-    <div class="d-flex flex-wrap gap-3">
-      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
-        <span class="status-dot bg-success"></span>
-        <span class="small text-muted">Users Directory: <strong>Active</strong></span>
-      </div>
-      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
-        {% if modules.assets.available %}
-        <span class="status-dot bg-success"></span>
-        <span class="small text-muted">Assets App: <strong>Connected</strong></span>
-        {% else %}
-        <span class="status-dot bg-secondary"></span>
-        <span class="small text-muted">Assets App: <strong class="text-warning">Integration Pending</strong></span>
-        {% endif %}
-      </div>
-      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
-        {% if modules.inventory.available %}
-        <span class="status-dot bg-success"></span>
-        <span class="small text-muted">Inventory App: <strong>Connected</strong></span>
-        {% else %}
-        <span class="status-dot bg-secondary"></span>
-        <span class="small text-muted">Inventory App: <strong class="text-warning">Integration Pending</strong></span>
-        {% endif %}
-      </div>
-      <div class="d-flex align-items-center bg-white px-3 py-1 rounded-pill border">
-        {% if modules.complaints.available %}
-        <span class="status-dot bg-success"></span>
-        <span class="small text-muted">Complaints App: <strong>Connected</strong></span>
-        {% else %}
-        <span class="status-dot bg-secondary"></span>
-        <span class="small text-muted">Complaints App: <strong class="text-warning">Integration Pending</strong></span>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Row 1: Key Operational Metric Cards -->
 <div class="row">
@@ -258,8 +237,8 @@
               <span class="badge 
                     {% if act.activity_type == 'COMPLAINT' %}bg-danger text-white
                     {% elif act.activity_type == 'MAINTENANCE' %}bg-warning text-dark
-                    {% elif act.activity_type == 'ASSET' %}bg-info text-white
-                    {% elif act.activity_type == 'INVENTORY' %}bg-secondary text-white
+                    {% elif act.activity_type == 'ASSET' %}bg-info text-dark
+                    {% elif act.activity_type == 'INVENTORY' %}text-white" style="background-color: #6f42c1;
                     {% elif act.activity_type == 'USER' %}bg-primary text-white
                     {% else %}bg-dark text-white{% endif %}">
                 {{ act.get_activity_type_display }}
@@ -271,7 +250,15 @@
             <div class="d-flex align-items-center justify-content-between mt-1" style="font-size: 0.7rem;">
               <span class="text-muted">By: <strong>{{ act.user_name }}</strong></span>
               {% if act.status %}
-              <span class="badge bg-light text-dark border">{{ act.status }}</span>
+              <span class="badge 
+                    {% if 'resolve' in act.status.lower or 'close' in act.status.lower or 'complete' in act.status.lower or 'active' in act.status.lower %}bg-success text-white
+                    {% elif 'pend' in act.status.lower or 'submit' in act.status.lower or 'open' in act.status.lower or 'require' in act.status.lower %}bg-warning text-dark
+                    {% elif 'progress' in act.status.lower or 'assign' in act.status.lower or 'inspect' in act.status.lower or 'review' in act.status.lower %}bg-primary text-white
+                    {% elif 'stock' in act.status.lower or 'issue' in act.status.lower or 'receive' in act.status.lower %}text-white" style="background-color: #0d6efd;
+                    {% elif 'damage' in act.status.lower or 'maint' in act.status.lower or 'high' in act.status.lower %}bg-danger text-white
+                    {% else %}bg-secondary text-white{% endif %}">
+                {{ act.status }}
+              </span>
               {% endif %}
             </div>
           </div>
@@ -286,72 +273,15 @@
   </div>
 </div>
 
-<!-- Row 3: Modular Integration Details & Walkthrough guides -->
-<div class="row">
-  <!-- Assets Module Details card -->
-  <div class="col-md-6">
-    <div class="dash-card">
-      <div class="dash-card-header">
-        <span><i class="fa-solid fa-cubes me-2 text-info"></i> Asset Integration Hub</span>
-      </div>
-      <div class="dash-card-body">
-        {% if modules.assets.available %}
-        <p class="text-success small"><i class="fa-solid fa-circle-check"></i> Connected to Real Asset Registry model.
-        </p>
-        <p class="small">The dashboard is successfully extracting device metadata and statuses from the assets app
-          database.</p>
-        {% else %}
-        <div class="text-center py-2">
-          <i class="fa-solid fa-square-rss text-muted mb-3" style="font-size: 2.5rem;"></i>
-          <h6>Integration Pending</h6>
-          <p class="small text-muted">
-            The Assets app model `Asset` is currently unmigrated or unconfigured.
-            Our dashboard's modular structure will automatically bind to it when its developer creates the model class
-            and runs database migrations.
-          </p>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <!-- Inventory Module Details card -->
-  <div class="col-md-6">
-    <div class="dash-card">
-      <div class="dash-card-header">
-        <span><i class="fa-solid fa-warehouse me-2 text-secondary"></i> Inventory Integration Hub</span>
-      </div>
-      <div class="dash-card-body">
-        {% if modules.inventory.available %}
-        <p class="text-success small"><i class="fa-solid fa-circle-check"></i> Connected to Real InventoryItem model.
-        </p>
-        <p class="small">Stock level charts are automatically populated from the inventory catalog database.</p>
-        {% else %}
-        <div class="text-center py-2">
-          <i class="fa-solid fa-network-wired text-muted mb-3" style="font-size: 2.5rem;"></i>
-          <h6>Integration Pending</h6>
-          <p class="small text-muted">
-            The Inventory app model `InventoryItem` is currently not configured.
-            When configured, the stock levels, reorder quantities, and catalog reports will render dynamically in this
-            widget.
-          </p>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Chart.js CDN for Interactive Dashboards -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 <script>
   // Initialize chart once page loads
   window.addEventListener('DOMContentLoaded', () => {
     const ctx = document.getElementById('trendChart').getContext('2d');
-    const labels = {{ trends.labels| safe
-  }};
-  const complaintsData = {{ trends.complaints| safe }};
-  const assetsData = {{ trends.assets| safe }};
+    const labels = {{ trends.labels|safe }};
+    const complaintsData = {{ trends.complaints|safe }};
+    const assetsData = {{ trends.assets|safe }};
 
   new Chart(ctx, {
     type: 'line',

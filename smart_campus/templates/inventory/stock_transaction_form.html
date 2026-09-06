@@ -1,0 +1,102 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  Process Stock Transaction: {{ item.name }} - SmartCampus
+{% endblock title %}
+
+{% block active_inventory %}{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-7">
+      <div class="d-flex align-items-center mb-4 gap-3">
+        <a href="{% url 'inventory:detail' item.pk %}" class="btn btn-outline-secondary btn-sm" title="Back to Item">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <h3 class="fw-bold text-dark mb-0">Auditable Stock Transaction</h3>
+          <p class="text-muted small mb-0">Record received stock, stock adjustment, or manual issue for <strong>{{ item.name }}</strong>.</p>
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>
+          {% for error in form.non_field_errors %}
+            {{ error }}<br>
+          {% endfor %}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+
+      <div class="dash-card">
+        <div class="dash-card-body p-4">
+          <div class="p-3 bg-light rounded border mb-4 d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-muted small d-block">Current Stock Level</span>
+              <span class="fw-bold text-dark fs-5">{{ item.quantity }} {{ item.unit }}</span>
+            </div>
+            <div>
+              <span class="text-muted small d-block">Minimum Threshold</span>
+              <span class="badge bg-secondary">{{ item.minimum_quantity }} {{ item.unit }}</span>
+            </div>
+          </div>
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="row g-3 mb-3">
+              <div class="col-12 col-md-6">
+                <label for="{{ form.transaction_type.id_for_label }}" class="form-label fw-semibold text-dark">
+                  Transaction Type <span class="text-danger">*</span>
+                </label>
+                {{ form.transaction_type }}
+                {% if form.transaction_type.errors %}
+                  <div class="text-danger small mt-1">{{ form.transaction_type.errors.0 }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold text-dark">
+                  Quantity <span class="text-danger">*</span>
+                </label>
+                {{ form.quantity }}
+                {% if form.quantity.errors %}
+                  <div class="text-danger small mt-1">{{ form.quantity.errors.0 }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.asset.id_for_label }}" class="form-label fw-semibold text-dark">
+                Associated Campus Asset (Optional)
+              </label>
+              {{ form.asset }}
+              {% if form.asset.errors %}
+                <div class="text-danger small mt-1">{{ form.asset.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label for="{{ form.notes.id_for_label }}" class="form-label fw-semibold text-dark">
+                Transaction Purpose / Invoice / Note <span class="text-danger">*</span>
+              </label>
+              {{ form.notes }}
+              {% if form.notes.errors %}
+                <div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'inventory:detail' item.pk %}" class="btn btn-outline-secondary px-4 fw-semibold">Cancel</a>
+              <button type="submit" class="btn btn-success px-4 fw-semibold">
+                <i class="fa-solid fa-check me-2"></i>Process Transaction
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock dashboard_content %}

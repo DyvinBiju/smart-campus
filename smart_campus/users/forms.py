@@ -380,4 +380,141 @@ class UserSocialSignupForm(SocialSignupForm):
         return user
 
 
+class UserManagementCreateForm(forms.Form):
+    """
+    Form for Administrators to create any user role in the Control Center.
+    """
+    name = forms.CharField(
+        label=_("Full Name"),
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={"placeholder": _("e.g. John Doe"), "class": "form-control"}),
+    )
+    email = forms.EmailField(
+        label=_("Email Address"),
+        required=True,
+        widget=forms.EmailInput(attrs={"placeholder": _("e.g. user@campus.edu"), "class": "form-control"}),
+    )
+    role = forms.ChoiceField(
+        label=_("Campus Role"),
+        choices=User.Role.choices,
+        initial=User.Role.STUDENT,
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    campus_id = forms.CharField(
+        label=_("Campus / Employee / Roll ID"),
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("e.g. CS2024001 or STF001"), "class": "form-control"}),
+    )
+    department = forms.CharField(
+        label=_("Department / Program"),
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("e.g. Computer Science"), "class": "form-control"}),
+    )
+    year_or_semester = forms.CharField(
+        label=_("Year / Semester"),
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("e.g. 3rd Year / Sem 5"), "class": "form-control"}),
+    )
+    phone_number = forms.CharField(
+        label=_("Phone Number"),
+        max_length=30,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": _("e.g. +91 9876543210"), "class": "form-control"}),
+    )
+    password1 = forms.CharField(
+        label=_("Initial Password"),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Enter password"), "class": "form-control"}),
+    )
+    password2 = forms.CharField(
+        label=_("Confirm Initial Password"),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm password"), "class": "form-control"}),
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise ValidationError(_("An account with this email already exists."))
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        if password1 and password2:
+            if password1 != password2:
+                self.add_error("password2", _("The passwords did not match."))
+            else:
+                validate_password(password1)
+        return cleaned_data
+
+    def save(self) -> User:
+        email = self.cleaned_data["email"]
+        campus_id = self.cleaned_data.get("campus_id", "").strip()
+        username = _generate_unique_username(email, campus_id)
+        role = self.cleaned_data["role"]
+
+        is_staff = role in [User.Role.MAINTENANCE, User.Role.ADMIN]
+        is_superuser = role == User.Role.ADMIN
+
+        user = User(
+            username=username,
+            email=email,
+            name=self.cleaned_data["name"].strip(),
+            role=role,
+            department=self.cleaned_data.get("department", "").strip(),
+            campus_id=campus_id,
+            year_or_semester=self.cleaned_data.get("year_or_semester", "").strip(),
+            phone_number=self.cleaned_data.get("phone_number", "").strip(),
+            is_staff=is_staff,
+            is_superuser=is_superuser,
+        )
+        user.set_password(self.cleaned_data["password1"])
+        user.save()
+        return user
+
+
+class UserManagementEditForm(forms.ModelForm):
+    """
+    Form for Administrators to edit user profile, role, and operational flags.
+    """
+    class Meta:
+        model = User
+        fields = [
+            "name",
+            "email",
+            "role",
+            "department",
+            "campus_id",
+            "year_or_semester",
+            "phone_number",
+            "is_active",
+            "is_available",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "role": forms.Select(attrs={"class": "form-select"}),
+            "department": forms.TextInput(attrs={"class": "form-control"}),
+            "campus_id": forms.TextInput(attrs={"class": "form-control"}),
+            "year_or_semester": forms.TextInput(attrs={"class": "form-control"}),
+            "phone_number": forms.TextInput(attrs={"class": "form-control"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_available": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        qs = User.objects.filter(email__iexact=email)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError(_("Another user with this email address already exists."))
+        return email
+
+
+
 

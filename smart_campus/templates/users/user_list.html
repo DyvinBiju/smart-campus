@@ -1,0 +1,281 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  User Management - SmartCampus Control Center
+{% endblock title %}
+
+{% block active_users_manage %}active{% endblock %}
+
+{% block dashboard_content %}
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <h3 class="fw-bold text-dark mb-1">
+        <i class="fa-solid fa-users-gear text-primary me-2"></i>User Management Directory
+      </h3>
+      <p class="text-muted small mb-0">
+        Manage campus users, assign roles, monitor account status, and control access permissions.
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'users:create' %}" class="btn btn-primary shadow-sm px-4 fw-semibold">
+        <i class="fa-solid fa-user-plus me-2"></i>Add New User
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center">
+        <div class="widget-icon bg-primary bg-opacity-10 text-primary me-3">
+          <i class="fa-solid fa-users fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Total Registered</div>
+          <div class="widget-value h3 mb-0 fw-bold">{{ total_users }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center">
+        <div class="widget-icon bg-success bg-opacity-10 text-success me-3">
+          <i class="fa-solid fa-user-check fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Active Users</div>
+          <div class="widget-value h3 mb-0 fw-bold">{{ active_users }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center">
+        <div class="widget-icon bg-info bg-opacity-10 text-info me-3">
+          <i class="fa-solid fa-user-graduate fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Students / Faculty</div>
+          <div class="widget-value h3 mb-0 fw-bold">{{ student_count|add:faculty_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center">
+        <div class="widget-icon bg-warning bg-opacity-10 text-warning me-3">
+          <i class="fa-solid fa-user-shield fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Staff / Admins</div>
+          <div class="widget-value h3 mb-0 fw-bold">{{ maintenance_count|add:admin_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Bar -->
+  <div class="dash-card mb-4">
+    <div class="dash-card-body py-3">
+      <form method="get" class="row g-3 align-items-center">
+        <div class="col-12 col-md-5">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+              <i class="fa-solid fa-magnifying-glass text-muted"></i>
+            </span>
+            <input type="text" name="q" value="{{ search_query }}" class="form-control border-start-0 ps-0" placeholder="Search by name, username, email, campus ID...">
+          </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+          <select name="role" class="form-select">
+            <option value="">All Roles</option>
+            {% for code, label in role_choices %}
+              <option value="{{ code }}" {% if selected_role == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <select name="status" class="form-select">
+            <option value="">All Status</option>
+            <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active Only</option>
+            <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive Only</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary w-100 fw-semibold">
+            <i class="fa-solid fa-filter me-1"></i>Filter
+          </button>
+          {% if search_query or selected_role or selected_status %}
+            <a href="{% url 'users:manage' %}" class="btn btn-outline-secondary" title="Reset Filters">
+              <i class="fa-solid fa-rotate-left"></i>
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Messages Alert -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid {% if message.tags == 'danger' or message.tags == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- User Directory Table -->
+  <div class="dash-card">
+    <div class="dash-card-header d-flex justify-content-between align-items-center">
+      <span class="fw-bold text-dark">
+        <i class="fa-solid fa-table me-2 text-primary"></i>User Records ({{ page_obj.paginator.count }})
+      </span>
+      <span class="badge bg-light text-secondary border">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" class="ps-4">User</th>
+            <th scope="col">Contact & Email</th>
+            <th scope="col">Campus ID / Dept</th>
+            <th scope="col">Role</th>
+            <th scope="col">Account Status</th>
+            <th scope="col">Joined Date</th>
+            <th scope="col" class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users_list %}
+            <tr>
+              <td class="ps-4">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                    {{ u.username|first|upper }}
+                  </div>
+                  <div>
+                    <a href="{% url 'users:detail' u.pk %}" class="fw-bold text-dark text-decoration-none hover-primary">
+                      {{ u.name|default:u.username }}
+                    </a>
+                    <div class="small text-muted">@{{ u.username }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="small fw-semibold text-dark">{{ u.email }}</div>
+                {% if u.phone_number %}
+                  <div class="small text-muted"><i class="fa-solid fa-phone me-1"></i>{{ u.phone_number }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="small fw-semibold text-dark">{{ u.campus_id|default:"—" }}</div>
+                {% if u.department %}
+                  <div class="small text-muted">{{ u.department }}</div>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.role == 'ADMIN' or u.is_superuser %}
+                  <span class="badge bg-danger text-white rounded-pill px-3 py-2">
+                    <i class="fa-solid fa-user-shield me-1"></i>Administrator
+                  </span>
+                {% elif u.role == 'MAINTENANCE' or u.is_staff %}
+                  <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                    <i class="fa-solid fa-screwdriver-wrench me-1"></i>Maintenance Staff
+                  </span>
+                {% elif u.role == 'FACULTY' %}
+                  <span class="badge bg-info text-dark rounded-pill px-3 py-2">
+                    <i class="fa-solid fa-chalkboard-user me-1"></i>Faculty
+                  </span>
+                {% else %}
+                  <span class="badge bg-secondary text-white rounded-pill px-3 py-2">
+                    <i class="fa-solid fa-user-graduate me-1"></i>Student
+                  </span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.is_active %}
+                  <span class="badge bg-success text-white rounded-pill px-3 py-2">
+                    <i class="fa-solid fa-circle-check me-1"></i>Active
+                  </span>
+                {% else %}
+                  <span class="badge bg-secondary text-white rounded-pill px-3 py-2">
+                    <i class="fa-solid fa-circle-xmark me-1"></i>Inactive
+                  </span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">
+                {{ u.date_joined|date:"M d, Y" }}
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group btn-group-sm">
+                  <a href="{% url 'users:detail' u.pk %}" class="btn btn-outline-primary" title="View Profile">
+                    <i class="fa-solid fa-eye"></i> View
+                  </a>
+                  <a href="{% url 'users:edit' u.pk %}" class="btn btn-outline-secondary" title="Edit User">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </a>
+                  {% if u.pk != request.user.pk %}
+                    <form method="post" action="{% url 'users:toggle_active' u.pk %}" class="d-inline" onsubmit="return confirm('Are you sure you want to {% if u.is_active %}deactivate{% else %}activate{% endif %} user {{ u.username }}?');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="{% if u.is_active %}Deactivate Account{% else %}Activate Account{% endif %}">
+                        <i class="fa-solid {% if u.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-5">
+                <div class="empty-state-container">
+                  <i class="fa-solid fa-user-xmark empty-state-icon text-muted mb-3 fs-1"></i>
+                  <h5 class="fw-bold text-dark">No users match your criteria</h5>
+                  <p class="text-muted small">Try adjusting your search keywords or clearing active role filters.</p>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    {% if is_paginated %}
+      <div class="dash-card-body border-top py-3 d-flex justify-content-between align-items-center">
+        <div class="small text-muted">
+          Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} users
+        </div>
+        <nav aria-label="User directory navigation">
+          <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&role={{ selected_role }}&status={{ selected_status }}">Previous</a>
+              </li>
+            {% endif %}
+            
+            {% for page_num in page_obj.paginator.page_range %}
+              <li class="page-item {% if page_obj.number == page_num %}active{% endif %}">
+                <a class="page-link" href="?page={{ page_num }}&q={{ search_query }}&role={{ selected_role }}&status={{ selected_status }}">{{ page_num }}</a>
+              </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&role={{ selected_role }}&status={{ selected_status }}">Next</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    {% endif %}
+  </div>
+{% endblock dashboard_content %}

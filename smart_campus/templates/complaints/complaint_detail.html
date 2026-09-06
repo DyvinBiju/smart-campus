@@ -11,26 +11,31 @@
   <div class="container">
     <div class="row align-items-center">
       <div class="col-md-8">
-        <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
           <span class="badge bg-primary fs-6 font-monospace px-3 py-2">{{ complaint.complaint_id }}</span>
           {% if complaint.status == 'Submitted' %}
             <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-inbox me-1"></i>Submitted</span>
           {% elif complaint.status == 'Under Review' %}
-            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-magnifying-glass me-1"></i>Under Review</span>
+            <span class="badge bg-secondary text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-magnifying-glass me-1"></i>Under Review</span>
+          {% elif complaint.status == 'Assigned' %}
+            <span class="badge bg-primary text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-user-check me-1"></i>Assigned</span>
+          {% elif complaint.status == 'Under Inspection' %}
+            <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-clipboard-check me-1"></i>Under Inspection</span>
+          {% elif complaint.status == 'Action Required' %}
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i>Action Required</span>
           {% elif complaint.status == 'In Progress' %}
             <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fa-solid fa-gears me-1"></i>In Progress</span>
           {% elif complaint.status == 'Resolved' %}
             <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Resolved</span>
+          {% elif complaint.status == 'Closed' %}
+            <span class="badge bg-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-lock me-1"></i>Closed</span>
           {% endif %}
         </div>
         <h2 class="fw-bold mb-0">{{ complaint.title }}</h2>
       </div>
       <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        <a href="{% url 'complaints:status_update' complaint.complaint_id %}" class="btn btn-warning px-3 py-2 text-dark fw-semibold me-2">
-          <i class="fa-solid fa-pen-to-square me-1"></i> Update Status & Assign
-        </a>
         <a href="{% url 'complaints:list' %}" class="btn btn-outline-secondary px-3 py-2">
-          <i class="fa-solid fa-arrow-left me-1"></i> Back to List
+          <i class="fa-solid fa-arrow-left me-1"></i> Back to Complaints List
         </a>
       </div>
     </div>
@@ -43,17 +48,26 @@
   <div class="container">
     <div class="row g-4">
       <div class="col-lg-8">
+        
+        <!-- DESCRIPTION CARD -->
         <div class="card border-0 shadow-sm rounded-4 mb-4">
           <div class="card-body p-4 p-md-5">
-            <h4 class="fw-bold mb-3 border-bottom pb-2">Description</h4>
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Issue Description</h5>
             <p class="text-secondary leading-relaxed fs-6 style-text" style="white-space: pre-line;">
               {{ complaint.description }}
             </p>
 
+            {% if complaint.inspection_notes %}
+              <div class="alert alert-info mt-4 rounded-3 p-3">
+                <h6 class="fw-bold text-info-emphasis mb-2"><i class="fa-solid fa-clipboard-list me-2"></i>Maintenance Inspection Findings</h6>
+                <p class="mb-0 text-dark" style="white-space: pre-line;">{{ complaint.inspection_notes }}</p>
+              </div>
+            {% endif %}
+
             {% if complaint.resolution_notes %}
               <div class="alert alert-success mt-4 rounded-3 p-3">
-                <h5 class="fw-bold text-success mb-2"><i class="fa-solid fa-clipboard-check me-2"></i>Resolution Notes</h5>
-                <p class="mb-1 text-dark">{{ complaint.resolution_notes }}</p>
+                <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-clipboard-check me-2"></i>Resolution Summary</h6>
+                <p class="mb-1 text-dark" style="white-space: pre-line;">{{ complaint.resolution_notes }}</p>
                 {% if complaint.resolved_at %}
                   <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>Resolved on: {{ complaint.resolved_at|date:"F d, Y - H:i" }}</small>
                 {% endif %}
@@ -62,48 +76,217 @@
           </div>
         </div>
 
-        <!-- INVENTORY RESOURCES USED SECTION -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-          <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-              <h5 class="fw-bold mb-0"><i class="fa-solid fa-boxes-stacked text-primary me-2"></i>Resources & Spare Parts Used</h5>
-              <button class="btn btn-sm btn-outline-primary fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#addResourceCollapse">
-                <i class="fa-solid fa-plus me-1"></i> Log Spare Item Used
-              </button>
-            </div>
+        <!-- ROLE ACTION CARDS -->
 
-            <!-- Collapse Form to Add Resource -->
-            <div class="collapse mb-4" id="addResourceCollapse">
-              <div class="p-3 bg-light rounded-3 border">
-                <h6 class="fw-bold mb-2">Record Spare Item / Stock Consumed</h6>
-                <form action="{% url 'complaints:add_resource' complaint.complaint_id %}" method="post">
+        <!-- 1. ADMIN ACTIONS: STAFF ASSIGNMENT -->
+        {% if is_admin %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-warning">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-user-gear text-warning me-2"></i>Administrator Action: Assign Maintenance Staff</h5>
+            <form action="{% url 'complaints:assign_staff' complaint.complaint_id %}" method="post">
+              {% csrf_token %}
+              <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                  <label class="form-label small fw-semibold text-muted">Select Available Maintenance Staff Member</label>
+                  {{ assign_form.assigned_to }}
+                </div>
+                <div class="col-md-4">
+                  <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark">
+                    <i class="fa-solid fa-user-check me-1"></i> Assign Staff
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 2. MAINTENANCE STAFF ACTIONS -->
+        {% if is_staff or is_admin %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-screwdriver-wrench text-primary me-2"></i>Maintenance Operations Hub</h5>
+
+            <!-- Tabs for Staff Actions -->
+            <ul class="nav nav-pills mb-3" id="staffActionTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-semibold" id="inspect-tab" data-bs-toggle="tab" data-bs-target="#inspect-panel" type="button">
+                  <i class="fa-solid fa-clipboard-check me-1"></i> Update Status & Inspection
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-panel" type="button">
+                  <i class="fa-solid fa-box-open me-1"></i> Use Available Inventory
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="request-tab" data-bs-toggle="tab" data-bs-target="#request-panel" type="button">
+                  <i class="fa-solid fa-paper-plane me-1"></i> Request Resource / Asset Action
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content pt-2" id="staffActionTabContent">
+              <!-- Panel 1: Inspection & Status Update -->
+              <div class="tab-pane fade show active" id="inspect-panel">
+                <form action="{% url 'complaints:inspect' complaint.complaint_id %}" method="post">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label small fw-semibold">Complaint Status</label>
+                      {{ inspect_form.status }}
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label small fw-semibold">Inspection Notes</label>
+                      {{ inspect_form.inspection_notes }}
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label small fw-semibold">Resolution Notes (if resolving)</label>
+                      {{ inspect_form.resolution_notes }}
+                    </div>
+                    <div class="col-12 text-end">
+                      <button type="submit" class="btn btn-primary px-4">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Save Inspection Progress
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Panel 2: Direct Inventory Usage -->
+              <div class="tab-pane fade" id="inventory-panel">
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                  <p class="small text-muted mb-0">
+                    <i class="fa-solid fa-info-circle me-1 text-primary"></i> Issue available inventory items directly. Stock quantity will be deducted atomically and logged in Stock Transactions.
+                  </p>
+                </div>
+                <form action="{% url 'complaints:use_inventory' complaint.complaint_id %}" method="post">
                   {% csrf_token %}
                   <div class="row g-3 align-items-end">
                     <div class="col-md-6">
-                      <label class="form-label small fw-semibold">Inventory Item</label>
-                      {{ resource_form.inventory_item }}
+                      <label class="form-label small fw-semibold">Select Available Inventory Item</label>
+                      {{ usage_form.inventory_item }}
                     </div>
                     <div class="col-md-3">
                       <label class="form-label small fw-semibold">Quantity</label>
-                      {{ resource_form.quantity_used }}
+                      {{ usage_form.quantity_used }}
                     </div>
                     <div class="col-md-3">
-                      <button type="submit" class="btn btn-primary w-100 fw-semibold"><i class="fa-solid fa-check me-1"></i> Log Usage</button>
+                      <button type="submit" class="btn btn-success w-100 fw-semibold">
+                        <i class="fa-solid fa-minus-circle me-1"></i> Issue Item
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Panel 3: Maintenance Action Request -->
+              <div class="tab-pane fade" id="request-panel">
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                  <p class="small text-muted mb-0">
+                    <i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i> Use this when requested stock is out of stock (0 quantity) or when an asset requires official repair, replacement, or retirement approval. This transitions complaint status to <strong>Action Required</strong>.
+                  </p>
+                </div>
+                <form action="{% url 'complaints:request_action' complaint.complaint_id %}" method="post">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label small fw-semibold">Request Type</label>
+                      {{ request_form.request_type }}
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label small fw-semibold">Inventory Item (Optional)</label>
+                      {{ request_form.inventory_item }}
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label small fw-semibold">Quantity</label>
+                      {{ request_form.quantity_requested }}
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label small fw-semibold">Reason / Operational Findings</label>
+                      {{ request_form.reason }}
+                    </div>
+                    <div class="col-12 text-end">
+                      <button type="submit" class="btn btn-warning px-4 fw-semibold text-dark">
+                        <i class="fa-solid fa-paper-plane me-1"></i> Submit Request to Admin
+                      </button>
                     </div>
                   </div>
                 </form>
               </div>
             </div>
+          </div>
+        </div>
+        {% endif %}
 
+        <!-- PENDING MAINTENANCE REQUESTS DECISION SECTION (FOR ADMIN) -->
+        {% if maintenance_requests %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-file-signature text-warning me-2"></i>Maintenance Action Requests</h5>
+            {% for req in maintenance_requests %}
+              <div class="p-3 bg-light rounded-3 border mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="badge bg-dark">{{ req.get_request_type_display }}</span>
+                  <span class="badge {% if req.status == 'PENDING' %}bg-warning text-dark{% elif req.status == 'APPROVED' %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                    {{ req.get_status_display }}
+                  </span>
+                </div>
+                <p class="mb-2"><strong>Reason:</strong> {{ req.reason }}</p>
+                {% if req.inventory_item %}
+                  <p class="small text-muted mb-2">Requested Item: {{ req.inventory_item.name }} (Qty: {{ req.quantity_requested }}, Current Stock: {{ req.inventory_item.quantity }})</p>
+                {% endif %}
+                <small class="text-muted d-block mb-3">Submitted by {{ req.requested_by.name|default:req.requested_by.username }} on {{ req.created_at|date:"M d, Y H:i" }}</small>
+
+                {% if req.admin_notes %}
+                  <div class="p-2 bg-white rounded border small text-secondary mb-2">
+                    <strong>Admin Notes:</strong> {{ req.admin_notes }}
+                  </div>
+                {% endif %}
+
+                {% if is_admin and req.status == 'PENDING' %}
+                  <div class="p-3 bg-white rounded border border-warning">
+                    <h6 class="fw-bold text-dark mb-2">Record Administrator Decision</h6>
+                    <form action="{% url 'complaints:request_decide' req.pk %}" method="post">
+                      {% csrf_token %}
+                      <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                          <label class="form-label small fw-semibold">Decision</label>
+                          <select name="status" class="form-select form-select-sm" required>
+                            <option value="APPROVED">Approve</option>
+                            <option value="REJECTED">Reject</option>
+                            <option value="MORE_INFO">Request More Info</option>
+                          </select>
+                        </div>
+                        <div class="col-md-5">
+                          <label class="form-label small fw-semibold">Admin Notes</label>
+                          <input type="text" name="admin_notes" class="form-control form-control-sm" placeholder="Decision rationale...">
+                        </div>
+                        <div class="col-md-3">
+                          <button type="submit" class="btn btn-sm btn-warning w-100 fw-semibold text-dark">Submit Decision</button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- INVENTORY RESOURCES CONSUMED TABLE -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="fa-solid fa-boxes-stacked text-primary me-2"></i>Resources & Spare Parts Issued</h5>
             {% if resources_used %}
               <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                   <thead class="table-light">
                     <tr>
                       <th>Resource Item</th>
-                      <th>Category</th>
-                      <th class="text-center">Quantity Used</th>
-                      <th>Date Logged</th>
+                      <th class="text-center">Quantity Issued</th>
+                      <th>Date Issued</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -114,7 +297,6 @@
                             {{ res.inventory_item.name }}
                           </a>
                         </td>
-                        <td><span class="badge bg-secondary">{{ res.inventory_item.category.name }}</span></td>
                         <td class="text-center fw-bold text-primary">{{ res.quantity_used }} {{ res.inventory_item.unit }}</td>
                         <td class="small text-muted">{{ res.used_at|date:"M d, Y - H:i" }}</td>
                       </tr>
@@ -123,48 +305,44 @@
                 </table>
               </div>
             {% else %}
-              <p class="text-muted small mb-0">No spare parts or inventory resources logged for this complaint yet.</p>
+              <p class="text-muted small mb-0">No spare parts or inventory resources issued for this complaint yet.</p>
             {% endif %}
           </div>
         </div>
 
+        <!-- PROGRESS TIMELINE HISTORY -->
         <div class="card border-0 shadow-sm rounded-4">
           <div class="card-body p-4">
-            <h5 class="fw-bold mb-3">Status Lifecycle</h5>
-            <div class="row text-center g-2">
-              <div class="col-3">
-                <div class="p-3 rounded-3 {% if complaint.status == 'Submitted' %}bg-info text-white fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
-                  <i class="fa-solid fa-inbox d-block fs-4 mb-1"></i>
-                  <small>Submitted</small>
-                </div>
-              </div>
-              <div class="col-3">
-                <div class="p-3 rounded-3 {% if complaint.status == 'Under Review' %}bg-warning text-dark fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
-                  <i class="fa-solid fa-magnifying-glass d-block fs-4 mb-1"></i>
-                  <small>Under Review</small>
-                </div>
-              </div>
-              <div class="col-3">
-                <div class="p-3 rounded-3 {% if complaint.status == 'In Progress' %}bg-primary text-white fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
-                  <i class="fa-solid fa-gears d-block fs-4 mb-1"></i>
-                  <small>In Progress</small>
-                </div>
-              </div>
-              <div class="col-3">
-                <div class="p-3 rounded-3 {% if complaint.status == 'Resolved' %}bg-success text-white fw-bold shadow-sm{% else %}bg-light text-muted{% endif %}">
-                  <i class="fa-solid fa-circle-check d-block fs-4 mb-1"></i>
-                  <small>Resolved</small>
-                </div>
-              </div>
-            </div>
+            <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="fa-solid fa-clock-rotate-left me-2 text-info"></i>Complaint Progress Timeline History</h5>
+            {% if history %}
+              <ul class="timeline list-unstyled mb-0 position-relative">
+                {% for item in history %}
+                  <li class="timeline-item pb-4 position-relative ps-4 border-start border-2 border-primary ms-2">
+                    <div class="position-absolute start-0 translate-middle-x bg-primary rounded-circle" style="width: 12px; height: 12px; top: 4px; left: -1px;"></div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="badge bg-light text-primary border font-monospace">{{ item.status }}</span>
+                      <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>{{ item.timestamp|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <p class="small text-dark mb-0 fw-semibold">{{ item.comment|default:"Status updated" }}</p>
+                    {% if item.changed_by %}
+                      <small class="text-muted"><i class="fa-solid fa-user me-1"></i>By {{ item.changed_by.name|default:item.changed_by.username }}</small>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted small mb-0">No history entries logged yet.</p>
+            {% endif %}
           </div>
         </div>
+
       </div>
 
+      <!-- SIDEBAR INFO CARD -->
       <div class="col-lg-4">
         <div class="card border-0 shadow-sm rounded-4 mb-4">
           <div class="card-body p-4">
-            <h5 class="fw-bold mb-3 border-bottom pb-2">Information</h5>
+            <h5 class="fw-bold mb-3 border-bottom pb-2">Complaint Info</h5>
             
             <div class="mb-3">
               <label class="text-muted small fw-semibold d-block">Submitted By</label>
@@ -172,12 +350,12 @@
             </div>
 
             {% if complaint.asset %}
-              <div class="mb-3 p-2 bg-light rounded-3 border">
-                <label class="text-muted small fw-semibold d-block">Affected Asset</label>
+              <div class="mb-3 p-3 bg-light rounded-3 border">
+                <label class="text-muted small fw-semibold d-block">Affected Campus Asset</label>
                 <a href="{% url 'assets:asset_detail' complaint.asset.pk %}" class="fs-6 fw-bold text-primary text-decoration-none d-block">
                   <i class="fa-solid fa-laptop-code me-1"></i> {{ complaint.asset.asset_code }} - {{ complaint.asset.name }}
                 </a>
-                <small class="badge {{ complaint.asset.status_badge_class }} mt-1">{{ complaint.asset.get_status_display }}</small>
+                <span class="badge {{ complaint.asset.status_badge_class }} mt-2">{{ complaint.asset.get_status_display }}</span>
               </div>
             {% endif %}
 
@@ -203,7 +381,7 @@
             </div>
 
             <div class="mb-3">
-              <label class="text-muted small fw-semibold d-block">Assigned Technician</label>
+              <label class="text-muted small fw-semibold d-block">Assigned Maintenance Staff</label>
               <span class="text-dark fw-bold">
                 {% if complaint.assigned_to %}
                   <i class="fa-solid fa-user-gear me-2 text-success"></i>{{ complaint.assigned_to.name|default:complaint.assigned_to.username }}
@@ -211,7 +389,7 @@
                     <small class="d-block text-muted fw-normal">Assigned: {{ complaint.assigned_at|date:"M d, Y" }}</small>
                   {% endif %}
                 {% else %}
-                  <span class="text-muted fw-normal"><i class="fa-regular fa-user me-1"></i>Not assigned yet</span>
+                  <span class="text-danger fw-semibold"><i class="fa-regular fa-user me-1"></i>Not assigned yet</span>
                 {% endif %}
               </span>
             </div>
@@ -233,4 +411,3 @@
 </section>
 <!-- END COMPLAINT DETAILS SECTION -->
 {% endblock content %}
-

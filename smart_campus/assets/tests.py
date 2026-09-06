@@ -44,12 +44,36 @@ class AssetModelTest(TestCase):
         self.assertEqual(self.asset.status_badge_class, "bg-danger")
 
 
+from smart_campus.users.models import User
+
+
 class AssetViewsTest(TestCase):
     """
-    Unit tests for Asset CRUD views and search/filter functionality.
+    Unit tests for Asset CRUD views, role permissions, and search/filter functionality.
     """
 
     def setUp(self):
+        self.admin = User.objects.create_user(
+            username="adminuser",
+            email="admin@campus.edu",
+            password="password123",
+            role=User.Role.ADMIN,
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.staff = User.objects.create_user(
+            username="staffuser",
+            email="staff@campus.edu",
+            password="password123",
+            role=User.Role.MAINTENANCE,
+        )
+        self.student = User.objects.create_user(
+            username="studentuser",
+            email="student@campus.edu",
+            password="password123",
+            role=User.Role.STUDENT,
+        )
+
         self.asset1 = Asset.objects.create(
             asset_code="AST-101",
             name="Projector Epson EB-X06",
@@ -67,8 +91,31 @@ class AssetViewsTest(TestCase):
             status="UNDER_MAINTENANCE",
         )
 
-    def test_asset_list_view(self):
-        """Test asset list page loads correctly with statistics."""
+    def test_student_access_denied(self):
+        """Test that Students are blocked from asset management."""
+        self.client.force_login(self.student)
+        response = self.client.get(reverse("assets:asset_list"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_maintenance_staff_read_only_access(self):
+        """Test that Maintenance Staff can view asset list/detail but not create/edit/delete."""
+        self.client.force_login(self.staff)
+
+        # 1. Staff can view list
+        response = self.client.get(reverse("assets:asset_list"))
+        self.assertEqual(response.status_code, 200)
+
+        # 2. Staff can view detail
+        detail_resp = self.client.get(reverse("assets:asset_detail", kwargs={"pk": self.asset1.pk}))
+        self.assertEqual(detail_resp.status_code, 200)
+
+        # 3. Staff cannot access create form
+        create_resp = self.client.get(reverse("assets:asset_create"))
+        self.assertEqual(create_resp.status_code, 403)
+
+    def test_admin_asset_list_view(self):
+        """Test asset list page loads correctly for admin with statistics."""
+        self.client.force_login(self.admin)
         response = self.client.get(reverse("assets:asset_list"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "assets/asset_list.html")
@@ -80,6 +127,7 @@ class AssetViewsTest(TestCase):
 
     def test_asset_list_search(self):
         """Test searching assets by keyword."""
+        self.client.force_login(self.admin)
         response = self.client.get(reverse("assets:asset_list"), {"q": "Microscope"})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Microscope")
@@ -87,6 +135,7 @@ class AssetViewsTest(TestCase):
 
     def test_asset_list_filter_by_status(self):
         """Test filtering assets by status."""
+        self.client.force_login(self.admin)
         response = self.client.get(
             reverse("assets:asset_list"), {"status": "UNDER_MAINTENANCE"}
         )
@@ -96,6 +145,7 @@ class AssetViewsTest(TestCase):
 
     def test_asset_detail_view(self):
         """Test asset detail page displays asset specifications."""
+        self.client.force_login(self.admin)
         response = self.client.get(
             reverse("assets:asset_detail", kwargs={"pk": self.asset1.pk})
         )
@@ -106,6 +156,7 @@ class AssetViewsTest(TestCase):
 
     def test_asset_create_view(self):
         """Test adding a new asset via the create form."""
+        self.client.force_login(self.admin)
         data = {
             "asset_code": "AST-201",
             "name": "Sony Wireless Microphone",
@@ -121,6 +172,7 @@ class AssetViewsTest(TestCase):
 
     def test_asset_update_view(self):
         """Test updating an existing asset."""
+        self.client.force_login(self.admin)
         data = {
             "asset_code": "AST-101",
             "name": "Projector Epson EB-X06 (Updated)",
@@ -138,10 +190,22 @@ class AssetViewsTest(TestCase):
         self.assertEqual(self.asset1.name, "Projector Epson EB-X06 (Updated)")
         self.assertEqual(self.asset1.status, "IN_STOCK")
 
+    def test_asset_retire_view(self):
+        """Test marking an asset as retired."""
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse("assets:asset_retire", kwargs={"pk": self.asset1.pk})
+        )
+        self.assertRedirects(response, reverse("assets:asset_detail", kwargs={"pk": self.asset1.pk}))
+        self.asset1.refresh_from_db()
+        self.assertEqual(self.asset1.status, "RETIRED")
+
     def test_asset_delete_view(self):
         """Test deleting an asset."""
+        self.client.force_login(self.admin)
         response = self.client.post(
             reverse("assets:asset_delete", kwargs={"pk": self.asset2.pk})
         )
         self.assertRedirects(response, reverse("assets:asset_list"))
         self.assertFalse(Asset.objects.filter(pk=self.asset2.pk).exists())
+

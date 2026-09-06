@@ -289,3 +289,108 @@ class TestLandingPageAndAuthTemplates:
         content = response.content.decode()
         assert "Already have an account?" in content
         assert reverse("account_login") in content
+
+
+class TestUserManagementViews:
+    def test_user_list_unauthenticated_redirects(self, client):
+        response = client.get(reverse("users:manage"))
+        assert response.status_code == HTTPStatus.FOUND
+
+    def test_user_list_student_access_denied(self, client):
+        student = UserFactory(role=User.Role.STUDENT)
+        client.force_login(student)
+        response = client.get(reverse("users:manage"))
+        assert response.status_code == HTTPStatus.FORBIDDEN
+
+    def test_user_list_admin_access_allowed(self, client):
+        admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        client.force_login(admin)
+        response = client.get(reverse("users:manage"))
+        assert response.status_code == HTTPStatus.OK
+        assert "User Management Directory" in response.content.decode()
+
+    def test_user_list_search_and_filter(self, client):
+        admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        target_student = UserFactory(name="Unique Searchable Student", role=User.Role.STUDENT)
+        client.force_login(admin)
+
+        response = client.get(reverse("users:manage") + "?q=Unique Searchable")
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "Unique Searchable Student" in content
+
+    def test_user_detail_view(self, client):
+        admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        target_user = UserFactory(name="Target User Details", role=User.Role.STUDENT)
+        client.force_login(admin)
+
+        response = client.get(reverse("users:detail", kwargs={"pk": target_user.pk}))
+        assert response.status_code == HTTPStatus.OK
+        assert "Target User Details" in response.content.decode()
+
+    def test_user_create_view(self, client):
+        admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        client.force_login(admin)
+
+        response = client.post(
+            reverse("users:create"),
+            data={
+                "name": "New Admin Created User",
+                "email": "created.user@campus.edu",
+                "role": User.Role.STUDENT.value,
+                "campus_id": "CS999",
+                "password1": "SecurePass123!",
+                "password2": "SecurePass123!",
+            },
+            follow=True,
+        )
+        assert response.status_code == HTTPStatus.OK
+        assert User.objects.filter(email="created.user@campus.edu").exists()
+
+    def test_admin_self_deactivation_safeguard(self, client):
+        admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True, is_active=True)
+        client.force_login(admin)
+
+        response = client.post(reverse("users:toggle_active", kwargs={"pk": admin.pk}), follow=True)
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "You cannot deactivate your own account" in content
+
+        admin.refresh_from_db()
+        assert admin.is_active is True
+
+    def test_admin_self_demotion_safeguard(self, client):
+        admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True, is_active=True)
+        client.force_login(admin)
+
+        response = client.post(
+            reverse("users:edit", kwargs={"pk": admin.pk}),
+            data={
+                "name": admin.name or admin.username,
+                "email": admin.email,
+                "role": User.Role.STUDENT.value,
+                "is_active": True,
+            },
+        )
+        assert response.status_code == HTTPStatus.OK
+        content = response.content.decode()
+        assert "You cannot remove administrative access from your own account" in content
+
+        admin.refresh_from_db()
+        assert admin.role == User.Role.ADMIN
+
+    def test_maintenance_staff_management_roster(self, client):
+        admin = UserFactory(role=User.Role.ADMIN, is_staff=True, is_superuser=True)
+        staff = UserFactory(name="Electrician Bob", role=User.Role.MAINTENANCE, is_available=True)
+        client.force_login(admin)
+
+        response = client.get(reverse("users:staff"))
+        assert response.status_code == HTTPStatus.OK
+        assert "Electrician Bob" in response.content.decode()
+
+        # Toggle availability
+        toggle_resp = client.post(reverse("users:toggle_staff_availability", kwargs={"pk": staff.pk}), follow=True)
+        assert toggle_resp.status_code == HTTPStatus.OK
+        staff.refresh_from_db()
+        assert staff.is_available is False
+

@@ -2,32 +2,33 @@
 {% load static %}
 
 {% block title %}
-  Delete Inventory Item: {{ item.name }} - SmartCampus
+  Delete Category: {{ category.name }} - SmartCampus Control Center
 {% endblock title %}
 
-{% block active_inventory %}{% endblock %}
+{% block active_inventory_category %}active{% endblock %}
+{% block active_inventory_category_maint %}active{% endblock %}
 
 {% block dashboard_content %}
   <div class="row justify-content-center">
     <div class="col-12 col-md-6">
       <div class="dash-card border-danger">
         <div class="dash-card-header bg-danger text-white">
-          <i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm Inventory Item Deletion
+          <i class="fa-solid fa-tags me-2"></i>Confirm Category Deletion
         </div>
         <div class="dash-card-body p-4 text-center">
           <div class="text-danger mb-3 fs-1">
             <i class="fa-solid fa-trash-can"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-2">Delete Inventory Item?</h4>
+          <h4 class="fw-bold text-dark mb-2">Delete Inventory Category?</h4>
           <p class="text-muted mb-4">
-            Are you sure you want to delete <strong>"{{ item.name }}"</strong> (Current Stock: {{ item.quantity }} {{ item.unit }})?
+            Are you sure you want to permanently delete category <strong>"{{ category.name }}"</strong>?
           </p>
 
           <form method="post" class="d-flex justify-content-center gap-3">
             {% csrf_token %}
-            <a href="{% url 'inventory:detail' item.pk %}" class="btn btn-outline-secondary px-4 fw-semibold">Cancel</a>
+            <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-secondary px-4 fw-semibold">Cancel</a>
             <button type="submit" class="btn btn-danger px-4 fw-semibold">
-              <i class="fa-solid fa-trash me-2"></i>Delete Item
+              <i class="fa-solid fa-trash me-2"></i>Delete Category
             </button>
           </form>
         </div>

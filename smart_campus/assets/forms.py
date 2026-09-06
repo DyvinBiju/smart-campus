@@ -8,6 +8,17 @@ class AssetForm(forms.ModelForm):
     Provides styled Bootstrap 5 widgets and placeholders.
     """
 
+    asset_code = forms.CharField(
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "e.g. AST-0001 (Leave blank to auto-generate)",
+            }
+        ),
+        help_text="Unique asset identifier. Auto-generated if left blank.",
+    )
+
     class Meta:
         model = Asset
         fields = [
@@ -21,12 +32,6 @@ class AssetForm(forms.ModelForm):
             "description",
         ]
         widgets = {
-            "asset_code": forms.TextInput(
-                attrs={
-                    "class": "form-control",
-                    "placeholder": "e.g. AST-101",
-                }
-            ),
             "name": forms.TextInput(
                 attrs={
                     "class": "form-control",

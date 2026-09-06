@@ -39,6 +39,11 @@ class User(AbstractUser):
         max_length=50,
         help_text=_("e.g. 3rd Year / Semester 5 (for students)."),
     )
+    is_available = models.BooleanField(
+        _("Available for Assignment"),
+        default=True,
+        help_text=_("Designates whether maintenance staff is available for new assignments."),
+    )
 
     first_name = None  # type: ignore[assignment]
     last_name = None  # type: ignore[assignment]

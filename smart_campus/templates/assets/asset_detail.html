@@ -1,216 +1,164 @@
-{% extends "base.html" %}
+{% extends "dashboard/dashboard_base.html" %}
 {% load static %}
 
 {% block title %}
-  {{ asset.asset_code }} - {{ asset.name }} - SmartCampus
+  Asset {{ asset.asset_code }}: {{ asset.name }} - SmartCampus
 {% endblock title %}
 
-{% block content %}
+{% block active_assets %}{% endblock %}
 
-<!-- START HEADER BANNER -->
-<section class="section-top">
-  <div class="container">
-    <div class="col-lg-10 offset-lg-1 text-center">
-      <div class="section-top-title">
-        <h1>Asset Details</h1>
-        <ul>
-          <li><a href="{% url 'home' %}">Home</a></li>
-          <li><a href="{% url 'assets:asset_list' %}"> / Assets</a></li>
-          <li> / {{ asset.asset_code }}</li>
-        </ul>
+{% block dashboard_content %}
+  <!-- HEADER BANNER -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary btn-sm" title="Back to Assets">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <div>
+        <h3 class="fw-bold text-dark mb-1">
+          {{ asset.name }} <span class="text-primary font-monospace">({{ asset.asset_code }})</span>
+        </h3>
+        <p class="text-muted small mb-0">
+          Physical Asset Metadata, Location & Operational Lifecycle
+        </p>
       </div>
     </div>
+    <div class="d-flex gap-2">
+      {% if is_admin %}
+        <a href="{% url 'assets:asset_update' asset.pk %}" class="btn btn-outline-primary px-3">
+          <i class="fa-solid fa-pen-to-square me-2"></i>Edit Asset
+        </a>
+        {% if asset.status != 'RETIRED' %}
+          <form method="post" action="{% url 'assets:asset_retire' asset.pk %}" onsubmit="return confirm('Retire asset {{ asset.asset_code }}? This action marks the equipment as retired.');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-warning px-3">
+              <i class="fa-solid fa-box-archive me-2"></i>Retire Asset
+            </button>
+          </form>
+        {% endif %}
+        <a href="{% url 'assets:asset_delete' asset.pk %}" class="btn btn-outline-danger px-3">
+          <i class="fa-solid fa-trash me-2"></i>Delete
+        </a>
+      {% endif %}
+    </div>
   </div>
-</section>
-<!-- END HEADER BANNER -->
 
-<!-- START ASSET DETAIL SECTION -->
-<section class="section-padding bg-light">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-lg-8 col-md-10">
+  <!-- MESSAGES ALERT -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid {% if message.tags == 'danger' or message.tags == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
 
-        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
-
-          <!-- CARD HEADER -->
-          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center border-bottom pb-4 mb-4 gap-2">
-            <div>
-              <span class="text-primary fw-bold text-uppercase fs-6">
-                <i class="fa-solid fa-barcode me-1"></i>{{ asset.asset_code }}
-              </span>
-              <h2 class="fw-bold mt-1 mb-0">{{ asset.name }}</h2>
-            </div>
-            <div>
-              <span class="badge {{ asset.status_badge_class }} px-3 py-2 rounded-pill fs-6">
-                {{ asset.get_status_display }}
-              </span>
-            </div>
-          </div>
-
-          <!-- ASSET INFORMATION GRID -->
-          <div class="row g-4 mb-4">
-            
-            <!-- Category -->
-            <div class="col-sm-6">
-              <div class="p-3 bg-light rounded-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">
-                  <i class="fa-solid fa-tag me-1 text-secondary"></i>Category
-                </div>
-                <div class="fs-5 fw-bold text-dark mt-1">
-                  {{ asset.category }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Purchase Date -->
-            <div class="col-sm-6">
-              <div class="p-3 bg-light rounded-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">
-                  <i class="fa-solid fa-calendar-days me-1 text-secondary"></i>Purchase Date
-                </div>
-                <div class="fs-5 fw-bold text-dark mt-1">
-                  {% if asset.purchase_date %}
-                    {{ asset.purchase_date|date:"F d, Y" }}
-                  {% else %}
-                    <span class="text-muted fw-normal fst-italic">Not recorded</span>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-
-            <!-- Building -->
-            <div class="col-sm-6">
-              <div class="p-3 bg-light rounded-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">
-                  <i class="fa-solid fa-building me-1 text-secondary"></i>Building Location
-                </div>
-                <div class="fs-5 fw-bold text-dark mt-1">
-                  {{ asset.building }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Room / Area -->
-            <div class="col-sm-6">
-              <div class="p-3 bg-light rounded-3 h-100">
-                <div class="text-muted small fw-semibold text-uppercase">
-                  <i class="fa-solid fa-door-open me-1 text-secondary"></i>Room / Area
-                </div>
-                <div class="fs-5 fw-bold text-dark mt-1">
-                  {% if asset.room %}
-                    {{ asset.room }}
-                  {% else %}
-                    <span class="text-muted fw-normal fst-italic">Not specified</span>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- DESCRIPTION SECTION -->
-          <div class="mb-4">
-            <h5 class="fw-bold mb-2">
-              <i class="fa-solid fa-circle-info me-2 text-primary"></i>Description & Specifications
-            </h5>
-            <div class="p-3 bg-light rounded-3">
-              {% if asset.description %}
-                <p class="mb-0 text-secondary" style="white-space: pre-line;">{{ asset.description }}</p>
-              {% else %}
-                <p class="mb-0 text-muted fst-italic">No additional notes or description provided for this asset.</p>
-              {% endif %}
-            </div>
-          </div>
-
-          <!-- LINKED COMPLAINTS & MAINTENANCE HISTORY -->
-          <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="fw-bold mb-0">
-                <i class="fa-solid fa-screwdriver-wrench me-2 text-warning"></i>Maintenance & Complaint History
-              </h5>
-              <a href="{% url 'complaints:create' %}?asset={{ asset.pk }}" class="btn btn-sm btn-outline-warning text-dark fw-semibold">
-                <i class="fa-solid fa-plus me-1"></i> Report Issue on Asset
-              </a>
-            </div>
-            <div class="p-3 bg-light rounded-3">
-              {% if asset.complaints.all %}
-                <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0 bg-white rounded">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Complaint ID</th>
-                        <th>Title</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for comp in asset.complaints.all %}
-                        <tr>
-                          <td>
-                            <a href="{% url 'complaints:detail' comp.complaint_id %}" class="font-monospace fw-bold text-decoration-none">
-                              {{ comp.complaint_id }}
-                            </a>
-                          </td>
-                          <td>{{ comp.title }}</td>
-                          <td>
-                            {% if comp.status == 'Submitted' %}
-                              <span class="badge bg-info text-dark">Submitted</span>
-                            {% elif comp.status == 'Under Review' %}
-                              <span class="badge bg-warning text-dark">Under Review</span>
-                            {% elif comp.status == 'In Progress' %}
-                              <span class="badge bg-primary">In Progress</span>
-                            {% elif comp.status == 'Resolved' %}
-                              <span class="badge bg-success">Resolved</span>
-                            {% endif %}
-                          </td>
-                          <td><small class="fw-semibold">{{ comp.priority }}</small></td>
-                          <td class="small text-muted">{{ comp.created_at|date:"M d, Y" }}</td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              {% else %}
-                <p class="mb-0 text-muted fst-italic">No maintenance complaints have been reported for this asset.</p>
-              {% endif %}
-            </div>
-          </div>
-
-          <!-- TIMESTAMPS & METADATA -->
-          <div class="border-top pt-3 mb-4">
-            <div class="row text-muted small">
-              <div class="col-sm-6 mb-1 mb-sm-0">
-                <i class="fa-regular fa-clock me-1"></i>Created: {{ asset.created_at|date:"M d, Y, h:i A" }}
-              </div>
-              <div class="col-sm-6 text-sm-end">
-                <i class="fa-solid fa-arrows-rotate me-1"></i>Last Updated: {{ asset.updated_at|date:"M d, Y, h:i A" }}
-              </div>
-            </div>
-          </div>
-
-          <!-- ACTION BUTTONS -->
-          <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center pt-2">
-            <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary px-4 py-2">
-              <i class="fa-solid fa-arrow-left me-2"></i>Back to Assets
-            </a>
-            <div class="d-flex gap-2">
-              <a href="{% url 'assets:asset_update' asset.pk %}" class="btn btn-warning px-4 py-2 fw-semibold text-dark">
-                <i class="fa-solid fa-pen-to-square me-2"></i>Edit Asset
-              </a>
-              <a href="{% url 'assets:asset_delete' asset.pk %}" class="btn btn-outline-danger px-4 py-2">
-                <i class="fa-regular fa-trash-can me-2"></i>Delete
-              </a>
-            </div>
-          </div>
-
+  <div class="row g-4">
+    <!-- LEFT COLUMN: ASSET METADATA CARD -->
+    <div class="col-12 col-lg-5">
+      <div class="dash-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="badge bg-light text-dark border px-3 py-2">
+            <i class="fa-solid fa-tag me-1 text-primary"></i>{{ asset.category }}
+          </span>
+          <span class="badge {{ asset.status_badge_class }} px-3 py-2 rounded-pill fs-6">
+            {{ asset.get_status_display }}
+          </span>
         </div>
 
+        <h4 class="fw-bold text-dark mb-3">{{ asset.name }}</h4>
+
+        <hr class="my-3">
+
+        <div class="mb-3">
+          <span class="text-muted small d-block">Asset Code</span>
+          <span class="fw-bold text-primary font-monospace fs-5">{{ asset.asset_code }}</span>
+        </div>
+
+        <div class="mb-3">
+          <span class="text-muted small d-block">Campus Location</span>
+          <div class="fw-semibold text-dark">
+            <i class="fa-solid fa-building me-1 text-secondary"></i>{{ asset.building }}
+            {% if asset.room %}
+              <span class="badge bg-light text-dark border ms-1">{{ asset.room }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <span class="text-muted small d-block">Purchase / Acquisition Date</span>
+          <span class="fw-semibold text-dark">{{ asset.purchase_date|date:"F d, Y"|default:"Not recorded" }}</span>
+        </div>
+
+        <div class="mb-3">
+          <span class="text-muted small d-block">System Registered</span>
+          <span class="fw-semibold text-dark">{{ asset.created_at|date:"F d, Y \a\t H:i" }}</span>
+        </div>
+
+        <div class="mb-0">
+          <span class="text-muted small d-block mb-1">Specifications & Description</span>
+          <div class="p-3 bg-light rounded border text-muted small">
+            {{ asset.description|default:"No additional specification notes registered for this asset." }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: RELATED MAINTENANCE COMPLAINTS & ACTIVITY -->
+    <div class="col-12 col-lg-7">
+      <div class="dash-card">
+        <div class="dash-card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-dark">
+            <i class="fa-solid fa-screwdriver-wrench me-2 text-warning"></i>Maintenance History & Related Complaints
+          </span>
+          <span class="badge bg-light text-dark border">{{ related_complaints|length }} Record{% if related_complaints|length != 1 %}s{% endif %}</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" class="ps-4">ID</th>
+                <th scope="col">Complaint Title</th>
+                <th scope="col">Priority</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="text-end pe-4">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cmp in related_complaints %}
+                <tr>
+                  <td class="ps-4 fw-bold text-primary">{{ cmp.complaint_id }}</td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ cmp.title }}</div>
+                    <div class="small text-muted">{{ cmp.created_at|date:"M d, Y" }}</div>
+                  </td>
+                  <td>
+                    <span class="badge {% if cmp.priority == 'High' %}bg-danger{% elif cmp.priority == 'Medium' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                      {{ cmp.priority }}
+                    </span>
+                  </td>
+                  <td><span class="badge bg-secondary text-white">{{ cmp.status }}</span></td>
+                  <td class="text-end pe-4">
+                    <a href="{% url 'complaints:detail' cmp.complaint_id %}" class="btn btn-sm btn-outline-primary">
+                      <i class="fa-solid fa-eye"></i> View
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-circle-check fs-1 text-success mb-2 d-block"></i>
+                    <div class="fw-bold text-dark">No maintenance issues reported for this asset.</div>
+                    <div class="small">Equipment has a clean operational log.</div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</section>
-<!-- END ASSET DETAIL SECTION -->
-
-{% endblock content %}
+{% endblock dashboard_content %}

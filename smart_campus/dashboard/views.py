@@ -16,6 +16,9 @@ from .helpers import (
     get_assets_metrics,
     get_inventory_metrics,
     get_complaints_metrics,
+    get_maintenance_staff_metrics,
+    get_realtime_audit_activities,
+    is_model_available,
     seed_mock_activities,
     log_activity,
 )
@@ -36,14 +39,89 @@ def get_current_role_and_user(request):
 
 class DashboardIndexView(LoginRequiredMixin, View):
     """
-    Landing redirector. Directs staff/admins to the Admin Operations dashboard,
-    and regular users (Students/Faculty) to the Student portal dashboard.
+    Landing redirector. Directs Admins to Admin Operations dashboard, Maintenance Staff
+    to Maintenance Staff dashboard, and regular users (Students/Faculty) to Student portal.
     """
     def get(self, request, *args, **kwargs):
         user = request.user
-        if user.is_admin_user or user.is_maintenance_staff:
+        if user.is_admin_user:
             return redirect("dashboard:admin")
+        elif user.is_maintenance_staff:
+            return redirect("dashboard:maintenance")
         return redirect("dashboard:student")
+
+
+class MaintenanceDashboardView(LoginRequiredMixin, TemplateView):
+    """
+    Dedicated operational workspace for Maintenance Staff.
+    Provides personal assigned work, priority items, inventory/asset quick views,
+    maintenance request status, and recent activity logs.
+    """
+    template_name = "dashboard/maintenance_dashboard.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not (request.user.is_maintenance_staff or request.user.is_admin_user or request.user.is_staff):
+            return redirect("dashboard:student")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        modules = get_modules_info()
+        staff_metrics = get_maintenance_staff_metrics(user)
+        assets_stats = get_assets_metrics()
+        inventory_stats = get_inventory_metrics()
+
+        ComplaintModel = is_model_available("complaints", "Complaint")
+        status_filter = self.request.GET.get("status", "").strip()
+
+        assigned_complaints = ComplaintModel.objects.select_related("user", "asset").filter(assigned_to=user) if ComplaintModel else []
+        if status_filter and assigned_complaints:
+            assigned_complaints = assigned_complaints.filter(status=status_filter)
+
+        needs_attention = (
+            ComplaintModel.objects.select_related("user", "asset")
+            .filter(assigned_to=user)
+            .filter(models.Q(priority="High") | models.Q(status__in=["Submitted", "Under Review", "Assigned", "Action Required"]))[:5]
+            if ComplaintModel
+            else []
+        )
+
+        MaintReqModel = is_model_available("complaints", "MaintenanceRequest")
+        my_requests = (
+            MaintReqModel.objects.select_related("complaint", "inventory_item")
+            .filter(requested_by=user)[:5]
+            if MaintReqModel
+            else []
+        )
+
+        HistoryModel = is_model_available("complaints", "ComplaintHistory")
+        recent_activity = (
+            HistoryModel.objects.select_related("complaint", "changed_by")
+            .filter(changed_by=user)
+            .order_by("-timestamp")[:8]
+            if HistoryModel
+            else []
+        )
+
+        context.update({
+            "modules": modules,
+            "staff_metrics": staff_metrics,
+            "assets_stats": assets_stats,
+            "inventory_stats": inventory_stats,
+            "assigned_complaints": assigned_complaints,
+            "needs_attention": needs_attention,
+            "my_requests": my_requests,
+            "recent_activity": recent_activity,
+            "status_filter": status_filter,
+            "statuses": ComplaintModel.Status.choices if ComplaintModel else [],
+            "preview_mode": False,
+            "current_role": "maintenance",
+        })
+        return context
+
 
 class StudentDashboardView(LoginRequiredMixin, TemplateView):
     """
@@ -140,19 +218,20 @@ class AdminDashboardView(LoginRequiredMixin, TemplateView):
         staff_users = User.objects.filter(models.Q(is_staff=True) | models.Q(role__in=[User.Role.ADMIN, User.Role.MAINTENANCE])).count()
         student_users = total_users - staff_users
         
-        # Query recent activities audit feed
-        recent_activities = Activity.objects.all()
-        if start_date:
-            recent_activities = recent_activities.filter(timestamp__gte=start_date)
-            
-        if category_filter != "all":
-            recent_activities = recent_activities.filter(activity_type__iexact=category_filter)
-        if status_filter != "all":
-            recent_activities = recent_activities.filter(status__iexact=status_filter)
-            
-        recent_activities = recent_activities.order_by('-timestamp')[:8]
+        # Query real-time system audit activity feed across all active models
+        recent_activities = get_realtime_audit_activities(
+            start_date=start_date,
+            category_filter=category_filter,
+            status_filter=status_filter,
+            limit=12,
+        )
         
-        # Calculate trend chart values (last 7 days counts)
+        ComplaintModel = is_model_available("complaints", "Complaint")
+        AssetModel = is_model_available("assets", "Asset")
+        HistoryModel = is_model_available("complaints", "ComplaintHistory")
+        StockTxModel = is_model_available("inventory", "StockTransaction")
+
+        # Calculate trend chart values (last 7 days counts from real DB)
         trend_dates = []
         complaints_trend = []
         assets_trend = []
@@ -160,15 +239,27 @@ class AdminDashboardView(LoginRequiredMixin, TemplateView):
             d = today_date - timedelta(days=i)
             trend_dates.append(d.strftime("%b %d"))
             
-            c_count = Activity.objects.filter(
-                activity_type__in=['COMPLAINT', 'MAINTENANCE'],
-                timestamp__date=d.date()
-            ).count()
-            
-            a_count = Activity.objects.filter(
-                activity_type='ASSET',
-                timestamp__date=d.date()
-            ).count()
+            c_count = 0
+            if ComplaintModel:
+                c_count += ComplaintModel.objects.filter(created_at__date=d.date()).count()
+            if HistoryModel:
+                c_count += HistoryModel.objects.filter(timestamp__date=d.date()).count()
+            if not ComplaintModel and not HistoryModel:
+                c_count = Activity.objects.filter(
+                    activity_type__in=['COMPLAINT', 'MAINTENANCE'],
+                    timestamp__date=d.date()
+                ).count()
+
+            a_count = 0
+            if AssetModel:
+                a_count += AssetModel.objects.filter(models.Q(created_at__date=d.date()) | models.Q(updated_at__date=d.date())).count()
+            if StockTxModel:
+                a_count += StockTxModel.objects.filter(created_at__date=d.date()).count()
+            if not AssetModel and not StockTxModel:
+                a_count = Activity.objects.filter(
+                    activity_type='ASSET',
+                    timestamp__date=d.date()
+                ).count()
             
             complaints_trend.append(c_count)
             assets_trend.append(a_count)

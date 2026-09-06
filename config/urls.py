@@ -27,13 +27,15 @@ urlpatterns = [
     path("accounts/login/", smart_campus_login_view, name="account_login"),
     path("accounts/", include("allauth.urls")),
 
-    # Custom apps
-    path("assets/", include("smart_campus.assets.urls")),
+    # Custom apps & Admin-scoped management routes
+    path("admin-panel/assets/", include("smart_campus.assets.urls", namespace="admin_assets")),
+    path("admin-panel/inventory/", include("smart_campus.inventory.urls", namespace="admin_inventory")),
+    path("assets/", include("smart_campus.assets.urls", namespace="assets")),
     path(
         "complaints/",
         include("smart_campus.complaints.urls", namespace="complaints"),
     ),
-    path("inventory/", include("smart_campus.inventory.urls")),
+    path("inventory/", include("smart_campus.inventory.urls", namespace="inventory")),
     path("dashboard/", include("smart_campus.dashboard.urls", namespace="dashboard")),
     # Media files
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),

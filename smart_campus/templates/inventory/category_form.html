@@ -1,0 +1,62 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  {{ page_title }} - SmartCampus Control Center
+{% endblock title %}
+
+{% block active_inventory_category %}active{% endblock %}
+{% block active_inventory_category_maint %}active{% endblock %}
+
+{% block dashboard_content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-6">
+      <div class="d-flex align-items-center mb-4 gap-3">
+        <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-secondary btn-sm" title="Back to Categories">
+          <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+          <h3 class="fw-bold text-dark mb-0">
+            <i class="fa-solid fa-tags text-primary me-2"></i>{{ page_title }}
+          </h3>
+          <p class="text-muted small mb-0">Configure master data category for inventory classification.</p>
+        </div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-card-body p-4">
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold text-dark">
+                <i class="fa-solid fa-tags me-1 text-primary"></i>Category Name <span class="text-danger">*</span>
+              </label>
+              {{ form.name }}
+              {% if form.name.errors %}
+                <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-4">
+              <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold text-dark">
+                Description
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}
+                <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <a href="{% url 'inventory:category_list' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+              <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                <i class="fa-solid fa-floppy-disk me-2"></i>Save Category
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock dashboard_content %}

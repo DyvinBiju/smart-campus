@@ -112,3 +112,37 @@ class DashboardViewTests(TestCase):
         self.assertIn("--- Activity Type Summaries ---", content)
         self.assertIn("--- Detailed Activity Audit Logs ---", content)
         self.assertIn("Water leakage", content)
+
+    def test_maintenance_staff_dashboard_access_and_authorization(self):
+        """
+        Verify role-based security & rendering for the dedicated Maintenance Staff dashboard.
+        """
+        staff_user = User.objects.create_user(
+            username="maint_tech_dash",
+            email="tech_dash@campus.edu",
+            password="Password123!",
+            role=User.Role.MAINTENANCE,
+            is_available=True,
+        )
+
+        # 1. Anonymous user -> redirect to login
+        anon_response = self.client.get(reverse("dashboard:maintenance"))
+        self.assertRedirects(anon_response, f"{reverse('account_login')}?next={reverse('dashboard:maintenance')}")
+
+        # 2. Student user -> redirected away from maintenance dashboard
+        self.client.force_login(self.student)
+        student_response = self.client.get(reverse("dashboard:maintenance"))
+        self.assertRedirects(student_response, reverse("dashboard:student"))
+
+        # 3. Landing index redirect for Maintenance Staff
+        self.client.force_login(staff_user)
+        index_response = self.client.get(reverse("dashboard:index"))
+        self.assertRedirects(index_response, reverse("dashboard:maintenance"))
+
+        # 4. Maintenance Staff direct access -> 200 OK & template used
+        dashboard_response = self.client.get(reverse("dashboard:maintenance"))
+        self.assertEqual(dashboard_response.status_code, 200)
+        self.assertTemplateUsed(dashboard_response, "dashboard/maintenance_dashboard.html")
+        self.assertContains(dashboard_response, "Maintenance Operations Hub")
+        self.assertContains(dashboard_response, "Status: Available for Work")
+

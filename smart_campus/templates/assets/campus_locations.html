@@ -1,0 +1,118 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  Campus Locations & Assets - SmartCampus Control Center
+{% endblock title %}
+
+{% block active_campus_locations %}active{% endblock %}
+
+{% block dashboard_content %}
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <h3 class="fw-bold text-dark mb-1">
+        <i class="fa-solid fa-building-user text-primary me-2"></i>Campus Locations & Infrastructure
+      </h3>
+      <p class="text-muted small mb-0">
+        Master data directory of campus buildings, rooms, labs, and localized asset distribution.
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'assets:asset_create' %}" class="btn btn-primary shadow-sm px-4 fw-semibold">
+        <i class="fa-solid fa-plus me-2"></i>Register New Asset
+      </a>
+    </div>
+  </div>
+
+  <!-- Metric Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+      <div class="dash-card p-3 d-flex align-items-center">
+        <div class="widget-icon bg-primary bg-opacity-10 text-primary me-3">
+          <i class="fa-solid fa-building fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Total Active Campus Buildings</div>
+          <div class="widget-value h3 mb-0 fw-bold">{{ total_buildings }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+      <div class="dash-card p-3 d-flex align-items-center">
+        <div class="widget-icon bg-success bg-opacity-10 text-success me-3">
+          <i class="fa-solid fa-laptop-code fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Total Registered Assets</div>
+          <div class="widget-value h3 mb-0 fw-bold">{{ total_assets }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Building Cards Grid -->
+  <div class="row g-4">
+    {% for b in buildings %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="dash-card h-100">
+          <div class="dash-card-header d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark">
+              <i class="fa-solid fa-building me-2 text-primary"></i>{{ b.building_name }}
+            </span>
+            <span class="badge bg-primary bg-opacity-10 text-primary border">
+              {{ b.total_assets }} Asset{{ b.total_assets|pluralize }}
+            </span>
+          </div>
+
+          <div class="dash-card-body">
+            <div class="d-flex justify-content-between mb-3 small">
+              <span class="text-muted"><i class="fa-solid fa-door-open me-1 text-secondary"></i>Rooms / Labs:</span>
+              <span class="fw-bold text-dark">{{ b.room_count }} Locations</span>
+            </div>
+
+            <div class="d-flex justify-content-between mb-3 small">
+              <span class="text-muted"><i class="fa-solid fa-circle-check me-1 text-success"></i>Active Assets:</span>
+              <span class="fw-bold text-success">{{ b.active_assets }}</span>
+            </div>
+
+            {% if b.maintenance_assets > 0 %}
+              <div class="d-flex justify-content-between mb-3 small">
+                <span class="text-muted"><i class="fa-solid fa-screwdriver-wrench me-1 text-warning"></i>Under Maintenance:</span>
+                <span class="fw-bold text-warning">{{ b.maintenance_assets }}</span>
+              </div>
+            {% endif %}
+
+            <hr class="my-3">
+
+            <div class="mb-3">
+              <span class="small text-muted d-block mb-2 font-monospace text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em;">Registered Rooms:</span>
+              <div class="d-flex flex-wrap gap-1">
+                {% for room in b.rooms_list %}
+                  <span class="badge bg-light text-dark border small fw-normal">{{ room }}</span>
+                {% empty %}
+                  <span class="text-muted small">General building space</span>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <a href="{% url 'assets:asset_list' %}?q={{ b.building_name|urlencode }}" class="btn btn-sm btn-outline-primary w-100 fw-semibold">
+                <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>View Building Assets
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="dash-card p-5 text-center text-muted">
+          <i class="fa-solid fa-building-circle-xmark fs-1 text-muted mb-3"></i>
+          <h5>No campus buildings or asset locations found</h5>
+          <p class="small">Register physical assets with building and room locations to build the master campus directory.</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock dashboard_content %}

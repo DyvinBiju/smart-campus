@@ -30,7 +30,8 @@ class Asset(models.Model):
     asset_code = models.CharField(
         max_length=20,
         unique=True,
-        help_text="Unique asset identifier (e.g. AST-001)",
+        blank=True,
+        help_text="Unique asset identifier (e.g. AST-0001). Leave blank to auto-generate.",
     )
     name = models.CharField(
         max_length=100,
@@ -69,6 +70,17 @@ class Asset(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        """Auto-generate asset code if not provided."""
+        if not self.asset_code:
+            count = Asset.objects.count() + 1
+            code = f"AST-{count:04d}"
+            while Asset.objects.filter(asset_code=code).exists():
+                count += 1
+                code = f"AST-{count:04d}"
+            self.asset_code = code
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["-created_at"]

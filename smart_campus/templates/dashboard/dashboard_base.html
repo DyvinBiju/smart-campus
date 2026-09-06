@@ -94,6 +94,22 @@
       margin-bottom: 0.5rem;
     }
 
+    .sidebar-heading {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #cbd5e1;
+      padding: 0.45rem 0.75rem;
+      margin-top: 1rem;
+      margin-bottom: 0.4rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 0.375rem;
+      border-left: 3px solid var(--primary-color);
+      display: flex;
+      align-items: center;
+    }
+
     .sidebar-menu a {
       display: flex;
       align-items: center;
@@ -110,6 +126,8 @@
       width: 20px;
       text-align: center;
       font-size: 1.1rem;
+      color: #60a5fa;
+      transition: all 0.25s ease;
     }
 
     .sidebar-menu a:hover {
@@ -117,10 +135,22 @@
       color: #ffffff;
     }
 
+    .sidebar-menu a:hover i {
+      color: #93c5fd;
+      transform: scale(1.1);
+    }
+
     .sidebar-menu li.active a {
-      background-color: var(--sidebar-active);
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+      font-weight: 600;
+    }
+
+    .sidebar-menu li.active a i {
+      color: #ffffff !important;
+      transform: scale(1.15);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
     }
 
     /* Content Area Styles */
@@ -383,14 +413,18 @@
         </h6>
         <span>
           {% if request.user.is_authenticated %}
-            {% if request.user.is_staff or request.user.is_superuser %}
+            {% if request.user.is_admin_user or request.user.is_superuser %}
               Administrator
+            {% elif request.user.is_maintenance_staff %}
+              Maintenance Staff
             {% else %}
               Student / User
             {% endif %}
           {% else %}
             {% if current_role == 'admin' %}
               Administrator (Preview)
+            {% elif current_role == 'maintenance' %}
+              Maintenance Staff (Preview)
             {% else %}
               Student / User (Preview)
             {% endif %}
@@ -399,45 +433,135 @@
       </div>
       
       <ul class="sidebar-menu">
-        {% if request.user.is_staff or request.user.is_superuser or not request.user.is_authenticated and current_role == 'admin' %}
+        {% if request.user.is_admin_user or request.user.is_superuser or not request.user.is_authenticated and current_role == 'admin' %}
+          <!-- ADMIN DASHBOARD -->
+          <li class="sidebar-heading">Control Center</li>
           <li class="{% block active_admin_overview %}{% endblock %}">
             <a href="{% url 'dashboard:admin' %}">
-              <i class="fa-solid fa-chart-line"></i> Admin Dashboard
+              <i class="fa-solid fa-chart-line"></i> Dashboard
             </a>
           </li>
-        {% endif %}
-        <li class="{% block active_student_overview %}{% endblock %}">
-          <a href="{% url 'dashboard:student' %}">
-            <i class="fa-solid fa-user-graduate"></i> Student Portal
-          </a>
-        </li>
-        {% if request.user.is_staff or request.user.is_superuser or not request.user.is_authenticated and current_role == 'admin' %}
+
+          <!-- PEOPLE MANAGEMENT -->
+          <li class="sidebar-heading">People Management</li>
+          <li class="{% block active_users_manage %}{% endblock %}">
+            <a href="{% url 'users:manage' %}">
+              <i class="fa-solid fa-users-gear"></i> User Directory
+            </a>
+          </li>
+          <li class="{% block active_staff_manage %}{% endblock %}">
+            <a href="{% url 'users:staff' %}">
+              <i class="fa-solid fa-screwdriver-wrench"></i> Maintenance Staff
+            </a>
+          </li>
+
+          <!-- OPERATIONS -->
+          <li class="sidebar-heading">Operations</li>
+          <li class="{% block active_admin_complaints %}{% endblock %}">
+            <a href="{% url 'complaints:admin_manage' %}">
+              <i class="fa-solid fa-clipboard-list"></i> Complaints Console
+            </a>
+          </li>
+
+          <!-- RESOURCES -->
+          <li class="sidebar-heading">Resources</li>
+          <li class="{% block active_assets %}{% endblock %}">
+            <a href="{% url 'assets:asset_list' %}">
+              <i class="fa-solid fa-laptop-code"></i> Campus Assets
+            </a>
+          </li>
+          <li class="{% block active_inventory %}{% endblock %}">
+            <a href="{% url 'inventory:list' %}">
+              <i class="fa-solid fa-boxes-stacked"></i> Inventory Items
+            </a>
+          </li>
+
+          <!-- CAMPUS MASTER DATA -->
+          <li class="sidebar-heading">Campus Master Data</li>
+          <li class="{% block active_campus_locations %}{% endblock %}">
+            <a href="{% url 'assets:campus_locations' %}">
+              <i class="fa-solid fa-building-user"></i> Buildings & Rooms
+            </a>
+          </li>
+          <li class="{% block active_inventory_category %}{% endblock %}">
+            <a href="{% url 'inventory:category_list' %}">
+              <i class="fa-solid fa-tags"></i> Inventory Categories
+            </a>
+          </li>
+
+          <!-- REPORTS & SYSTEM -->
+          <li class="sidebar-heading">Reports & System</li>
           <li class="{% block active_reports %}{% endblock %}">
             <a href="{% url 'dashboard:reports' %}">
               <i class="fa-solid fa-file-invoice"></i> Reports Center
             </a>
           </li>
         {% endif %}
-        <li class="{% block active_see_complaints %}{% endblock %}">
-          {% if request.user.is_staff or request.user.is_superuser or not request.user.is_authenticated and current_role == 'admin' %}
-            <a href="{% url 'dashboard:admin' %}?category=COMPLAINT">
-              <i class="fa-solid fa-list-check"></i> See Complaints
+
+        {% if request.user.is_maintenance_staff or current_role == 'maintenance' %}
+          <li class="sidebar-heading">Maintenance Workspace</li>
+          <li class="{% block active_maintenance_overview %}{% endblock %}">
+            <a href="{% url 'dashboard:maintenance' %}">
+              <i class="fa-solid fa-screwdriver-wrench"></i> Maintenance Hub
             </a>
-          {% else %}
-            <a href="{% url 'dashboard:student' %}#complaint-log-section">
-              <i class="fa-solid fa-list-check"></i> See Complaints
+          </li>
+          <li class="{% block active_my_assigned %}{% endblock %}">
+            <a href="{% url 'complaints:assigned' %}">
+              <i class="fa-solid fa-clipboard-list"></i> My Assigned Work
             </a>
-          {% endif %}
-        </li>
+          </li>
+          <li class="{% block active_see_complaints %}{% endblock %}">
+            <a href="{% url 'complaints:list' %}">
+              <i class="fa-solid fa-list-check"></i> Campus Complaints
+            </a>
+          </li>
+          <li class="{% block active_assets_maint %}{% endblock %}">
+            <a href="{% url 'assets:asset_list' %}">
+              <i class="fa-solid fa-laptop-code"></i> Campus Assets
+            </a>
+          </li>
+          <li class="{% block active_inventory_maint %}{% endblock %}">
+            <a href="{% url 'inventory:list' %}">
+              <i class="fa-solid fa-boxes-stacked"></i> Resource Inventory
+            </a>
+          </li>
+          <li class="{% block active_inventory_category_maint %}{% endblock %}">
+            <a href="{% url 'inventory:category_list' %}">
+              <i class="fa-solid fa-tags"></i> Inventory Categories
+            </a>
+          </li>
+        {% endif %}
+
+        {% if not request.user.is_admin_user and not request.user.is_superuser and not request.user.is_maintenance_staff and current_role != 'admin' and current_role != 'maintenance' %}
+          <li class="sidebar-heading">Student Portal</li>
+          <li class="{% block active_student_overview %}{% endblock %}">
+            <a href="{% url 'dashboard:student' %}">
+              <i class="fa-solid fa-user-graduate"></i> Dashboard
+            </a>
+          </li>
+          <li class="{% block active_see_complaints_stud %}{% endblock %}">
+            <a href="{% url 'complaints:list' %}">
+              <i class="fa-solid fa-list-check"></i> My Complaints
+            </a>
+          </li>
+          <li class="{% block active_submit_complaint %}{% endblock %}">
+            <a href="{% url 'complaints:create' %}">
+              <i class="fa-solid fa-circle-plus"></i> Submit Complaint
+            </a>
+          </li>
+        {% endif %}
+
+        <hr class="my-3 border-secondary border-opacity-25">
+
         <li>
-          <span class="sidebar-link-text text-white-50 px-3 py-2 d-block small">
-            <i class="fa-solid fa-user-circle me-2"></i>{% if request.user.is_authenticated %}{{ request.user.username }}{% else %}{{ user_stats.name }}{% endif %}
+          <span class="sidebar-link-text text-white-50 px-3 py-1 d-block small">
+            <i class="fa-solid fa-user-circle me-2"></i>{% if request.user.is_authenticated %}{{ request.user.name|default:request.user.username }}{% else %}{{ user_stats.name }}{% endif %}
           </span>
         </li>
         {% if request.user.is_authenticated %}
           <li>
             <a href="{% url 'account_logout' %}">
-              <i class="fa-solid fa-right-from-bracket"></i> Logout
+              <i class="fa-solid fa-right-from-bracket text-danger"></i> Logout
             </a>
           </li>
         {% endif %}

@@ -13,20 +13,30 @@
       <div class="col-md-8">
         <h2 class="fw-bold mb-1">
           <i class="fa-solid fa-list-check text-primary me-2"></i>
-          {% if is_admin_or_staff %}Campus Complaints{% else %}My Registered Complaints{% endif %}
+          {% if is_admin %}Campus Complaints Hub{% elif is_staff %}Assigned Maintenance Complaints{% else %}My Complaints{% endif %}
         </h2>
         <p class="text-muted mb-0">
-          {% if is_admin_or_staff %}
-            Browse, search, and manage all campus-wide reported issues and track resolution progress.
+          {% if is_admin %}
+            Browse, inspect, assign staff, and manage all campus operational complaints.
+          {% elif is_staff %}
+            View complaints assigned to you and update inspection status or inventory usage.
           {% else %}
-            View and track the status of complaints submitted by you.
+            View and track progress of complaints submitted by you.
           {% endif %}
         </p>
       </div>
       <div class="col-md-4 text-md-end mt-3 mt-md-0">
-        {% if not is_admin_or_staff %}
+        {% if not is_admin and not is_staff %}
         <a href="{% url 'complaints:create' %}" class="btn_one px-4 py-2">
           <i class="fa-solid fa-plus me-1"></i> Raise Complaint
+        </a>
+        {% elif is_admin %}
+        <a href="{% url 'complaints:admin_manage' %}" class="btn btn-warning px-4 py-2 fw-semibold">
+          <i class="fa-solid fa-user-gear me-1"></i> Admin Action Hub
+        </a>
+        {% elif is_staff %}
+        <a href="{% url 'complaints:assigned' %}" class="btn btn-primary px-4 py-2 fw-semibold">
+          <i class="fa-solid fa-screwdriver-wrench me-1"></i> My Assigned Work
         </a>
         {% endif %}
       </div>
@@ -45,16 +55,29 @@
         <form method="get" action="{% url 'complaints:list' %}" id="complaint-filter-form">
           <div class="row g-3">
             <!-- Search Field -->
-            <div class="col-lg-4 col-md-6">
+            <div class="col-lg-3 col-md-6">
               <label for="search" class="form-label fw-semibold small text-muted">Search Complaints</label>
               <div class="input-group">
                 <span class="input-group-text bg-white text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                <input type="text" name="search" id="search" class="form-control" placeholder="Search by ID, title, location..." value="{{ search_query }}">
+                <input type="text" name="search" id="search" class="form-control" placeholder="ID, title, location, asset..." value="{{ search_query }}">
               </div>
             </div>
 
+            <!-- Scope Filter for Admins -->
+            {% if is_admin %}
+            <div class="col-lg-2 col-md-6">
+              <label for="scope" class="form-label fw-semibold small text-muted">View Scope</label>
+              <select name="scope" id="scope" class="form-select">
+                <option value="">All Complaints</option>
+                <option value="unassigned" {% if scope_filter == "unassigned" %}selected{% endif %}>Unassigned Only</option>
+                <option value="assigned" {% if scope_filter == "assigned" %}selected{% endif %}>Assigned Only</option>
+                <option value="my" {% if scope_filter == "my" %}selected{% endif %}>My Submitted</option>
+              </select>
+            </div>
+            {% endif %}
+
             <!-- Category Filter -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-2 col-md-6">
               <label for="category" class="form-label fw-semibold small text-muted">Category</label>
               <select name="category" id="category" class="form-select">
                 <option value="">All Categories</option>
@@ -107,7 +130,7 @@
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
       <div class="card-header bg-white p-4 d-flex align-items-center justify-content-between border-bottom">
         <h5 class="fw-bold mb-0">
-          {% if is_admin_or_staff %}All Campus Complaints{% else %}My Complaints History{% endif %}
+          {% if is_admin %}Campus Complaints{% elif is_staff %}Assigned Work{% else %}My Submitted Complaints{% endif %}
           <span class="badge bg-light text-primary border ms-2 font-monospace fs-6">{{ complaints.count }}</span>
         </h5>
         {% if has_active_filters %}
@@ -123,10 +146,11 @@
               <thead class="table-light">
                 <tr>
                   <th scope="col" class="ps-4">ID</th>
-                  <th scope="col">Title</th>
+                  <th scope="col">Title & Location</th>
                   <th scope="col">Category</th>
                   <th scope="col">Priority</th>
                   <th scope="col">Status</th>
+                  <th scope="col">Assigned Staff</th>
                   <th scope="col">Submitted On</th>
                   <th scope="col" class="text-end pe-4">Actions</th>
                 </tr>
@@ -144,6 +168,9 @@
                         {{ complaint.title }}
                       </a>
                       <div class="small text-muted"><i class="fa-solid fa-location-dot me-1"></i>{{ complaint.location }}</div>
+                      {% if complaint.asset %}
+                        <div class="small text-primary"><i class="fa-solid fa-laptop-code me-1"></i>{{ complaint.asset.asset_code }}</div>
+                      {% endif %}
                     </td>
                     <td>
                       <span class="badge bg-light text-dark border">{{ complaint.get_category_display }}</span>
@@ -159,31 +186,39 @@
                     </td>
                     <td>
                       {% if complaint.status == 'Submitted' %}
-                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-inbox me-1"></i>Submitted</span>
+                        <span class="badge bg-info text-dark px-3 py-1 rounded-pill"><i class="fa-solid fa-inbox me-1"></i>Submitted</span>
                       {% elif complaint.status == 'Under Review' %}
-                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-magnifying-glass me-1"></i>Under Review</span>
+                        <span class="badge bg-secondary text-white px-3 py-1 rounded-pill"><i class="fa-solid fa-magnifying-glass me-1"></i>Under Review</span>
+                      {% elif complaint.status == 'Assigned' %}
+                        <span class="badge bg-primary text-white px-3 py-1 rounded-pill"><i class="fa-solid fa-user-check me-1"></i>Assigned</span>
+                      {% elif complaint.status == 'Under Inspection' %}
+                        <span class="badge bg-info text-dark px-3 py-1 rounded-pill"><i class="fa-solid fa-clipboard-check me-1"></i>Under Inspection</span>
+                      {% elif complaint.status == 'Action Required' %}
+                        <span class="badge bg-warning text-dark px-3 py-1 rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i>Action Required</span>
                       {% elif complaint.status == 'In Progress' %}
-                        <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fa-solid fa-gears me-1"></i>In Progress</span>
+                        <span class="badge bg-primary px-3 py-1 rounded-pill"><i class="fa-solid fa-gears me-1"></i>In Progress</span>
                       {% elif complaint.status == 'Resolved' %}
-                        <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Resolved</span>
+                        <span class="badge bg-success px-3 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Resolved</span>
+                      {% elif complaint.status == 'Closed' %}
+                        <span class="badge bg-dark px-3 py-1 rounded-pill">Closed</span>
                       {% else %}
-                        <span class="badge bg-secondary px-3 py-2 rounded-pill">{{ complaint.status }}</span>
+                        <span class="badge bg-secondary px-3 py-1 rounded-pill">{{ complaint.status }}</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if complaint.assigned_to %}
+                        <span class="small fw-semibold text-dark"><i class="fa-solid fa-user-gear text-success me-1"></i>{{ complaint.assigned_to.name|default:complaint.assigned_to.username }}</span>
+                      {% else %}
+                        <span class="badge bg-light text-danger border">Unassigned</span>
                       {% endif %}
                     </td>
                     <td class="text-muted small">
                       {{ complaint.created_at|date:"M d, Y H:i" }}
                     </td>
                     <td class="text-end pe-4">
-                      <div class="btn-group btn-group-sm">
-                        <a href="{% url 'complaints:detail' complaint.complaint_id %}" class="btn btn-outline-primary" title="View Details">
-                          <i class="fa-solid fa-eye me-1"></i> View
-                        </a>
-                        {% if is_admin_or_staff %}
-                        <a href="{% url 'complaints:status_update' complaint.complaint_id %}" class="btn btn-outline-secondary" title="Update Status">
-                          <i class="fa-solid fa-arrows-rotate me-1"></i> Status
-                        </a>
-                        {% endif %}
-                      </div>
+                      <a href="{% url 'complaints:detail' complaint.complaint_id %}" class="btn btn-sm btn-outline-primary" title="View Details">
+                        <i class="fa-solid fa-eye me-1"></i> View Details
+                      </a>
                     </td>
                   </tr>
                 {% endfor %}
@@ -195,16 +230,18 @@
             <i class="fa-solid fa-magnifying-glass fs-1 text-muted mb-3 d-block"></i>
             {% if has_active_filters %}
               <h5 class="fw-bold text-secondary">No Matching Complaints Found</h5>
-              <p class="text-muted mb-4">No complaints matched your search or filter criteria. Try clearing your filters or using different terms.</p>
-              <a href="{% url 'complaints:list' %}" class="btn btn-outline-primary px-4 py-2 me-2">
+              <p class="text-muted mb-4">No complaints matched your search or filter criteria.</p>
+              <a href="{% url 'complaints:list' %}" class="btn btn-outline-primary px-4 py-2">
                 <i class="fa-solid fa-rotate-left me-1"></i> Clear Filters
               </a>
             {% else %}
-              <h5 class="fw-bold text-secondary">No Complaints Found</h5>
-              <p class="text-muted mb-4">No complaints have been reported yet. Click below to raise the first complaint.</p>
+              <h5 class="fw-bold text-secondary">No Complaints Registered</h5>
+              <p class="text-muted mb-4">No complaints have been reported yet.</p>
+              {% if not is_admin and not is_staff %}
               <a href="{% url 'complaints:create' %}" class="btn_one px-4 py-2">
                 <i class="fa-solid fa-plus me-1"></i> Submit First Complaint
               </a>
+              {% endif %}
             {% endif %}
           </div>
         {% endif %}
