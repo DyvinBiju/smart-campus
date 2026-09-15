@@ -9,6 +9,7 @@ from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 
 from smart_campus.users.models import User
+from smart_campus.complaints.models import Complaint, ComplaintHistory
 from smart_campus.users.tests.factories import UserFactory
 
 if TYPE_CHECKING:
@@ -47,35 +48,6 @@ class TestStudentSignupView:
         assert user.is_student is True
 
 
-class TestFacultySignupView:
-    def test_get_faculty_signup_page(self, client):
-        response = client.get(reverse("users:faculty_signup"))
-        assert response.status_code == HTTPStatus.OK
-        assert "Faculty & Teacher Registration" in response.content.decode()
-
-    def test_post_faculty_signup(self, client):
-        response = client.post(
-            reverse("users:faculty_signup"),
-            data={
-                "name": "Dr. Grace Hopper",
-                "campus_id": "FAC505",
-                "email": "grace.hopper@campus.edu",
-                "department": "Computer Science",
-                "password1": "SecureP@ss123!",
-                "password2": "SecureP@ss123!",
-            },
-            follow=True,
-        )
-        assert response.status_code == HTTPStatus.OK
-        content = response.content.decode()
-        assert "Account created successfully. Welcome to SmartCampus!" in content
-        assert "_auth_user_id" in client.session
-
-        user = User.objects.get(email="grace.hopper@campus.edu")
-        assert user.role == User.Role.FACULTY
-        assert user.is_faculty is True
-
-
 class TestRoleRequiredMixin:
     def test_authenticated_allowed_role(self, rf: RequestFactory):
         from django.http import HttpResponse
@@ -84,12 +56,12 @@ class TestRoleRequiredMixin:
         from smart_campus.users.views import RoleRequiredMixin
 
         class SampleAuthorizedView(RoleRequiredMixin, View):
-            allowed_roles = [User.Role.FACULTY.value]
+            allowed_roles = [User.Role.ADMIN.value]
 
             def get(self, request):
                 return HttpResponse("OK")
 
-        user = UserFactory(role=User.Role.FACULTY)
+        user = UserFactory(role=User.Role.ADMIN)
         request = rf.get("/")
         request.user = user
         response = SampleAuthorizedView.as_view()(request)
@@ -102,7 +74,7 @@ class TestRoleRequiredMixin:
         from smart_campus.users.views import RoleRequiredMixin
 
         class SampleAuthorizedView(RoleRequiredMixin, View):
-            allowed_roles = [User.Role.FACULTY.value]
+            allowed_roles = [User.Role.ADMIN.value]
 
             def get(self, request):
                 return HttpResponse("OK")
@@ -201,13 +173,46 @@ class TestUserAuthenticationFlows:
 
 
 class TestLandingPageAndAuthTemplates:
+    def test_student_dashboard_activity_only_contains_owned_public_updates(self, client, db):
+        student = UserFactory(role=User.Role.STUDENT)
+        other_student = UserFactory(role=User.Role.STUDENT)
+        own_complaint = Complaint.objects.create(
+            title="Broken desk",
+            description="Desk needs repair",
+            user=student,
+        )
+        other_complaint = Complaint.objects.create(
+            title="Other issue",
+            description="Private complaint",
+            user=other_student,
+        )
+        ComplaintHistory.objects.create(
+            complaint=own_complaint,
+            status=Complaint.Status.IN_PROGRESS,
+            comment="Internal maintenance note",
+        )
+        ComplaintHistory.objects.create(
+            complaint=other_complaint,
+            status=Complaint.Status.RESOLVED,
+            comment="Other student's update",
+        )
+
+        client.force_login(student)
+        response = client.get(reverse("dashboard:student"))
+        content = response.content.decode()
+
+        assert own_complaint.complaint_id in content
+        assert "In Progress" in content
+        assert "Internal maintenance note" not in content
+        assert other_complaint.complaint_id not in content
+        assert "Other student's update" not in content
+
     def test_landing_page_logged_out_navigation(self, client):
         response = client.get(reverse("home"))
         assert response.status_code == HTTPStatus.OK
         content = response.content.decode()
         assert reverse("account_login") in content
         assert reverse("users:student_signup") in content
-        assert reverse("users:faculty_signup") in content
         assert "Raise Complaint" in content
         assert "My Complaints" in content
 
@@ -266,14 +271,12 @@ class TestLandingPageAndAuthTemplates:
         content = response.content.decode()
         assert "Don&#x27;t have an account?" in content or "Don't have an account?" in content
         assert reverse("users:student_signup") in content
-        assert reverse("users:faculty_signup") in content
 
     def test_account_signup_renders_role_selection(self, client):
         response = client.get(reverse("account_signup"))
         assert response.status_code == HTTPStatus.OK
         content = response.content.decode()
         assert reverse("users:student_signup") in content
-        assert reverse("users:faculty_signup") in content
         assert reverse("account_login") in content
 
     def test_student_signup_page_bottom_signin_link(self, client):
@@ -283,12 +286,6 @@ class TestLandingPageAndAuthTemplates:
         assert "Already have an account?" in content
         assert reverse("account_login") in content
 
-    def test_faculty_signup_page_bottom_signin_link(self, client):
-        response = client.get(reverse("users:faculty_signup"))
-        assert response.status_code == HTTPStatus.OK
-        content = response.content.decode()
-        assert "Already have an account?" in content
-        assert reverse("account_login") in content
 
 
 class TestUserManagementViews:

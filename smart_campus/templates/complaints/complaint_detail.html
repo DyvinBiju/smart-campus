@@ -365,9 +365,22 @@
             </div>
 
             <div class="mb-3">
-              <label class="text-muted small fw-semibold d-block">Location</label>
-              <span class="fs-6 fw-bold text-dark"><i class="fa-solid fa-location-dot me-2 text-danger"></i>{{ complaint.location }}</span>
+              <label class="text-muted small fw-semibold d-block">Official Registered Location</label>
+              {% if complaint.location_record %}
+                <a href="{% url 'assets:location_detail' complaint.location_record.pk %}" class="fs-6 fw-bold text-primary text-decoration-none">
+                  <i class="fa-solid fa-building me-2 text-danger"></i>{{ complaint.location_record.get_full_path }}
+                </a>
+              {% else %}
+                <span class="fs-6 fw-bold text-dark"><i class="fa-solid fa-location-dot me-2 text-secondary"></i>{{ complaint.location|default:"Unspecified Location" }}</span>
+              {% endif %}
             </div>
+
+            {% if complaint.manual_location %}
+              <div class="mb-3 p-2 bg-light rounded border small">
+                <label class="text-muted fw-semibold d-block">Additional Location Details</label>
+                <span class="text-dark">{{ complaint.manual_location }}</span>
+              </div>
+            {% endif %}
 
             <div class="mb-3">
               <label class="text-muted small fw-semibold d-block">Priority</label>

@@ -2,11 +2,12 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError, PermissionDenied
+from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import InventoryItemForm, StockTransactionForm
-from .models import InventoryCategory, InventoryItem, StockTransaction
+from .forms import InventoryItemForm, StockTransactionForm, StorageLocationForm
+from .models import InventoryCategory, InventoryItem, StockTransaction, StorageLocation
 
 
 def admin_required(view_func):
@@ -37,10 +38,11 @@ def inventory_list(request):
     if not is_admin and not is_maint:
         raise PermissionDenied("Access denied. Inventory records are restricted to Administrators and Maintenance Staff.")
 
-    items = InventoryItem.objects.select_related("category").all()
+    items = InventoryItem.objects.select_related("category", "location").all()
 
     search = request.GET.get("search", "").strip()
     category = request.GET.get("category", "")
+    location_id = request.GET.get("location", "")
     status = request.GET.get("status", "")
 
     if search:
@@ -48,10 +50,15 @@ def inventory_list(request):
             Q(name__icontains=search)
             | Q(description__icontains=search)
             | Q(storage_location__icontains=search)
+            | Q(location__name__icontains=search)
+            | Q(location__code__icontains=search)
         )
 
     if category:
         items = items.filter(category_id=category)
+
+    if location_id and location_id.isdigit():
+        items = items.filter(location_id=int(location_id))
 
     if status in ["available", "in_stock"]:
         items = [item for item in items if item.stock_status == "In Stock"]
@@ -61,12 +68,15 @@ def inventory_list(request):
         items = [item for item in items if item.stock_status == "Out of Stock"]
 
     categories = InventoryCategory.objects.all()
+    storage_locations = StorageLocation.objects.filter(is_active=True)
 
     context = {
         "items": items,
         "categories": categories,
+        "storage_locations": storage_locations,
         "search": search,
         "selected_category": category,
+        "selected_location": location_id,
         "selected_status": status,
         "is_admin": is_admin,
         "is_maintenance_staff": is_maint,
@@ -410,4 +420,151 @@ def inventory_report_unavailable(request, pk):
 
     return redirect("inventory:detail", pk=item.pk)
 
-
+
+@login_required
+def storage_location_list(request):
+    is_admin = request.user.is_authenticated and (
+        getattr(request.user, "is_admin_user", False) or request.user.is_superuser or request.user.is_staff
+    )
+    is_maint = request.user.is_authenticated and getattr(request.user, "is_maintenance_staff", False)
+
+    if not is_admin and not is_maint:
+        raise PermissionDenied("Access denied. Storage locations are restricted to Administrators and Maintenance Staff.")
+
+    locations = StorageLocation.objects.prefetch_related("items").all()
+
+    search = request.GET.get("search", "").strip()
+    status = request.GET.get("status", "")
+
+    if search:
+        locations = locations.filter(
+            Q(name__icontains=search)
+            | Q(code__icontains=search)
+            | Q(description__icontains=search)
+        )
+
+    if status == "active":
+        locations = locations.filter(is_active=True)
+    elif status == "inactive":
+        locations = locations.filter(is_active=False)
+
+    total_locations = StorageLocation.objects.count()
+    active_locations = StorageLocation.objects.filter(is_active=True).count()
+    inactive_locations = StorageLocation.objects.filter(is_active=False).count()
+
+    context = {
+        "locations": locations,
+        "total_locations": total_locations,
+        "active_locations": active_locations,
+        "inactive_locations": inactive_locations,
+        "search": search,
+        "selected_status": status,
+        "is_admin": is_admin,
+        "is_maintenance_staff": is_maint,
+    }
+
+    return render(request, "inventory/storage_location_list.html", context)
+
+
+@login_required
+def storage_location_detail(request, pk):
+    is_admin = request.user.is_authenticated and (
+        getattr(request.user, "is_admin_user", False) or request.user.is_superuser or request.user.is_staff
+    )
+    is_maint = request.user.is_authenticated and getattr(request.user, "is_maintenance_staff", False)
+
+    if not is_admin and not is_maint:
+        raise PermissionDenied("Access denied. You are not authorized to view storage location details.")
+
+    location = get_object_or_404(StorageLocation, pk=pk)
+    stored_items = location.items.select_related("category").all()
+
+    return render(
+        request,
+        "inventory/storage_location_detail.html",
+        {
+            "location": location,
+            "stored_items": stored_items,
+            "is_admin": is_admin,
+            "is_maintenance_staff": is_maint,
+        },
+    )
+
+
+@admin_required
+def storage_location_create(request):
+    if request.method == "POST":
+        form = StorageLocationForm(request.POST)
+        if form.is_valid():
+            loc = form.save()
+            messages.success(request, f"Storage location '{loc.name}' created successfully.")
+            return redirect("inventory:storage_location_list")
+    else:
+        form = StorageLocationForm()
+
+    return render(
+        request,
+        "inventory/storage_location_form.html",
+        {"form": form, "page_title": "Add Storage Location"},
+    )
+
+
+@admin_required
+def storage_location_update(request, pk):
+    location = get_object_or_404(StorageLocation, pk=pk)
+
+    if request.method == "POST":
+        form = StorageLocationForm(request.POST, instance=location)
+        if form.is_valid():
+            loc = form.save()
+            messages.success(request, f"Storage location '{loc.name}' updated successfully.")
+            return redirect("inventory:storage_location_list")
+    else:
+        form = StorageLocationForm(instance=location)
+
+    return render(
+        request,
+        "inventory/storage_location_form.html",
+        {
+            "form": form,
+            "location": location,
+            "page_title": f"Edit Storage Location: {location.name}",
+        },
+    )
+
+
+@admin_required
+def storage_location_toggle_active(request, pk):
+    location = get_object_or_404(StorageLocation, pk=pk)
+    if request.method == "POST":
+        location.is_active = not location.is_active
+        location.save()
+        status_str = "ACTIVATED" if location.is_active else "DEACTIVATED"
+        messages.success(request, f"Storage location '{location.name}' has been {status_str}.")
+    return redirect("inventory:storage_location_list")
+
+
+@admin_required
+def storage_location_delete(request, pk):
+    location = get_object_or_404(StorageLocation, pk=pk)
+
+    if request.method == "POST":
+        if location.items.exists():
+            messages.error(
+                request,
+                f"Cannot delete storage location '{location.name}' because it contains {location.item_count} active inventory item(s). Deactivate it instead to preserve audit records.",
+            )
+            return redirect("inventory:storage_location_list")
+
+        loc_name = location.name
+        location.delete()
+        messages.success(request, f"Storage location '{loc_name}' deleted successfully.")
+        return redirect("inventory:storage_location_list")
+
+    return render(
+        request,
+        "inventory/storage_location_confirm_delete.html",
+        {"location": location},
+    )
+
+

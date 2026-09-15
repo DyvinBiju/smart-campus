@@ -8,23 +8,28 @@ from .views import (
     AssetRetireView,
     AssetUpdateView,
     CampusLocationsView,
+    LocationCreateView,
+    LocationDeleteView,
+    LocationDetailView,
+    LocationToggleActiveView,
+    LocationUpdateView,
 )
 
 app_name = "assets"
 
 urlpatterns = [
-    # List all assets & search/filter
+    # Asset Management Routes
     path("", AssetListView.as_view(), name="asset_list"),
-    # Campus Locations & Buildings/Rooms master view
-    path("locations/", CampusLocationsView.as_view(), name="campus_locations"),
-    # Add a new asset
     path("create/", AssetCreateView.as_view(), name="asset_create"),
-    # View asset details
     path("<int:pk>/", AssetDetailView.as_view(), name="asset_detail"),
-    # Edit an asset
     path("<int:pk>/edit/", AssetUpdateView.as_view(), name="asset_update"),
-    # Retire an asset
     path("<int:pk>/retire/", AssetRetireView.as_view(), name="asset_retire"),
-    # Delete an asset
     path("<int:pk>/delete/", AssetDeleteView.as_view(), name="asset_delete"),
+    # Location Management Routes
+    path("locations/", CampusLocationsView.as_view(), name="campus_locations"),
+    path("locations/create/", LocationCreateView.as_view(), name="location_create"),
+    path("locations/<int:pk>/", LocationDetailView.as_view(), name="location_detail"),
+    path("locations/<int:pk>/edit/", LocationUpdateView.as_view(), name="location_update"),
+    path("locations/<int:pk>/toggle-active/", LocationToggleActiveView.as_view(), name="location_toggle_active"),
+    path("locations/<int:pk>/delete/", LocationDeleteView.as_view(), name="location_delete"),
 ]

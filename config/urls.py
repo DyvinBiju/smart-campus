@@ -6,12 +6,31 @@ from django.urls import path
 from django.views import defaults as default_views
 from django.views.generic import TemplateView
 
+from smart_campus.assets.models import Asset, Location
+from smart_campus.inventory.models import InventoryItem
+from smart_campus.users.models import User
 from smart_campus.users.views import smart_campus_login_view
+
+
+class PublicHomeView(TemplateView):
+    template_name = "pages/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["public_statistics"] = {
+            "registered_students": User.objects.filter(
+                role=User.Role.STUDENT, is_active=True
+            ).count(),
+            "campus_assets": Asset.objects.exclude(status="RETIRED").count(),
+            "inventory_items": InventoryItem.objects.count(),
+            "campus_locations": Location.objects.filter(is_active=True).count(),
+        }
+        return context
 
 
 urlpatterns = [
 
-    path("", TemplateView.as_view(template_name="pages/home.html"), name="home"),
+    path("", PublicHomeView.as_view(), name="home"),
 
     path(
         "about/",

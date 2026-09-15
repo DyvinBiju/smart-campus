@@ -124,7 +124,7 @@
                 {% elif act.activity_type == 'INVENTORY' %}bg-secondary text-white
                 {% elif act.activity_type == 'USER' %}bg-primary text-white
                 {% else %}bg-dark text-white{% endif %}">
-                {{ act.get_activity_type_display }}
+                {{ act.activity_type_display }}
               </span>
             </td>
             <td>{{ act.user_name }}</td>

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -21,7 +22,7 @@ from .models import Complaint, ComplaintHistory, ComplaintResource, MaintenanceR
 
 @login_required
 def complaint_create(request):
-    """View for Student / Faculty to raise a new complaint."""
+    """View for students to raise a new complaint."""
     if request.method == "POST":
         form = ComplaintForm(request.POST)
         if form.is_valid():
@@ -77,7 +78,7 @@ def complaint_list(request):
         elif scope_filter == "unassigned":
             complaints = complaints.filter(assigned_to__isnull=True)
     else:
-        # Students & Faculty can ONLY view their own submitted complaints
+        # Students can ONLY view their own submitted complaints
         complaints = Complaint.objects.select_related("user", "asset", "assigned_to").filter(user=user)
 
     if search_query:
@@ -135,7 +136,7 @@ def complaint_detail(request, complaint_id):
     is_admin = user.is_superuser or user.role == User.Role.ADMIN or user.is_staff
     is_staff = user.role == User.Role.MAINTENANCE
 
-    # Authorization check: Students & Faculty can only view their own complaints
+    # Authorization check: Students can only view their own complaints
     if not (is_admin or is_staff):
         if complaint.user != user:
             raise PermissionDenied("You are not authorized to view this complaint.")
@@ -183,12 +184,18 @@ def admin_complaint_manage(request):
 
     unassigned_complaints = Complaint.objects.select_related("user", "asset").filter(assigned_to__isnull=True)
     pending_requests = MaintenanceRequest.objects.select_related("complaint", "requested_by", "inventory_item").filter(status="PENDING")
-    all_complaints = Complaint.objects.select_related("user", "asset", "assigned_to").all()[:30]
+    all_complaints_queryset = Complaint.objects.select_related(
+        "user", "asset", "assigned_to", "location_record"
+    ).order_by("-created_at")
+    all_complaints_paginator = Paginator(all_complaints_queryset, 25)
+    all_complaints_page = all_complaints_paginator.get_page(request.GET.get("page"))
 
     context = {
         "unassigned_complaints": unassigned_complaints,
         "pending_requests": pending_requests,
-        "all_complaints": all_complaints,
+        "all_complaints": all_complaints_page.object_list,
+        "all_complaints_page": all_complaints_page,
+        "all_complaints_count": all_complaints_paginator.count,
     }
     return render(request, "complaints/admin_complaint_manage.html", context)
 

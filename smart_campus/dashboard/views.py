@@ -9,6 +9,9 @@ from django.shortcuts import redirect
 from django.utils.timezone import now
 from django.views.generic import TemplateView, View
 
+from smart_campus.assets.models import Asset
+from smart_campus.complaints.models import Complaint, ComplaintHistory, MaintenanceRequest
+from smart_campus.inventory.models import InventoryItem, StockTransaction
 from smart_campus.users.models import User
 from .models import Activity
 from .helpers import (
@@ -19,7 +22,6 @@ from .helpers import (
     get_maintenance_staff_metrics,
     get_realtime_audit_activities,
     is_model_available,
-    seed_mock_activities,
     log_activity,
 )
 
@@ -27,7 +29,6 @@ def get_current_role_and_user(request):
     """
     Determines user staff/admin status and returns (is_staff, user).
     """
-    seed_mock_activities()
     user = request.user
     if user.is_authenticated:
         is_staff = user.is_staff or user.is_superuser or user.is_admin_user or user.is_maintenance_staff
@@ -40,7 +41,7 @@ def get_current_role_and_user(request):
 class DashboardIndexView(LoginRequiredMixin, View):
     """
     Landing redirector. Directs Admins to Admin Operations dashboard, Maintenance Staff
-    to Maintenance Staff dashboard, and regular users (Students/Faculty) to Student portal.
+    to Maintenance Staff dashboard, and regular student users to the Student portal.
     """
     def get(self, request, *args, **kwargs):
         user = request.user
@@ -132,37 +133,69 @@ class StudentDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        is_staff, user = get_current_role_and_user(self.request)
-        
-        # Retrieve modules info
-        modules = get_modules_info()
-        
-        # Retrieve complaints metrics for this specific user
-        complaints_stats = get_complaints_metrics(user=user)
-        
-        # Get recent updates relevant to COMPLAINTS for this user
-        recent_updates = Activity.objects.filter(
-            activity_type__in=['COMPLAINT', 'MAINTENANCE']
-        )
-        if user.is_authenticated or not isinstance(user, AnonymousUser):
-            recent_updates = recent_updates.filter(user=user)
-        recent_updates = recent_updates.order_by('-timestamp')[:5]
-        
+        user = self.request.user
+        user_complaints = Complaint.objects.filter(user=user)
+        recent_complaints = user_complaints.select_related("asset", "location_record").order_by(
+            "-updated_at", "-created_at"
+        )[:8]
+        public_status_labels = {
+            Complaint.Status.SUBMITTED: "Complaint Submitted",
+            Complaint.Status.UNDER_REVIEW: "Under Review",
+            Complaint.Status.ASSIGNED: "Assigned to Maintenance Staff",
+            Complaint.Status.UNDER_INSPECTION: "Under Inspection",
+            Complaint.Status.IN_PROGRESS: "In Progress",
+            Complaint.Status.ACTION_REQUIRED: "Awaiting Resources",
+            Complaint.Status.RESOLVED: "Resolved",
+            Complaint.Status.CLOSED: "Closed",
+        }
+        recent_updates = [
+            {
+                "complaint": update.complaint,
+                "timestamp": update.timestamp,
+                "title": public_status_labels[update.status],
+                "status": public_status_labels[update.status],
+                "description": "Your complaint progress has been updated.",
+            }
+            for update in ComplaintHistory.objects.filter(
+                complaint__user=user,
+                status__in=public_status_labels,
+            ).select_related("complaint").order_by("-timestamp")[:5]
+        ]
+
+        complaints_stats = {
+            "total": user_complaints.count(),
+            "submitted": user_complaints.filter(status=Complaint.Status.SUBMITTED).count(),
+            "under_review": user_complaints.filter(status=Complaint.Status.UNDER_REVIEW).count(),
+            "in_progress": user_complaints.filter(
+                status__in=[
+                    Complaint.Status.ASSIGNED,
+                    Complaint.Status.UNDER_INSPECTION,
+                    Complaint.Status.IN_PROGRESS,
+                    Complaint.Status.ACTION_REQUIRED,
+                ]
+            ).count(),
+            "resolved": user_complaints.filter(
+                status__in=[Complaint.Status.RESOLVED, Complaint.Status.CLOSED]
+            ).count(),
+        }
+        role_label = user.get_role_display()
+
         context.update({
-            "modules": modules,
             "complaints_stats": complaints_stats,
+            "recent_complaints": recent_complaints,
             "user_stats": {
-                "date_joined": user.date_joined if hasattr(user, 'date_joined') else now(),
-                "email": user.email if hasattr(user, 'email') else "student1@campus.edu",
-                "name": user.name if hasattr(user, 'name') and user.name else (user.username if hasattr(user, 'username') else "John Student"),
+                "date_joined": user.date_joined,
+                "email": user.email,
+                "name": user.name or user.username,
+                "username": user.username,
+                "role": role_label,
+                "campus_id": user.campus_id,
+                "department": user.department,
+                "year_or_semester": user.year_or_semester,
             },
             "recent_updates": recent_updates,
-            "quick_links": [
-                {"name": "View My Complaints", "url": "#complaint-log-section", "icon": "fa-list-check"},
-                {"name": "My Profile Settings", "url": f"/users/{user.username}/" if hasattr(user, 'username') else "#", "icon": "fa-user-gear"},
-                {"name": "Help & Support", "url": "/about/", "icon": "fa-circle-question"},
-            ],
-            "preview_mode": not self.request.user.is_authenticated,
+            "role_label": role_label,
+            "preview_mode": False,
             "current_role": "student"
         })
         return context
@@ -177,7 +210,7 @@ class AdminDashboardView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not (request.user.is_admin_user or request.user.is_maintenance_staff or request.user.is_staff):
+        if not (request.user.is_admin_user or request.user.is_superuser):
             return redirect("dashboard:student")
         return super().dispatch(request, *args, **kwargs)
 
@@ -296,17 +329,21 @@ class ReportExportView(LoginRequiredMixin, View):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not (request.user.is_admin_user or request.user.is_maintenance_staff or request.user.is_staff):
+        if not (request.user.is_admin_user or request.user.is_superuser):
             return redirect("dashboard:student")
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        # Ensure database is seeded
-        seed_mock_activities()
-        
         export_format = request.GET.get("format", "print")
         date_filter = request.GET.get("date_range", "all")
-        activity_type_filter = request.GET.get("type", "all")
+        activity_type_filter = request.GET.get("type", "all").upper()
+
+        valid_date_filters = {"all", "today", "7_days", "30_days"}
+        valid_activity_types = {"all", "COMPLAINT", "MAINTENANCE", "ASSET", "INVENTORY"}
+        if date_filter not in valid_date_filters:
+            date_filter = "all"
+        if activity_type_filter not in valid_activity_types:
+            activity_type_filter = "all"
         
         today_date = now()
         start_date = None
@@ -317,19 +354,107 @@ class ReportExportView(LoginRequiredMixin, View):
         elif date_filter == "30_days":
             start_date = today_date - timedelta(days=30)
             
-        # Query activities
-        activities_qs = Activity.objects.all()
-        if start_date:
-            activities_qs = activities_qs.filter(timestamp__gte=start_date)
-        if activity_type_filter != "all":
-            activities_qs = activities_qs.filter(activity_type__iexact=activity_type_filter)
-            
-        activities = activities_qs.order_by('-timestamp')
-        total_activities = activities.count()
-        complaint_count = activities.filter(activity_type='COMPLAINT').count()
-        maintenance_count = activities.filter(activity_type='MAINTENANCE').count()
-        asset_count = activities.filter(activity_type='ASSET').count()
-        inventory_count = activities.filter(activity_type='INVENTORY').count()
+        activities = []
+
+        def add_activity(activity_type, display, timestamp, user_name, title, description, status):
+            if start_date and timestamp < start_date:
+                return
+            if activity_type_filter != "all" and activity_type != activity_type_filter:
+                return
+            activities.append({
+                "timestamp": timestamp,
+                "activity_type": activity_type,
+                "activity_type_display": display,
+                "user_name": user_name or "Not recorded",
+                "title": title,
+                "description": description or "Not specified",
+                "status": status or "Not specified",
+            })
+
+        complaints = Complaint.objects.select_related("user", "assigned_to", "asset", "location_record")
+        for complaint in complaints:
+            submitted_by = complaint.user.name or complaint.user.username if complaint.user else "Not recorded"
+            add_activity(
+                "COMPLAINT",
+                "Complaint",
+                complaint.created_at,
+                submitted_by,
+                f"{complaint.complaint_id}: {complaint.title}",
+                complaint.description,
+                complaint.get_status_display(),
+            )
+
+        histories = ComplaintHistory.objects.select_related("complaint", "changed_by")
+        for history in histories:
+            changed_by = history.changed_by.name or history.changed_by.username if history.changed_by else "Not recorded"
+            add_activity(
+                "MAINTENANCE",
+                "Maintenance",
+                history.timestamp,
+                changed_by,
+                f"{history.complaint.complaint_id}: {history.complaint.title}",
+                history.comment or f"Status changed to {history.status}",
+                history.status,
+            )
+
+        maintenance_requests = MaintenanceRequest.objects.select_related("complaint", "requested_by")
+        for request_item in maintenance_requests:
+            requested_by = request_item.requested_by.name or request_item.requested_by.username if request_item.requested_by else "Not recorded"
+            add_activity(
+                "MAINTENANCE",
+                "Maintenance",
+                request_item.created_at,
+                requested_by,
+                f"{request_item.get_request_type_display()}: {request_item.complaint.complaint_id}",
+                request_item.reason,
+                request_item.get_status_display(),
+            )
+
+        assets = Asset.objects.select_related("location")
+        for asset in assets:
+            location = asset.location.get_full_path() if asset.location else asset.building or "Not specified"
+            add_activity(
+                "ASSET",
+                "Asset",
+                asset.updated_at,
+                "Not recorded",
+                f"{asset.asset_code}: {asset.name}",
+                f"Location: {location}; Category: {asset.get_category_display()}",
+                asset.get_status_display(),
+            )
+
+        inventory_items = InventoryItem.objects.select_related("category", "location")
+        for item in inventory_items:
+            location = item.location.name if item.location else item.storage_location or "Not specified"
+            add_activity(
+                "INVENTORY",
+                "Inventory",
+                item.updated_at,
+                "Not recorded",
+                item.name,
+                f"Category: {item.category.name}; Quantity: {item.quantity} {item.unit}; Location: {location}",
+                item.stock_status,
+            )
+
+        stock_transactions = StockTransaction.objects.select_related("item", "created_by")
+        for transaction in stock_transactions:
+            created_by = transaction.created_by.name or transaction.created_by.username if transaction.created_by else "Not recorded"
+            add_activity(
+                "INVENTORY",
+                "Inventory",
+                transaction.created_at,
+                created_by,
+                f"{transaction.get_transaction_type_display()}: {transaction.item.name}",
+                f"{transaction.quantity} {transaction.item.unit}; {transaction.notes or 'Stock transaction recorded'}",
+                transaction.item.stock_status,
+            )
+
+        activities.sort(key=lambda activity: activity["timestamp"], reverse=True)
+        total_activities = len(activities)
+        complaint_count = sum(activity["activity_type"] == "COMPLAINT" for activity in activities)
+        maintenance_count = sum(activity["activity_type"] == "MAINTENANCE" for activity in activities)
+        asset_count = sum(activity["activity_type"] == "ASSET" for activity in activities)
+        inventory_count = sum(activity["activity_type"] == "INVENTORY" for activity in activities)
         
         if export_format == "csv":
             response = HttpResponse(content_type="text/csv")
@@ -354,12 +479,12 @@ class ReportExportView(LoginRequiredMixin, View):
             writer.writerow(["Timestamp", "Activity Type", "Logged By", "Title", "Description", "Status"])
             for act in activities:
                 writer.writerow([
-                    act.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                    act.get_activity_type_display(),
-                    act.user_name or "System",
-                    act.title,
-                    act.description,
-                    act.status or "N/A"
+                    act["timestamp"].strftime("%Y-%m-%d %H:%M:%S"),
+                    act["activity_type_display"],
+                    act["user_name"],
+                    act["title"],
+                    act["description"],
+                    act["status"],
                 ])
                 
             return response
@@ -387,7 +512,7 @@ class SwitchRoleView(LoginRequiredMixin, View):
     """
     def get(self, request, *args, **kwargs):
         new_role = request.GET.get("role", "admin")
-        if new_role == "admin" and (request.user.is_admin_user or request.user.is_maintenance_staff or request.user.is_staff):
+        if new_role == "admin" and (request.user.is_admin_user or request.user.is_superuser):
             return redirect("dashboard:admin")
         return redirect("dashboard:student")
 

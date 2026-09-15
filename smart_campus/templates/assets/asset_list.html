@@ -90,7 +90,7 @@
   <div class="dash-card mb-4">
     <div class="dash-card-body py-3">
       <form method="get" class="row g-3 align-items-center">
-        <div class="col-12 col-md-5">
+        <div class="col-12 col-md-4">
           <div class="input-group">
             <span class="input-group-text bg-light border-end-0">
               <i class="fa-solid fa-magnifying-glass text-muted"></i>
@@ -105,7 +105,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
           <select name="status" class="form-select">
             <option value="">All Statuses</option>
             {% for code, label in status_choices %}
@@ -127,11 +127,22 @@
           </select>
         </div>
 
+        <div class="col-6 col-md-2">
+          <select name="location" class="form-select">
+            <option value="">All Locations</option>
+            {% for loc in available_locations %}
+              <option value="{{ loc.pk }}" {% if selected_location|slugify == loc.pk|slugify %}selected{% endif %}>
+                {{ loc.get_full_path }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
         <div class="col-12 col-md-2 d-flex gap-2">
           <button type="submit" class="btn btn-primary w-100 fw-semibold">
             <i class="fa-solid fa-filter me-1"></i> Filter
           </button>
-          {% if search_query or selected_status or selected_category %}
+          {% if search_query or selected_status or selected_category or selected_location %}
             <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary" title="Clear Filters">
               <i class="fa-solid fa-rotate-left"></i>
             </a>
@@ -189,9 +200,15 @@
               </td>
               <td>
                 <div class="small fw-semibold text-dark">
-                  <i class="fa-solid fa-building me-1 text-muted"></i>{{ asset.building }}
-                  {% if asset.room %}
-                    <span class="text-muted font-normal">({{ asset.room }})</span>
+                  {% if asset.location %}
+                    <a href="{% url 'assets:location_detail' asset.location.pk %}" class="text-decoration-none text-primary">
+                      <i class="fa-solid fa-building me-1 text-danger"></i>{{ asset.location.get_full_path }}
+                    </a>
+                  {% else %}
+                    <i class="fa-solid fa-building me-1 text-muted"></i>{{ asset.building }}
+                    {% if asset.room %}
+                      <span class="text-muted font-normal">({{ asset.room }})</span>
+                    {% endif %}
                   {% endif %}
                 </div>
               </td>

@@ -8,7 +8,6 @@ from django.http import HttpRequest
 from django.test import RequestFactory
 from django.utils.translation import gettext_lazy as _
 
-from smart_campus.users.forms import FacultySignupForm
 from smart_campus.users.forms import MaintenanceStaffCreationForm
 from smart_campus.users.forms import StudentSignupForm
 from smart_campus.users.forms import UserAdminCreationForm
@@ -59,6 +58,22 @@ class TestStudentSignupForm:
         assert user.is_student is True
         assert user.check_password("SecureP@ssword123!")
 
+    def test_student_signup_rejects_blank_name_and_whitespace_email(self, db):
+        form = StudentSignupForm(
+            data={
+                "name": "   ",
+                "campus_id": "CS202499",
+                "email": "   ",
+                "department": "Computer Science",
+                "year_or_semester": "4th Year",
+                "password1": "SecureP@ssword123!",
+                "password2": "SecureP@ssword123!",
+            },
+        )
+        assert not form.is_valid()
+        assert "name" in form.errors
+        assert "email" in form.errors
+
     def test_student_signup_password_mismatch(self, db):
         form = StudentSignupForm(
             data={
@@ -74,28 +89,26 @@ class TestStudentSignupForm:
         assert not form.is_valid()
         assert "password2" in form.errors
 
-
-class TestFacultySignupForm:
-    def test_valid_faculty_signup(self, db):
-        form = FacultySignupForm(
+    def test_duplicate_email_rejected_case_insensitive(self, db):
+        User.objects.create_user(
+            username="existing-user",
+            email="sarah@campus.edu",
+            password="SecureP@ssword123!",
+            name="Existing User",
+        )
+        form = StudentSignupForm(
             data={
-                "name": "Prof. Alan Turing",
-                "campus_id": "FAC1001",
-                "email": "turing@campus.edu",
-                "department": "Mathematics & CS",
+                "name": "Sarah Student",
+                "campus_id": "CS202500",
+                "email": "SARAH@campus.edu",
+                "department": "Computer Science",
+                "year_or_semester": "4th Year",
                 "password1": "SecureP@ssword123!",
                 "password2": "SecureP@ssword123!",
             },
         )
-        assert form.is_valid(), form.errors
-        user = form.save()
-        assert user.name == "Prof. Alan Turing"
-        assert user.campus_id == "FAC1001"
-        assert user.email == "turing@campus.edu"
-        assert user.department == "Mathematics & CS"
-        assert user.role == User.Role.FACULTY
-        assert user.is_faculty is True
-        assert user.check_password("SecureP@ssword123!")
+        assert not form.is_valid()
+        assert "email" in form.errors
 
 
 class TestMaintenanceStaffCreationForm:
@@ -132,7 +145,7 @@ class TestSignupFormNoRoleDropdown:
                 "email": "stu.phone@campus.edu",
                 "department": "Computer Science",
                 "year_or_semester": "1st Year",
-                "phone_number": "+91 9876543210",
+                "phone_number": "9876543210",
                 "password1": "SecurePass123!",
                 "password2": "SecurePass123!",
             },
@@ -141,25 +154,19 @@ class TestSignupFormNoRoleDropdown:
         assert form.is_valid(), form.errors
         user = form.save()
         assert user.role == User.Role.STUDENT
-        assert user.phone_number == "+91 9876543210"
+        assert user.phone_number == "9876543210"
 
-    def test_faculty_form_has_no_role_field_and_supports_phone(self, db):
-        form = FacultySignupForm(
-            data={
-                "name": "Faculty Phone",
-                "campus_id": "FAC999",
-                "email": "fac.phone@campus.edu",
-                "department": "Physics",
-                "phone_number": "+91 9123456780",
-                "password1": "SecurePass123!",
-                "password2": "SecurePass123!",
-            },
-        )
-        assert "role" not in form.fields
-        assert form.is_valid(), form.errors
-        user = form.save()
-        assert user.role == User.Role.FACULTY
-        assert user.phone_number == "+91 9123456780"
+    def test_student_signup_rejects_phone_number_longer_than_10_digits(self, db):
+        form = StudentSignupForm(data={"phone_number": "12345678901"})
+
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+    def test_student_signup_rejects_non_numeric_phone_number(self, db):
+        form = StudentSignupForm(data={"phone_number": "98765abc10"})
+
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
 
     def test_user_signup_form_has_no_role_field(self):
         form = UserSignupForm()

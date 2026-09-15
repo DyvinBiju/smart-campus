@@ -1,0 +1,1 @@
+# Assets management package

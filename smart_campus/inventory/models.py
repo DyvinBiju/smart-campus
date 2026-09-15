@@ -16,6 +16,29 @@ class InventoryCategory(models.Model):
         return self.name
 
 
+class StorageLocation(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+    code = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text="e.g. STORE-001")
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Storage Location"
+        verbose_name_plural = "Storage Locations"
+
+    def __str__(self):
+        if self.code:
+            return f"{self.name} ({self.code})"
+        return self.name
+
+    @property
+    def item_count(self):
+        return self.items.count()
+
+
 class InventoryItem(models.Model):
     name = models.CharField(max_length=150)
     category = models.ForeignKey(
@@ -32,6 +55,14 @@ class InventoryItem(models.Model):
         validators=[MinValueValidator(0)],
     )
     unit = models.CharField(max_length=50, default="pieces")
+    location = models.ForeignKey(
+        StorageLocation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="items",
+        help_text="Official inventory storage location",
+    )
     storage_location = models.CharField(
         max_length=100,
         blank=True,
@@ -54,6 +85,16 @@ class InventoryItem(models.Model):
         elif self.quantity <= self.minimum_quantity:
             return "Low Stock"
         return "In Stock"
+
+    def save(self, *args, **kwargs):
+        if self.location:
+            self.storage_location = self.location.name
+        elif self.storage_location:
+            matched = StorageLocation.objects.filter(name__iexact=self.storage_location.strip()).first()
+            if matched:
+                self.location = matched
+                self.storage_location = matched.name
+        super().save(*args, **kwargs)
 
 
 class StockTransaction(models.Model):

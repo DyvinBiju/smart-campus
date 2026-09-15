@@ -5,7 +5,7 @@ from . import views
 app_name = "users"
 urlpatterns = [
     path("signup/student/", view=views.student_signup_view, name="student_signup"),
-    path("signup/faculty/", view=views.faculty_signup_view, name="faculty_signup"),
+    path("profile/edit/", view=views.SelfProfileUpdateView.as_view(), name="profile_edit"),
     # User Management Console Routes
     path("manage/", view=views.UserManagementListView.as_view(), name="manage"),
     path("create/", view=views.UserManagementCreateView.as_view(), name="create"),

@@ -155,6 +155,16 @@ class InventoryViewsPermissionsTest(TestCase):
         detail_resp = self.client.get(reverse("inventory:detail", kwargs={"pk": self.item.pk}))
         self.assertEqual(detail_resp.status_code, 200)
 
+    def test_admin_can_view_inventory_categories(self):
+        """The administrator sidebar category link renders its management page."""
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("inventory:category_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Inventory Categories")
+        self.assertContains(response, "Paper Products")
+
     def test_student_cannot_create_inventory(self):
         """Test that non-admin (student) cannot create inventory items."""
         self.client.force_login(self.student_user)

@@ -89,9 +89,20 @@
 
         <div class="mb-3">
           <span class="text-muted small d-block">Storage Location</span>
-          <span class="fw-semibold text-dark">
-            <i class="fa-solid fa-warehouse me-1 text-secondary"></i>{{ item.storage_location|default:"Central Store Room" }}
-          </span>
+          {% if item.location %}
+            <a href="{% url 'inventory:storage_location_detail' item.location.pk %}" class="fw-semibold text-dark text-decoration-none">
+              <i class="fa-solid fa-warehouse me-1 text-primary"></i>{{ item.location.name }}
+              {% if item.location.code %}
+                <span class="badge bg-light text-muted border font-monospace ms-1">{{ item.location.code }}</span>
+              {% endif %}
+            </a>
+          {% elif item.storage_location %}
+            <span class="fw-semibold text-dark">
+              <i class="fa-solid fa-warehouse me-1 text-secondary"></i>{{ item.storage_location }}
+            </span>
+          {% else %}
+            <span class="text-muted fst-italic">No storage location assigned</span>
+          {% endif %}
         </div>
 
         <div class="mb-3">

@@ -12,7 +12,6 @@ class User(AbstractUser):
 
     class Role(models.TextChoices):
         STUDENT = "STUDENT", _("Student")
-        FACULTY = "FACULTY", _("Faculty / Teacher")
         MAINTENANCE = "MAINTENANCE", _("Maintenance Staff")
         ADMIN = "ADMIN", _("Administrator")
 
@@ -52,11 +51,6 @@ class User(AbstractUser):
     def is_student(self) -> bool:
         """Check if user is a student."""
         return self.role == self.Role.STUDENT
-
-    @property
-    def is_faculty(self) -> bool:
-        """Check if user is faculty / teacher."""
-        return self.role == self.Role.FACULTY
 
     @property
     def is_maintenance_staff(self) -> bool:

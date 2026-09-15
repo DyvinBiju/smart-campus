@@ -35,7 +35,9 @@
 
     .dashboard-container {
       display: flex;
-      min-height: calc(100vh - 80px);
+      height: calc(100vh - 80px);
+      min-height: 0;
+      overflow: hidden;
     }
 
     /* Sidebar Styles */
@@ -47,6 +49,14 @@
       flex-shrink: 0;
       transition: all 0.3s ease;
       border-right: 1px solid rgba(255, 255, 255, 0.05);
+      align-self: stretch;
+      height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .dashboard-sidebar-toggle {
+      display: none;
     }
 
     .sidebar-user {
@@ -141,7 +151,7 @@
     }
 
     .sidebar-menu li.active a {
-      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      background: #2563eb;
       color: #ffffff;
       box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
       font-weight: 600;
@@ -157,6 +167,10 @@
     .dashboard-content {
       flex-grow: 1;
       padding: 2rem;
+      min-width: 0;
+      min-height: 0;
+      height: 100%;
+      overflow-x: hidden;
       overflow-y: auto;
     }
 
@@ -278,11 +292,30 @@
     @media (max-width: 991.98px) {
       .dashboard-container {
         flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - 80px);
+        overflow: visible;
       }
       .dashboard-sidebar {
         width: 100%;
         border-right: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        height: auto;
+        overflow: visible;
+      }
+      .dashboard-sidebar-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        margin: 1rem 1rem 0;
+      }
+      .dashboard-sidebar.is-collapsed {
+        display: none;
+      }
+      .dashboard-content {
+        padding: 1.25rem 1rem;
+        height: auto;
+        overflow: visible;
       }
     }
 
@@ -395,7 +428,7 @@
 {% block content %}
   <div class="dashboard-container">
     <!-- Sidebar -->
-    <div class="dashboard-sidebar">
+    <aside class="dashboard-sidebar" id="dashboard-sidebar" aria-label="Dashboard navigation">
       <div class="sidebar-user">
         <div class="avatar">
           {% if request.user.is_authenticated %}
@@ -436,69 +469,74 @@
         {% if request.user.is_admin_user or request.user.is_superuser or not request.user.is_authenticated and current_role == 'admin' %}
           <!-- ADMIN DASHBOARD -->
           <li class="sidebar-heading">Control Center</li>
-          <li class="{% block active_admin_overview %}{% endblock %}">
-            <a href="{% url 'dashboard:admin' %}">
+          <li class="{% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'admin' %}active{% endif %}">
+            <a href="{% url 'dashboard:admin' %}" {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'admin' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-chart-line"></i> Dashboard
             </a>
           </li>
 
           <!-- PEOPLE MANAGEMENT -->
           <li class="sidebar-heading">People Management</li>
-          <li class="{% block active_users_manage %}{% endblock %}">
-            <a href="{% url 'users:manage' %}">
+          <li class="{% if request.resolver_match.namespace == 'users' and request.resolver_match.url_name != 'staff' and request.resolver_match.url_name != 'toggle_staff_availability' %}active{% endif %}">
+            <a href="{% url 'users:manage' %}" {% if request.resolver_match.namespace == 'users' and request.resolver_match.url_name != 'staff' and request.resolver_match.url_name != 'toggle_staff_availability' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-users-gear"></i> User Directory
             </a>
           </li>
-          <li class="{% block active_staff_manage %}{% endblock %}">
-            <a href="{% url 'users:staff' %}">
+          <li class="{% if request.resolver_match.namespace == 'users' and request.resolver_match.url_name == 'staff' %}active{% endif %}">
+            <a href="{% url 'users:staff' %}" {% if request.resolver_match.namespace == 'users' and request.resolver_match.url_name == 'staff' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-screwdriver-wrench"></i> Maintenance Staff
             </a>
           </li>
 
           <!-- OPERATIONS -->
           <li class="sidebar-heading">Operations</li>
-          <li class="{% block active_admin_complaints %}{% endblock %}">
-            <a href="{% url 'complaints:admin_manage' %}">
+          <li class="{% if request.resolver_match.namespace == 'complaints' %}active{% endif %}">
+            <a href="{% url 'complaints:admin_manage' %}" {% if request.resolver_match.namespace == 'complaints' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-clipboard-list"></i> Complaints Console
             </a>
           </li>
 
           <!-- RESOURCES -->
           <li class="sidebar-heading">Resources</li>
-          <li class="{% block active_assets %}{% endblock %}">
-            <a href="{% url 'assets:asset_list' %}">
+          <li class="{% if request.resolver_match.namespace == 'assets' and request.resolver_match.url_name != 'campus_locations' and request.resolver_match.url_name|slice:':9' != 'location_' %}active{% endif %}">
+            <a href="{% url 'assets:asset_list' %}" {% if request.resolver_match.namespace == 'assets' and request.resolver_match.url_name != 'campus_locations' and request.resolver_match.url_name|slice:':9' != 'location_' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-laptop-code"></i> Campus Assets
             </a>
           </li>
-          <li class="{% block active_inventory %}{% endblock %}">
-            <a href="{% url 'inventory:list' %}">
+          <li class="{% if request.resolver_match.namespace == 'inventory' and request.resolver_match.url_name != 'storage_location_list' and request.resolver_match.url_name|slice:':9' != 'storage_l' and request.resolver_match.url_name|slice:':9' != 'category_' %}active{% endif %}">
+            <a href="{% url 'inventory:list' %}" {% if request.resolver_match.namespace == 'inventory' and request.resolver_match.url_name != 'storage_location_list' and request.resolver_match.url_name|slice:':9' != 'storage_l' and request.resolver_match.url_name|slice:':9' != 'category_' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-boxes-stacked"></i> Inventory Items
+            </a>
+          </li>
+          <li class="{% if request.resolver_match.namespace == 'assets' and request.resolver_match.url_name == 'campus_locations' or request.resolver_match.namespace == 'assets' and request.resolver_match.url_name|slice:':9' == 'location_' %}active{% endif %}">
+            <a href="{% url 'assets:campus_locations' %}" {% if request.resolver_match.namespace == 'assets' and request.resolver_match.url_name == 'campus_locations' or request.resolver_match.namespace == 'assets' and request.resolver_match.url_name|slice:':9' == 'location_' %}aria-current="page"{% endif %}>
+              <i class="fa-solid fa-building-user"></i> Campus Locations
+            </a>
+          </li>
+          <li class="{% if request.resolver_match.namespace == 'inventory' and request.resolver_match.url_name|slice:':9' == 'storage_l' %}active{% endif %}">
+            <a href="{% url 'inventory:storage_location_list' %}" {% if request.resolver_match.namespace == 'inventory' and request.resolver_match.url_name|slice:':9' == 'storage_l' %}aria-current="page"{% endif %}>
+              <i class="fa-solid fa-warehouse"></i> Storage Locations
             </a>
           </li>
 
           <!-- CAMPUS MASTER DATA -->
           <li class="sidebar-heading">Campus Master Data</li>
-          <li class="{% block active_campus_locations %}{% endblock %}">
-            <a href="{% url 'assets:campus_locations' %}">
-              <i class="fa-solid fa-building-user"></i> Buildings & Rooms
-            </a>
-          </li>
-          <li class="{% block active_inventory_category %}{% endblock %}">
-            <a href="{% url 'inventory:category_list' %}">
+          <li class="{% if request.resolver_match.namespace == 'inventory' and request.resolver_match.url_name|slice:':9' == 'category_' %}active{% endif %}">
+            <a href="{% url 'inventory:category_list' %}" {% if request.resolver_match.namespace == 'inventory' and request.resolver_match.url_name|slice:':9' == 'category_' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-tags"></i> Inventory Categories
             </a>
           </li>
 
           <!-- REPORTS & SYSTEM -->
           <li class="sidebar-heading">Reports & System</li>
-          <li class="{% block active_reports %}{% endblock %}">
-            <a href="{% url 'dashboard:reports' %}">
+          <li class="{% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'reports' %}active{% endif %}">
+            <a href="{% url 'dashboard:reports' %}" {% if request.resolver_match.namespace == 'dashboard' and request.resolver_match.url_name == 'reports' %}aria-current="page"{% endif %}>
               <i class="fa-solid fa-file-invoice"></i> Reports Center
             </a>
           </li>
         {% endif %}
 
-        {% if request.user.is_maintenance_staff or current_role == 'maintenance' %}
+        {% if request.user.is_authenticated and request.user.role == 'MAINTENANCE' or not request.user.is_authenticated and current_role == 'maintenance' %}
           <li class="sidebar-heading">Maintenance Workspace</li>
           <li class="{% block active_maintenance_overview %}{% endblock %}">
             <a href="{% url 'dashboard:maintenance' %}">
@@ -544,6 +582,11 @@
               <i class="fa-solid fa-list-check"></i> My Complaints
             </a>
           </li>
+          <li class="{% block active_student_profile %}{% endblock %}">
+            <a href="{% url 'users:profile_edit' %}">
+              <i class="fa-solid fa-user-pen"></i> My Profile
+            </a>
+          </li>
           <li class="{% block active_submit_complaint %}{% endblock %}">
             <a href="{% url 'complaints:create' %}">
               <i class="fa-solid fa-circle-plus"></i> Submit Complaint
@@ -567,10 +610,13 @@
         {% endif %}
 
       </ul>
-    </div>
+    </aside>
 
     <!-- Main Dashboard Content -->
     <div class="dashboard-content">
+      <button class="btn btn-outline-primary dashboard-sidebar-toggle" type="button" data-dashboard-sidebar-toggle aria-controls="dashboard-sidebar" aria-expanded="true">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i> Navigation
+      </button>
       {% if preview_mode %}
         <!-- Role Simulator Toolbar -->
         <div class="preview-role-bar py-2 px-3 mb-4 d-flex justify-content-between align-items-center rounded border" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2) !important;">
@@ -594,3 +640,18 @@
     </div>
   </div>
 {% endblock content %}
+
+{% block inline_javascript %}
+  {{ block.super }}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const toggle = document.querySelector("[data-dashboard-sidebar-toggle]");
+      const sidebar = document.getElementById("dashboard-sidebar");
+      if (!toggle || !sidebar) return;
+      toggle.addEventListener("click", function () {
+        const collapsed = sidebar.classList.toggle("is-collapsed");
+        toggle.setAttribute("aria-expanded", String(!collapsed));
+      });
+    });
+  </script>
+{% endblock inline_javascript %}

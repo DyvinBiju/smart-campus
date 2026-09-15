@@ -54,7 +54,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
           <div class="input-group">
             <span class="input-group-text bg-light border-end-0">
               <i class="fa-solid fa-tags text-primary"></i>
@@ -71,6 +71,17 @@
         </div>
 
         <div class="col-6 col-md-2">
+          <select name="location" class="form-select">
+            <option value="">All Locations</option>
+            {% for loc in storage_locations %}
+              <option value="{{ loc.pk }}" {% if selected_location == loc.pk|stringformat:"s" %}selected{% endif %}>
+                {{ loc.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
           <select name="status" class="form-select">
             <option value="">All Stock Levels</option>
             <option value="in_stock" {% if selected_status == 'in_stock' or selected_status == 'available' %}selected{% endif %}>In Stock</option>
@@ -79,11 +90,11 @@
           </select>
         </div>
 
-        <div class="col-12 col-md-2 d-flex gap-2">
+        <div class="col-6 col-md-1 d-flex gap-2">
           <button type="submit" class="btn btn-primary w-100 fw-semibold">
             <i class="fa-solid fa-filter me-1"></i> Filter
           </button>
-          {% if search or selected_category or selected_status %}
+          {% if search or selected_category or selected_status or selected_location %}
             <a href="{% url 'inventory:list' %}" class="btn btn-outline-secondary" title="Clear Filters">
               <i class="fa-solid fa-rotate-left"></i>
             </a>
@@ -139,8 +150,16 @@
                   <i class="fa-solid fa-tags me-1"></i>{{ item.category }}
                 </span>
               </td>
-              <td class="small text-muted">
-                <i class="fa-solid fa-warehouse me-1"></i>{{ item.storage_location|default:"Central Store" }}
+              <td class="small">
+                {% if item.location %}
+                  <a href="{% url 'inventory:storage_location_detail' item.location.pk %}" class="text-decoration-none text-muted">
+                    <i class="fa-solid fa-warehouse me-1 text-primary"></i>{{ item.location.name }}
+                  </a>
+                {% elif item.storage_location %}
+                  <span class="text-muted"><i class="fa-solid fa-warehouse me-1"></i>{{ item.storage_location }}</span>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
               </td>
               <td>
                 <span class="fw-bold text-dark fs-6">{{ item.quantity }}</span>

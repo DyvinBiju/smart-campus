@@ -1,0 +1,203 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  Location: {{ location.get_full_path }} - SmartCampus
+{% endblock title %}
+
+{% block active_campus_locations %}active{% endblock %}
+
+{% block dashboard_content %}
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <div class="mb-1">
+        <a href="{% url 'assets:campus_locations' %}" class="text-decoration-none small text-muted">
+          <i class="fa-solid fa-arrow-left me-1"></i>Locations Directory
+        </a>
+      </div>
+      <h3 class="fw-bold text-dark mb-1">
+        <i class="fa-solid fa-building text-primary me-2"></i>{{ location.name }}
+      </h3>
+      <p class="text-muted small mb-0">
+        Hierarchy: <span class="fw-semibold text-primary">{{ location.get_full_path }}</span>
+      </p>
+    </div>
+
+    {% if is_admin %}
+      <div class="d-flex gap-2">
+        <a href="{% url 'assets:location_update' location.pk %}" class="btn btn-outline-primary fw-semibold">
+          <i class="fa-solid fa-pen-to-square me-1"></i>Edit Location
+        </a>
+        <form method="post" action="{% url 'assets:location_toggle_active' location.pk %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-{% if location.is_active %}warning{% else %}success{% endif %} fw-semibold">
+            <i class="fa-solid {% if location.is_active %}fa-power-off{% else %}fa-check{% endif %} me-1"></i>
+            {% if location.is_active %}Deactivate{% else %}Activate{% endif %}
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Metric Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center mb-0">
+        <div class="widget-icon bg-primary bg-opacity-10 text-primary me-3">
+          <i class="fa-solid fa-tag fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Location Type</div>
+          <div class="widget-value h6 mb-0 fw-bold">{{ location.get_location_type_display }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center mb-0">
+        <div class="widget-icon bg-info bg-opacity-10 text-info me-3">
+          <i class="fa-solid fa-laptop-code fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Registered Assets</div>
+          <div class="widget-value h4 mb-0 fw-bold">{{ assigned_assets|length }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center mb-0">
+        <div class="widget-icon bg-warning bg-opacity-10 text-warning me-3">
+          <i class="fa-solid fa-clipboard-list fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Associated Complaints</div>
+          <div class="widget-value h4 mb-0 fw-bold">{{ associated_complaints|length }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+      <div class="dash-card p-3 d-flex align-items-center mb-0">
+        <div class="widget-icon {% if location.is_active %}bg-success bg-opacity-10 text-success{% else %}bg-secondary bg-opacity-10 text-secondary{% endif %} me-3">
+          <i class="fa-solid {% if location.is_active %}fa-circle-check{% else %}fa-circle-xmark{% endif %} fs-4"></i>
+        </div>
+        <div>
+          <div class="widget-title mb-0 text-muted">Status</div>
+          <div class="widget-value h6 mb-0 fw-bold">{% if location.is_active %}ACTIVE{% else %}INACTIVE{% endif %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if child_locations %}
+    <!-- Child Locations Grid -->
+    <div class="dash-card mb-4">
+      <div class="dash-card-header">
+        <span class="fw-bold text-dark"><i class="fa-solid fa-sitemap text-primary me-2"></i>Child Rooms & Departments</span>
+      </div>
+      <div class="dash-card-body">
+        <div class="d-flex flex-wrap gap-2">
+          {% for child in child_locations %}
+            <a href="{% url 'assets:location_detail' child.pk %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+              <i class="fa-solid fa-door-open me-1 text-primary"></i>{{ child.name }}
+              <span class="badge bg-primary rounded-pill ms-1">{{ child.asset_count }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Assets List Column -->
+    <div class="col-12 col-lg-6">
+      <div class="dash-card h-100">
+        <div class="dash-card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-dark"><i class="fa-solid fa-laptop-code text-primary me-2"></i>Assets Registered at this Location</span>
+          <span class="badge bg-primary">{{ assigned_assets|length }}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Asset Code</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for asset in assigned_assets %}
+                <tr>
+                  <td>
+                    <a href="{% url 'assets:asset_detail' asset.pk %}" class="fw-bold text-primary text-decoration-none">
+                      {{ asset.asset_code }}
+                    </a>
+                  </td>
+                  <td class="fw-semibold text-dark">{{ asset.name }}</td>
+                  <td><span class="badge bg-light text-dark border small">{{ asset.category }}</span></td>
+                  <td><span class="badge {{ asset.status_badge_class }}">{{ asset.get_status_display }}</span></td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted small">
+                    No physical assets registered at this location yet.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complaints List Column -->
+    <div class="col-12 col-lg-6">
+      <div class="dash-card h-100">
+        <div class="dash-card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-dark"><i class="fa-solid fa-clipboard-list text-primary me-2"></i>Complaints Recorded for this Location</span>
+          <span class="badge bg-warning text-dark">{{ associated_complaints|length }}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Complaint ID</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Assigned Staff</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cmp in associated_complaints %}
+                <tr>
+                  <td>
+                    <a href="{% url 'complaints:detail' cmp.complaint_id %}" class="fw-bold text-primary text-decoration-none">
+                      {{ cmp.complaint_id }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark text-truncate" style="max-width: 180px;">{{ cmp.title }}</div>
+                    {% if cmp.manual_location %}
+                      <div class="small text-muted text-truncate" style="max-width: 180px;">Notes: {{ cmp.manual_location }}</div>
+                    {% endif %}
+                  </td>
+                  <td><span class="badge bg-info bg-opacity-10 text-dark border">{{ cmp.get_status_display }}</span></td>
+                  <td class="small">{{ cmp.assigned_to.name|default:cmp.assigned_to.username|default:"Unassigned" }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4 text-muted small">
+                    No complaints registered for this location.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock dashboard_content %}

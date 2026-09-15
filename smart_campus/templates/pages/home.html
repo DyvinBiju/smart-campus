@@ -45,34 +45,42 @@
     <div class="row">
 
       <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0">
-        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
-          <span class="ti-headphone-alt sc_one fs-2 mb-2 d-inline-block"></span>
-          <h2 class="counter-num fw-bold">1248</h2>
-          <p class="text-muted fw-semibold">Complaints Raised</p>
+        <div class="single-counter d-flex align-items-center text-start p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-user sc_one fs-2 mb-0 d-inline-block flex-shrink-0"></span>
+          <div>
+            <h2 class="counter-num fw-bold">{{ public_statistics.registered_students }}</h2>
+            <p class="text-muted fw-semibold mb-0">Registered Students</p>
+          </div>
         </div>
       </div>
 
       <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0">
-        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
-          <span class="ti-check-box sc_two fs-2 mb-2 d-inline-block"></span>
-          <h2 class="counter-num fw-bold">1180</h2>
-          <p class="text-muted fw-semibold">Issues Resolved</p>
+        <div class="single-counter d-flex align-items-center text-start p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-package sc_two fs-2 mb-0 d-inline-block flex-shrink-0"></span>
+          <div>
+            <h2 class="counter-num fw-bold">{{ public_statistics.campus_assets }}</h2>
+            <p class="text-muted fw-semibold mb-0">Campus Assets</p>
+          </div>
         </div>
       </div><!-- END COL -->
 
       <div class="col-lg-3 col-sm-6 col-xs-12 mb-4 mb-lg-0">
-        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
-          <span class="ti-time sc_three fs-2 mb-2 d-inline-block"></span>
-          <h2 class="counter-num fw-bold">68</h2>
-          <p class="text-muted fw-semibold">Pending Complaints</p>
+        <div class="single-counter d-flex align-items-center text-start p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-archive sc_three fs-2 mb-0 d-inline-block flex-shrink-0"></span>
+          <div>
+            <h2 class="counter-num fw-bold">{{ public_statistics.inventory_items }}</h2>
+            <p class="text-muted fw-semibold mb-0">Inventory Items</p>
+          </div>
         </div>
       </div><!-- END COL -->
 
       <div class="col-lg-3 col-sm-6 col-xs-12">
-        <div class="single-counter text-center p-4 rounded-4 shadow-sm bg-white">
-          <span class="ti-user sc_four fs-2 mb-2 d-inline-block"></span>
-          <h2 class="counter-num fw-bold">3450</h2>
-          <p class="text-muted fw-semibold">Registered Users</p>
+        <div class="single-counter d-flex align-items-center text-start p-4 rounded-4 shadow-sm bg-white">
+          <span class="ti-location-pin sc_four fs-2 mb-0 d-inline-block flex-shrink-0"></span>
+          <div>
+            <h2 class="counter-num fw-bold">{{ public_statistics.campus_locations }}</h2>
+            <p class="text-muted fw-semibold mb-0">Campus Locations</p>
+          </div>
         </div>
       </div><!-- END COL -->
 

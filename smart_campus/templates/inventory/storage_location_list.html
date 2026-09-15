@@ -1,0 +1,178 @@
+{% extends "dashboard/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+  Inventory Storage Locations - SmartCampus
+{% endblock title %}
+
+{% block active_storage_locations %}active{% endblock %}
+{% block active_storage_locations_maint %}active{% endblock %}
+
+{% block dashboard_content %}
+  <!-- Header Banner -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+    <div>
+      <h3 class="fw-bold text-dark mb-1">
+        <i class="fa-solid fa-warehouse text-primary me-2"></i>Inventory Storage Locations
+      </h3>
+      <p class="text-muted small mb-0">
+        Controlled store rooms, central warehouses, and stock storage locations.
+      </p>
+    </div>
+    {% if is_admin %}
+      <div>
+        <a href="{% url 'inventory:storage_location_create' %}" class="btn btn-primary shadow-sm px-4 fw-semibold">
+          <i class="fa-solid fa-plus me-2"></i>Add Storage Location
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Messages Alert -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+        <i class="fa-solid {% if message.tags == 'danger' or message.tags == 'error' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Stats Widgets -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="dash-card p-3 mb-0 text-center">
+        <span class="text-muted small d-block text-uppercase fw-semibold mb-1">Total Stores</span>
+        <h3 class="fw-bold text-dark mb-0">{{ total_locations }}</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dash-card p-3 mb-0 text-center">
+        <span class="text-muted small d-block text-uppercase fw-semibold mb-1">Active Stores</span>
+        <h3 class="fw-bold text-success mb-0">{{ active_locations }}</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="dash-card p-3 mb-0 text-center">
+        <span class="text-muted small d-block text-uppercase fw-semibold mb-1">Inactive Stores</span>
+        <h3 class="fw-bold text-secondary mb-0">{{ inactive_locations }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Bar -->
+  <div class="dash-card mb-4">
+    <div class="p-3">
+      <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-7">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+            <input type="text" name="search" class="form-control border-start-0" placeholder="Search store name, code, or description..." value="{{ search }}">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select name="status" class="form-select">
+            <option value="">All Statuses</option>
+            <option value="active" {% if selected_status == "active" %}selected{% endif %}>Active Only</option>
+            <option value="inactive" {% if selected_status == "inactive" %}selected{% endif %}>Inactive Only</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary w-100">Filter</button>
+          <a href="{% url 'inventory:storage_location_list' %}" class="btn btn-outline-secondary" title="Reset Filters"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Locations Table -->
+  <div class="dash-card">
+    <div class="dash-card-header d-flex justify-content-between align-items-center">
+      <span class="fw-bold text-dark">
+        <i class="fa-solid fa-list me-2 text-primary"></i>Configured Storage Locations ({{ locations|length }})
+      </span>
+      <a href="{% url 'inventory:list' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-boxes-stacked me-1"></i>View All Inventory Items
+      </a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col" class="ps-4">Store Name</th>
+            <th scope="col">Code</th>
+            <th scope="col">Description</th>
+            <th scope="col">Stored Items</th>
+            <th scope="col">Status</th>
+            <th scope="col" class="text-end pe-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for loc in locations %}
+            <tr>
+              <td class="ps-4 fw-bold text-dark">
+                <a href="{% url 'inventory:storage_location_detail' loc.pk %}" class="text-dark text-decoration-none">
+                  <i class="fa-solid fa-warehouse me-2 text-primary"></i>{{ loc.name }}
+                </a>
+              </td>
+              <td>
+                {% if loc.code %}
+                  <span class="badge bg-light text-dark border font-monospace">{{ loc.code }}</span>
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">
+                {{ loc.description|default:"No description provided." }}
+              </td>
+              <td>
+                <a href="{% url 'inventory:list' %}?location={{ loc.pk }}" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none rounded-pill px-3 py-2">
+                  {{ loc.item_count }} item{{ loc.item_count|pluralize }}
+                </a>
+              </td>
+              <td>
+                {% if loc.is_active %}
+                  <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 fw-semibold">Active</span>
+                {% else %}
+                  <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-3 py-1 fw-semibold">Inactive</span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                <div class="btn-group btn-group-sm">
+                  <a href="{% url 'inventory:storage_location_detail' loc.pk %}" class="btn btn-outline-primary" title="View Details">
+                    <i class="fa-solid fa-eye"></i> View
+                  </a>
+                  {% if is_admin %}
+                    <a href="{% url 'inventory:storage_location_update' loc.pk %}" class="btn btn-outline-secondary" title="Edit Location">
+                      <i class="fa-solid fa-pen-to-square"></i> Edit
+                    </a>
+                    <form method="post" action="{% url 'inventory:storage_location_toggle_active' loc.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-outline-{% if loc.is_active %}warning{% else %}success{% endif %}" title="{% if loc.is_active %}Deactivate{% else %}Activate{% endif %} Location">
+                        <i class="fa-solid fa-{% if loc.is_active %}power-off{% else %}check{% endif %}"></i>
+                      </button>
+                    </form>
+                    <a href="{% url 'inventory:storage_location_delete' loc.pk %}" class="btn btn-outline-danger" title="Delete Location">
+                      <i class="fa-solid fa-trash"></i>
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-5 text-muted">
+                No inventory storage locations found matching criteria.
+                {% if is_admin %}
+                  <a href="{% url 'inventory:storage_location_create' %}">Add new location</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock dashboard_content %}

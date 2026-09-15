@@ -54,8 +54,6 @@
             <span class="badge bg-danger text-white rounded-pill px-3 py-2">Administrator</span>
           {% elif managed_user.role == 'MAINTENANCE' or managed_user.is_staff %}
             <span class="badge bg-warning text-dark rounded-pill px-3 py-2">Maintenance Staff</span>
-          {% elif managed_user.role == 'FACULTY' %}
-            <span class="badge bg-info text-dark rounded-pill px-3 py-2">Faculty / Teacher</span>
           {% else %}
             <span class="badge bg-secondary text-white rounded-pill px-3 py-2">Student</span>
           {% endif %}

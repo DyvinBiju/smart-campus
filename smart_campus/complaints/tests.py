@@ -71,7 +71,7 @@ class ComplaintViewsTests(TestCase):
         post_data = {
             "title": "Air Conditioner not cooling",
             "category": Complaint.Category.ELECTRICAL,
-            "location": "Faculty Room B",
+            "manual_location": "Faculty Room B",
             "priority": Complaint.Priority.HIGH,
             "description": "AC unit runs but does not cool.",
         }
@@ -350,7 +350,7 @@ class ComplaintAuthenticationAndAuthorizationTests(TestCase):
         post_data = {
             "title": "Unauthorized Complaint",
             "category": Complaint.Category.OTHER,
-            "location": "Main Gate",
+            "manual_location": "Main Gate",
             "priority": Complaint.Priority.LOW,
             "description": "Anonymous post attempt",
         }
@@ -365,7 +365,7 @@ class ComplaintAuthenticationAndAuthorizationTests(TestCase):
         post_data = {
             "title": "Water leak in hall",
             "category": Complaint.Category.PLUMBING,
-            "location": "Main Hall",
+            "manual_location": "Main Hall",
             "priority": Complaint.Priority.MEDIUM,
             "description": "Water dripping from ceiling",
         }
@@ -381,7 +381,7 @@ class ComplaintAuthenticationAndAuthorizationTests(TestCase):
         post_data = {
             "title": "Desk broken",
             "category": Complaint.Category.FURNITURE,
-            "location": "Room 302",
+            "manual_location": "Room 302",
             "priority": Complaint.Priority.LOW,
             "description": "Leg missing",
         }
@@ -396,7 +396,7 @@ class ComplaintAuthenticationAndAuthorizationTests(TestCase):
         post_data = {
             "title": "Impersonation Attempt",
             "category": Complaint.Category.OTHER,
-            "location": "Room 101",
+            "manual_location": "Room 101",
             "priority": Complaint.Priority.LOW,
             "description": "Form post trying to specify another user",
             "user": self.other_student.pk,
@@ -556,6 +556,89 @@ class RoleBasedWorkflowTests(TestCase):
         self.assertEqual(maint_req.status, MaintenanceRequest.Status.APPROVED)
         self.assertEqual(self.item.quantity, 2)
         self.assertEqual(self.complaint.status, Complaint.Status.IN_PROGRESS)
+
+
+class AdministratorComplaintConsoleTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="complaint_console_admin",
+            email="console_admin@campus.edu",
+            password="Password123!",
+            role=User.Role.ADMIN,
+        )
+        self.student = User.objects.create_user(
+            username="complaint_console_student",
+            email="console_student@campus.edu",
+            password="Password123!",
+            role=User.Role.STUDENT,
+        )
+        self.maintenance = User.objects.create_user(
+            username="complaint_console_staff",
+            email="console_staff@campus.edu",
+            password="Password123!",
+            role=User.Role.MAINTENANCE,
+        )
+        self.complaint = Complaint.objects.create(
+            title="Console test complaint",
+            description="A real complaint shown in the administrator console.",
+            category=Complaint.Category.PLUMBING,
+            location="North Block",
+            priority=Complaint.Priority.HIGH,
+            status=Complaint.Status.IN_PROGRESS,
+            user=self.student,
+            assigned_to=self.maintenance,
+        )
+
+    def test_admin_console_renders_real_complaint_details(self):
+        Complaint.objects.create(
+            title="Anonymous console complaint",
+            description="A complaint without a linked account.",
+            category=Complaint.Category.OTHER,
+            location="Main Gate",
+            user=None,
+        )
+        self.client.force_login(self.admin)
+
+        response = self.client.get(reverse("complaints:admin_manage"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "All Complaints")
+        self.assertContains(response, self.complaint.complaint_id)
+        self.assertContains(response, self.complaint.title)
+        self.assertContains(response, self.complaint.get_status_display())
+        self.assertContains(response, self.student.username)
+        self.assertContains(response, self.maintenance.username)
+        self.assertContains(response, "North Block")
+        self.assertContains(response, "Not recorded")
+        self.assertContains(response, "View Details")
+        self.assertEqual(response.context["all_complaints_count"], 2)
+
+    def test_admin_console_paginates_all_complaints(self):
+        for index in range(25):
+            Complaint.objects.create(
+                title=f"Additional complaint {index}",
+                description="Pagination fixture",
+                category=Complaint.Category.OTHER,
+                location="South Block",
+                user=self.student,
+            )
+
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("complaints:admin_manage"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["all_complaints_count"], 26)
+        self.assertTrue(response.context["all_complaints_page"].has_next())
+
+        next_response = self.client.get(reverse("complaints:admin_manage") + "?page=2")
+        self.assertEqual(next_response.status_code, 200)
+        self.assertEqual(next_response.context["all_complaints_page"].number, 2)
+
+    def test_non_administrators_cannot_access_admin_console(self):
+        for user in (self.student, self.maintenance):
+            self.client.force_login(user)
+            response = self.client.get(reverse("complaints:admin_manage"))
+            self.assertEqual(response.status_code, 403)
 
 
 

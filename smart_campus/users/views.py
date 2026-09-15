@@ -11,7 +11,6 @@ from django.views.generic import FormView
 from allauth.account.views import LoginView
 from allauth.core.exceptions import ImmediateHttpResponse
 
-from smart_campus.users.forms import FacultySignupForm
 from smart_campus.users.forms import StudentSignupForm
 from smart_campus.users.models import User
 
@@ -24,7 +23,7 @@ from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
 
 from smart_campus.users.forms import (
-    FacultySignupForm,
+    SelfProfileForm,
     StudentSignupForm,
     UserManagementCreateForm,
     UserManagementEditForm,
@@ -52,8 +51,10 @@ class SmartCampusLoginView(LoginView):
         ):
             redirect_url = next_url
         else:
-            if user.is_admin_user or user.is_maintenance_staff:
+            if user.is_admin_user:
                 redirect_url = reverse("dashboard:admin")
+            elif user.is_maintenance_staff:
+                redirect_url = reverse("dashboard:maintenance")
             else:
                 redirect_url = reverse("dashboard:student")
 
@@ -102,26 +103,6 @@ class StudentSignupView(FormView):
 
 
 student_signup_view = StudentSignupView.as_view()
-
-
-class FacultySignupView(FormView):
-    template_name = "users/signup_faculty.html"
-    form_class = FacultySignupForm
-
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        user = form.save()
-        login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
-        messages.success(
-            self.request,
-            _("Account created successfully. Welcome to SmartCampus!"),
-        )
-        return redirect("dashboard:student")
-
-
-faculty_signup_view = FacultySignupView.as_view()
 
 
 class UserManagementListView(RoleRequiredMixin, ListView):
@@ -179,7 +160,6 @@ class UserManagementListView(RoleRequiredMixin, ListView):
         context["active_users"] = all_users.filter(is_active=True).count()
         context["inactive_users"] = all_users.filter(is_active=False).count()
         context["student_count"] = all_users.filter(role=User.Role.STUDENT).count()
-        context["faculty_count"] = all_users.filter(role=User.Role.FACULTY).count()
         context["maintenance_count"] = all_users.filter(role=User.Role.MAINTENANCE).count()
         context["admin_count"] = all_users.filter(role=User.Role.ADMIN).count()
 
@@ -291,6 +271,38 @@ class UserManagementEditView(RoleRequiredMixin, UpdateView):
                 return self.form_invalid(form)
 
         messages.success(self.request, _(f"User '{target_user.username}' updated successfully."))
+        return super().form_valid(form)
+
+
+class SelfProfileUpdateView(LoginRequiredMixin, UpdateView):
+    """Allow students to update their own non-privileged profile fields."""
+
+    model = User
+    form_class = SelfProfileForm
+    template_name = "users/profile_form.html"
+    success_url = reverse_lazy("dashboard:student")
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if (
+            request.user.is_admin_user
+            or request.user.is_superuser
+            or request.user.role != User.Role.STUDENT
+        ):
+            raise PermissionDenied(_("Only students can use this profile page."))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["profile_user"] = self.request.user
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, _("Your profile was updated successfully."))
         return super().form_valid(form)
 
 

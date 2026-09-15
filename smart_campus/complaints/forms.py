@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from smart_campus.assets.models import Asset
+from smart_campus.assets.models import Asset, Location
 from smart_campus.inventory.models import InventoryItem
 from .models import Complaint, ComplaintResource, MaintenanceRequest
 
@@ -11,12 +11,12 @@ User = get_user_model()
 class ComplaintForm(forms.ModelForm):
     class Meta:
         model = Complaint
-        fields = ["title", "category", "asset", "location", "priority", "description"]
+        fields = ["title", "category", "asset", "location_record", "manual_location", "priority", "description"]
         widgets = {
             "title": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "placeholder": "e.g., Projector not working in Room 204",
+                    "placeholder": "e.g., Projector not working in Seminar Hall",
                     "required": True,
                 }
             ),
@@ -29,13 +29,20 @@ class ComplaintForm(forms.ModelForm):
             "asset": forms.Select(
                 attrs={
                     "class": "form-select",
+                    "id": "id_asset",
                 }
             ),
-            "location": forms.TextInput(
+            "location_record": forms.Select(
+                attrs={
+                    "class": "form-select",
+                    "id": "id_location_record",
+                }
+            ),
+            "manual_location": forms.TextInput(
                 attrs={
                     "class": "form-control",
-                    "placeholder": "e.g., Science Block, 2nd Floor, Lab 3",
-                    "required": True,
+                    "id": "id_manual_location",
+                    "placeholder": "Enter specific area details (e.g., Near north entrance, 2nd floor hall)",
                 }
             ),
             "priority": forms.Select(
@@ -48,17 +55,59 @@ class ComplaintForm(forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "rows": 4,
-                    "placeholder": "Provide details about the issue...",
+                    "placeholder": "Provide specific details about the issue...",
                     "required": True,
                 }
             ),
         }
 
+    def clean_title(self):
+        title = (self.cleaned_data.get("title") or "").strip()
+        if not title:
+            raise forms.ValidationError("Complaint title cannot be blank.")
+        return title
+
+    def clean_description(self):
+        description = (self.cleaned_data.get("description") or "").strip()
+        if not description:
+            raise forms.ValidationError("Complaint description cannot be blank.")
+        return description
+
+    def clean_manual_location(self):
+        manual_location = (self.cleaned_data.get("manual_location") or "").strip()
+        if manual_location and len(manual_location) > 200:
+            raise forms.ValidationError("Manual location details are too long.")
+        return manual_location
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["asset"].required = False
-        self.fields["asset"].empty_label = "-- Select Affected Asset (Optional) --"
-        self.fields["asset"].queryset = Asset.objects.all()
+        self.fields["asset"].empty_label = "-- No Specific Asset / General Complaint --"
+        self.fields["asset"].queryset = Asset.objects.select_related("location").all()
+
+        self.fields["location_record"].required = False
+        self.fields["location_record"].empty_label = "-- Select Registered Location --"
+        self.fields["location_record"].queryset = Location.objects.filter(is_active=True)
+
+        self.fields["manual_location"].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        asset = cleaned_data.get("asset")
+        location_record = cleaned_data.get("location_record")
+        manual_location = (cleaned_data.get("manual_location") or "").strip()
+
+        if asset and asset.location and not location_record:
+            cleaned_data["location_record"] = asset.location
+            location_record = asset.location
+
+        if not location_record and not asset:
+            if not manual_location:
+                raise forms.ValidationError(
+                    "Please select an Affected Asset, a Registered Location, or enter Additional / Manual Location Details."
+                )
+
+        return cleaned_data
 
 
 class ComplaintAssignForm(forms.ModelForm):
@@ -145,9 +194,16 @@ class DirectInventoryUsageForm(forms.ModelForm):
             ),
         }
 
+    def clean_quantity_used(self):
+        quantity = self.cleaned_data.get("quantity_used")
+        if quantity is None:
+            return quantity
+        if quantity <= 0:
+            raise forms.ValidationError("Quantity used must be greater than zero.")
+        return quantity
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Only permit selecting items that are currently in stock (>0)
         self.fields["inventory_item"].queryset = InventoryItem.objects.filter(quantity__gt=0)
         self.fields["inventory_item"].empty_label = "-- Select Available Inventory Item --"
 
@@ -195,6 +251,12 @@ class MaintenanceRequestForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_reason(self):
+        reason = (self.cleaned_data.get("reason") or "").strip()
+        if not reason:
+            raise forms.ValidationError("Please provide a reason for the maintenance request.")
+        return reason
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

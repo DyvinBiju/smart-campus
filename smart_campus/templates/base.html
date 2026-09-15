@@ -124,15 +124,6 @@
                   Student
                 </a>
               </li>
-              <li>
-                <hr class="dropdown-divider my-1">
-              </li>
-              <li>
-                <a class="dropdown-item py-2" href="{% url 'users:faculty_signup' %}">
-                  <i class="fa-solid fa-chalkboard-user text-info me-2"></i>
-                  Faculty / Teacher
-                </a>
-              </li>
             </ul>
           </div>
           {% endif %}
@@ -163,7 +154,6 @@
           <li><a href="{% url 'account_login' %}">Sign In</a></li>
           {% if ACCOUNT_ALLOW_REGISTRATION %}
           <li><a href="{% url 'users:student_signup' %}">Sign Up (Student)</a></li>
-          <li><a href="{% url 'users:faculty_signup' %}">Sign Up (Faculty / Teacher)</a></li>
           {% endif %}
           {% endif %}
         </ul>

@@ -46,8 +46,22 @@ class Complaint(models.Model):
         default=Category.OTHER,
         verbose_name=_("Category"),
     )
+    location_record = models.ForeignKey(
+        "assets.Location",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="complaints",
+        verbose_name=_("Structured Location"),
+    )
+    manual_location = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_("Additional / Manual Location Details"),
+    )
     location = models.CharField(
         max_length=200,
+        blank=True,
         verbose_name=_("Location"),
     )
     priority = models.CharField(
@@ -121,7 +135,25 @@ class Complaint(models.Model):
     def __str__(self):
         return f"{self.complaint_id} - {self.title}"
 
+    @property
+    def display_location(self):
+        """Returns readable location string for templates."""
+        if self.location_record:
+            return self.location_record.get_full_path()
+        return self.manual_location or self.location or "Unspecified Location"
+
     def save(self, *args, **kwargs):
+        if self.location_record:
+            full_path = self.location_record.get_full_path()
+            if self.manual_location:
+                self.location = f"{full_path} ({self.manual_location})"
+            else:
+                self.location = full_path
+        elif self.manual_location:
+            self.location = self.manual_location
+        elif not self.location:
+            self.location = "Unspecified Location"
+
         if not self.complaint_id:
             last_complaint = (
                 Complaint.objects.filter(complaint_id__startswith="CMP-")

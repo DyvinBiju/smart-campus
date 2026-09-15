@@ -21,18 +21,12 @@ def test_user_default_role():
     new_user = User(username="newstudent", email="student@campus.edu")
     assert new_user.role == User.Role.STUDENT
     assert new_user.is_student is True
-    assert new_user.is_faculty is False
     assert new_user.is_staff_member is False
     assert new_user.is_admin_user is False
     assert new_user.can_manage_campus_operations is False
 
 
 def test_user_roles_and_permissions():
-    faculty = User(username="prof_smith", role=User.Role.FACULTY)
-    assert faculty.is_faculty is True
-    assert faculty.is_student is False
-    assert faculty.can_manage_campus_operations is False
-
     maintenance = User(username="maintenance_bob", role=User.Role.MAINTENANCE)
     assert maintenance.is_maintenance_staff is True
     assert maintenance.is_staff_member is True

@@ -53,7 +53,7 @@
               <div class="mb-3">
                 <label for="id_title" class="form-label fw-semibold">Complaint Title <span class="text-danger">*</span></label>
                 {{ form.title }}
-                <div class="form-text">Summarize the problem concisely (e.g., Broken Window, Projector Issue).</div>
+                <div class="form-text">Summarize the problem concisely (e.g., Projector Issue in Seminar Hall).</div>
               </div>
 
               <div class="row g-3 mb-3">
@@ -67,16 +67,39 @@
                 </div>
               </div>
 
-              <div class="mb-3">
-                <label for="id_asset" class="form-label fw-semibold">Affected Asset (Optional)</label>
-                {{ form.asset }}
-                <div class="form-text">Select a specific campus asset if applicable (e.g. projector, computer, microscope).</div>
+              <div class="mb-4 p-3 bg-light rounded-3 border">
+                <label for="id_asset" class="form-label fw-semibold text-primary">
+                  <i class="fa-solid fa-laptop-code me-1"></i>Is this complaint related to a specific Campus Asset?
+                </label>
+                <select name="asset" id="id_asset" class="form-select">
+                  <option value="" data-location-id="" data-location-name="">-- No Specific Asset / General Complaint --</option>
+                  {% for asset_obj in form.fields.asset.queryset %}
+                    <option value="{{ asset_obj.pk }}" 
+                            data-location-id="{{ asset_obj.location.pk|default:'' }}" 
+                            data-location-name="{{ asset_obj.location.get_full_path|default:'' }}"
+                            {% if form.asset.value|slugify == asset_obj.pk|slugify %}selected{% endif %}>
+                      {{ asset_obj.asset_code }} - {{ asset_obj.name }} {% if asset_obj.location %}({{ asset_obj.location.name }}){% endif %}
+                    </option>
+                  {% endfor %}
+                </select>
+                <div class="form-text">If selected, the registered asset location will auto-populate below.</div>
+
+                <div id="asset-location-alert" class="alert alert-info py-2 px-3 mt-2 mb-0 small d-none">
+                  <i class="fa-solid fa-circle-info me-1"></i>
+                  Asset Registered Location: <strong id="asset-location-text"></strong>
+                </div>
               </div>
 
               <div class="mb-3">
-                <label for="id_location" class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
-                {{ form.location }}
-                <div class="form-text">Specify building name, floor number, classroom or lab ID.</div>
+                <label for="id_location_record" class="form-label fw-semibold">Campus Registered Location</label>
+                {{ form.location_record }}
+                <div class="form-text">Select campus building/room location directory record.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="id_manual_location" class="form-label fw-semibold">Additional / Manual Location Details</label>
+                {{ form.manual_location }}
+                <div class="form-text">Enter specific details if location is not listed or if extra directions are needed (e.g., Near north entrance, 2nd floor hall).</div>
               </div>
 
               <div class="mb-4">
@@ -86,7 +109,7 @@
               </div>
 
               <div class="d-flex align-items-center gap-3 pt-2">
-                <button type="submit" class="btn_one px-4 py-2 border-0">
+                <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
                   <i class="fa-solid fa-paper-plane me-2"></i>Submit Complaint
                 </button>
                 <a href="{% url 'complaints:list' %}" class="btn btn-light px-4 py-2 border">Cancel</a>
@@ -98,5 +121,37 @@
     </div>
   </div>
 </section>
+
+<!-- Auto-fill JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const assetSelect = document.getElementById('id_asset');
+    const locationSelect = document.getElementById('id_location_record');
+    const alertBox = document.getElementById('asset-location-alert');
+    const locationText = document.getElementById('asset-location-text');
+
+    function syncAssetLocation() {
+      if (!assetSelect) return;
+      const selectedOption = assetSelect.options[assetSelect.selectedIndex];
+      const locId = selectedOption.getAttribute('data-location-id');
+      const locName = selectedOption.getAttribute('data-location-name');
+
+      if (locId && locationSelect) {
+        locationSelect.value = locId;
+        if (alertBox && locationText) {
+          locationText.textContent = locName;
+          alertBox.classList.remove('d-none');
+        }
+      } else {
+        if (alertBox) alertBox.classList.add('d-none');
+      }
+    }
+
+    if (assetSelect) {
+      assetSelect.addEventListener('change', syncAssetLocation);
+      syncAssetLocation();
+    }
+  });
+</script>
 <!-- END COMPLAINT FORM SECTION -->
 {% endblock content %}
