@@ -6,6 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db import models
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils.timezone import now
 from django.views.generic import TemplateView, View
 
@@ -13,7 +14,7 @@ from smart_campus.assets.models import Asset
 from smart_campus.complaints.models import Complaint, ComplaintHistory, MaintenanceRequest
 from smart_campus.inventory.models import InventoryItem, StockTransaction
 from smart_campus.users.models import User
-from .models import Activity
+from .models import Activity, Notification
 from .helpers import (
     get_modules_info,
     get_assets_metrics,
@@ -116,6 +117,10 @@ class MaintenanceDashboardView(LoginRequiredMixin, TemplateView):
             "needs_attention": needs_attention,
             "my_requests": my_requests,
             "recent_activity": recent_activity,
+            "notifications": Notification.objects.filter(recipient=user)[:10],
+            "unread_notifications_count": Notification.objects.filter(
+                recipient=user, is_read=False
+            ).count(),
             "status_filter": status_filter,
             "statuses": ComplaintModel.Status.choices if ComplaintModel else [],
             "preview_mode": False,
@@ -505,6 +510,22 @@ class ReportExportView(LoginRequiredMixin, View):
             }
             from django.shortcuts import render
             return render(request, "dashboard/reports_export.html", context)
+
+class NotificationMarkReadView(LoginRequiredMixin, View):
+    """
+    Marks a single notification as read. Recipient scoping ensures users can
+    only touch their own notifications (others get 404, leaking nothing).
+    """
+
+    def post(self, request, pk, *args, **kwargs):
+        from django.shortcuts import get_object_or_404
+
+        notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
+        if not notification.is_read:
+            notification.is_read = True
+            notification.save(update_fields=["is_read"])
+        return redirect(request.META.get("HTTP_REFERER", reverse("dashboard:maintenance")))
+
 
 class SwitchRoleView(LoginRequiredMixin, View):
     """

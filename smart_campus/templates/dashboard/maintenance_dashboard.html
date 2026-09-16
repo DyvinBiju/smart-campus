@@ -288,6 +288,59 @@
 
   <!-- Side Quick Access Column: Inventory & Assets Hub -->
   <div class="col-lg-4">
+
+    <!-- My Notifications -->
+    <div class="dash-card mb-4 border-start border-4 border-warning">
+      <div class="dash-card-header bg-white p-4 border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold text-dark mb-0">
+          <i class="fa-solid fa-bell text-warning me-2"></i> My Notifications
+        </h5>
+        {% if unread_notifications_count %}
+          <span class="badge bg-warning text-dark fs-6">{{ unread_notifications_count }} New</span>
+        {% endif %}
+      </div>
+      <div class="dash-card-body p-0" style="max-height: 350px; overflow-y: auto;">
+        {% if notifications %}
+          <div class="list-group list-group-flush">
+            {% for note in notifications %}
+              <div class="list-group-item p-3 {% if not note.is_read %}bg-warning bg-opacity-10{% endif %}">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="badge bg-light text-dark border small">{{ note.get_notification_type_display }}</span>
+                  <small class="text-muted" style="font-size: 0.7rem;">{{ note.created_at|timesince }} ago</small>
+                </div>
+                <p class="small text-dark fw-semibold mb-1">{{ note.title }}</p>
+                {% if note.message %}
+                  <p class="small text-muted mb-2">{{ note.message }}</p>
+                {% endif %}
+                <div class="d-flex justify-content-between align-items-center">
+                  {% if note.link %}
+                    <a href="{{ note.link }}" class="btn btn-sm btn-outline-primary fw-semibold">
+                      <i class="fa-solid fa-eye me-1"></i> View
+                    </a>
+                  {% else %}
+                    <span></span>
+                  {% endif %}
+                  {% if not note.is_read %}
+                    <form method="post" action="{% url 'dashboard:notification_read' note.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-sm btn-outline-secondary fw-semibold" title="Mark as read">
+                        <i class="fa-solid fa-check me-1"></i> Mark read
+                      </button>
+                    </form>
+                  {% else %}
+                    <span class="badge bg-light text-muted border small"><i class="fa-solid fa-check me-1"></i>Read</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted small">
+            No notifications yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
     
     <!-- Inventory Access Card -->
     <div class="dash-card mb-4 border-start border-4 border-success">

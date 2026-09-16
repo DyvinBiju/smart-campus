@@ -6,8 +6,10 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
+from smart_campus.dashboard.models import Notification
 from smart_campus.inventory.models import StockTransaction
 from smart_campus.users.models import User
 from .forms import (
@@ -281,6 +283,27 @@ def admin_assign_staff(request, complaint_id):
                     comment=f"Assigned to Maintenance Staff member {staff_name}.",
                 )
                 messages.success(request, f"Assigned Maintenance Staff member {staff_name} to complaint {complaint.complaint_id}.")
+            if new_staff is not None and (is_first_assignment or is_reassignment):
+                # Backend notification for the newly assigned staff member only.
+                notify_type = (
+                    Notification.NotificationType.REASSIGNMENT
+                    if is_reassignment
+                    else Notification.NotificationType.ASSIGNMENT
+                )
+                action_word = "Reassigned" if is_reassignment else "Assigned"
+                Notification.notify(
+                    recipient=new_staff,
+                    notification_type=notify_type,
+                    title=f"{action_word} maintenance request: {updated.complaint_id}",
+                    message=(
+                        f"You have been assigned to complaint {updated.complaint_id}: "
+                        f"{updated.title} ({updated.get_category_display()}, "
+                        f"{updated.display_location}, Priority: {updated.get_priority_display()})."
+                    ),
+                    link=reverse(
+                        "complaints:detail", kwargs={"complaint_id": updated.complaint_id}
+                    ),
+                )
             return redirect("complaints:detail", complaint_id=complaint.complaint_id)
         else:
             for field, errors in form.errors.items():
@@ -500,7 +523,7 @@ def admin_request_decide(request, request_id):
     if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
         raise PermissionDenied("Only Administrators can decide on maintenance requests.")
 
-    req = get_object_or_404(MaintenanceRequest.objects.select_related("complaint", "inventory_item"), pk=request_id)
+    req = get_object_or_404(MaintenanceRequest.objects.select_related("complaint", "inventory_item", "requested_by"), pk=request_id)
     complaint = req.complaint
 
     if request.method == "POST":
@@ -558,6 +581,28 @@ def admin_request_decide(request, request_id):
                 )
 
             messages.success(request, f"Decision recorded for maintenance request.")
+            if req.requested_by is not None:
+                # Backend notification for the staff member who raised the request.
+                decision_word = decision.get_status_display()
+                if decision.status == MaintenanceRequest.Status.APPROVED:
+                    notify_type = Notification.NotificationType.REQUEST_APPROVED
+                elif decision.status == MaintenanceRequest.Status.REJECTED:
+                    notify_type = Notification.NotificationType.REQUEST_REJECTED
+                else:
+                    notify_type = Notification.NotificationType.REQUEST_MORE_INFO
+                Notification.notify(
+                    recipient=req.requested_by,
+                    notification_type=notify_type,
+                    title=f"Resource request {decision_word}: {complaint.complaint_id}",
+                    message=(
+                        f"Your {req.get_request_type_display()} request for complaint "
+                        f"{complaint.complaint_id} was {decision_word}."
+                        + (f" Admin notes: {decision.admin_notes}" if decision.admin_notes else "")
+                    ),
+                    link=reverse(
+                        "complaints:detail", kwargs={"complaint_id": complaint.complaint_id}
+                    ),
+                )
             return redirect("complaints:detail", complaint_id=complaint.complaint_id)
 
     return redirect("complaints:detail", complaint_id=complaint.complaint_id)
