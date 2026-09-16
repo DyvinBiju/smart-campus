@@ -221,6 +221,11 @@
               </div>
             {% endif %}
 
+            {% if complaint.status == 'Resolved' %}
+              <div class="alert alert-success rounded-3 p-3 mb-0">
+                <span class="small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>Maintenance work is <strong>completed</strong> — this complaint is <strong>Resolved</strong> and no further maintenance actions are available. Details and history remain accessible below.</span>
+              </div>
+            {% else %}
             {% if complaint.status == 'Assigned' and is_assignee %}
               <form action="{% url 'complaints:accept' complaint.complaint_id %}" method="post" class="mb-3">
                 {% csrf_token %}
@@ -356,6 +361,7 @@
                 </form>
               </div>
             </div>
+            {% endif %}
           </div>
         </div>
         {% endif %}

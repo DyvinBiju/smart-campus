@@ -24,6 +24,21 @@ from .forms import (
 from .models import Complaint, ComplaintHistory, ComplaintResource, MaintenanceRequest
 
 
+def _resolved_guard(request, complaint):
+    """
+    Rejects modifying maintenance actions on Resolved complaints.
+    Returns a redirect response for refused POSTs, else None.
+    Details and history stay readable; only modifications are refused.
+    """
+    if complaint.status == Complaint.Status.RESOLVED and request.method == "POST":
+        messages.error(
+            request,
+            "This complaint is Resolved. Maintenance work is completed and no further action is available.",
+        )
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+    return None
+
+
 @login_required
 def complaint_create(request):
     """View for students to raise a new complaint."""
@@ -325,6 +340,10 @@ def maintenance_accept(request, complaint_id):
     if complaint.assigned_to_id != user.pk:
         raise PermissionDenied("Only the currently assigned Maintenance Staff member can accept this complaint.")
 
+    resolved_response = _resolved_guard(request, complaint)
+    if resolved_response is not None:
+        return resolved_response
+
     if request.method != "POST":
         return redirect("complaints:detail", complaint_id=complaint.complaint_id)
 
@@ -360,6 +379,10 @@ def maintenance_reject(request, complaint_id):
     )
     if complaint.assigned_to_id != user.pk:
         raise PermissionDenied("Only the currently assigned Maintenance Staff member can reject this complaint.")
+
+    resolved_response = _resolved_guard(request, complaint)
+    if resolved_response is not None:
+        return resolved_response
 
     if request.method != "POST":
         return redirect("complaints:detail", complaint_id=complaint.complaint_id)
@@ -404,6 +427,9 @@ def maintenance_inspect(request, complaint_id):
         raise PermissionDenied("Only Maintenance Staff can update inspection progress.")
 
     complaint = get_object_or_404(Complaint, complaint_id=complaint_id)
+    resolved_response = _resolved_guard(request, complaint)
+    if resolved_response is not None:
+        return resolved_response
     if request.method == "POST":
         form = MaintenanceInspectionForm(request.POST, instance=complaint)
         if form.is_valid():
@@ -442,6 +468,9 @@ def maintenance_use_inventory(request, complaint_id):
         raise PermissionDenied("Only Maintenance Staff can issue inventory for maintenance.")
 
     complaint = get_object_or_404(Complaint, complaint_id=complaint_id)
+    resolved_response = _resolved_guard(request, complaint)
+    if resolved_response is not None:
+        return resolved_response
     if request.method == "POST":
         form = DirectInventoryUsageForm(request.POST)
         if form.is_valid():
@@ -493,6 +522,9 @@ def maintenance_request_action(request, complaint_id):
         raise PermissionDenied("Only Maintenance Staff can submit resource/asset action requests.")
 
     complaint = get_object_or_404(Complaint, complaint_id=complaint_id)
+    resolved_response = _resolved_guard(request, complaint)
+    if resolved_response is not None:
+        return resolved_response
     if request.method == "POST":
         form = MaintenanceRequestForm(request.POST)
         if form.is_valid():
