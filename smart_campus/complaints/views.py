@@ -165,7 +165,7 @@ def complaint_detail(request, complaint_id):
 def assigned_complaints(request):
     """View for Maintenance Staff to see complaints assigned to them."""
     user = request.user
-    if not (user.role == User.Role.MAINTENANCE or user.is_superuser or user.is_staff or user.role == User.Role.ADMIN):
+    if not (user.role == User.Role.MAINTENANCE):
         raise PermissionDenied("Access restricted to Maintenance Staff.")
 
     assigned_list = Complaint.objects.select_related("user", "asset").filter(assigned_to=user)
@@ -233,7 +233,7 @@ def admin_assign_staff(request, complaint_id):
 def maintenance_inspect(request, complaint_id):
     """Maintenance Staff records inspection findings and updates operational progress."""
     user = request.user
-    if not (user.role == User.Role.MAINTENANCE or user.is_superuser or user.is_staff or user.role == User.Role.ADMIN):
+    if not (user.role == User.Role.MAINTENANCE):
         raise PermissionDenied("Only Maintenance Staff can update inspection progress.")
 
     complaint = get_object_or_404(Complaint, complaint_id=complaint_id)
@@ -271,7 +271,7 @@ def maintenance_use_inventory(request, complaint_id):
     Deducts available inventory, creates StockTransaction, and logs history.
     """
     user = request.user
-    if not (user.role == User.Role.MAINTENANCE or user.is_superuser or user.is_staff or user.role == User.Role.ADMIN):
+    if not (user.role == User.Role.MAINTENANCE):
         raise PermissionDenied("Only Maintenance Staff can issue inventory for maintenance.")
 
     complaint = get_object_or_404(Complaint, complaint_id=complaint_id)
@@ -322,7 +322,7 @@ def maintenance_request_action(request, complaint_id):
     Maintenance Staff submits request when inventory is unavailable or asset needs repair/replace/retire.
     """
     user = request.user
-    if not (user.role == User.Role.MAINTENANCE or user.is_superuser or user.is_staff or user.role == User.Role.ADMIN):
+    if not (user.role == User.Role.MAINTENANCE):
         raise PermissionDenied("Only Maintenance Staff can submit resource/asset action requests.")
 
     complaint = get_object_or_404(Complaint, complaint_id=complaint_id)

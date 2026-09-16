@@ -113,6 +113,11 @@ class Complaint(models.Model):
         blank=True,
         verbose_name=_("Resolution Notes"),
     )
+    rejection_reason = models.TextField(
+        blank=True,
+        default="",
+        verbose_name=_("Rejection Reason"),
+    )
     resolved_at = models.DateTimeField(
         null=True,
         blank=True,
