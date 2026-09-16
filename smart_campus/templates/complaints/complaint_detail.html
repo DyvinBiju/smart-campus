@@ -119,7 +119,6 @@
                   {% if assign_form.assigned_to.errors %}
                     <div class="text-danger small mt-1">{{ assign_form.assigned_to.errors.0 }}</div>
                   {% endif %}
-                  <div class="form-text small" id="assign-staff-hint">First select a specialization to load matching staff.</div>
                 </div>
                 <div class="col-md-3">
                   <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark">
@@ -127,6 +126,7 @@
                   </button>
                 </div>
               </div>
+              <div class="form-text small mt-2" id="assign-staff-hint">First select a specialization to load matching staff.</div>
             </form>
           </div>
         </div>
