@@ -19,6 +19,8 @@
             <span class="badge bg-secondary text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-magnifying-glass me-1"></i>Under Review</span>
           {% elif complaint.status == 'Assigned' %}
             <span class="badge bg-primary text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-user-check me-1"></i>Assigned</span>
+          {% elif complaint.status == 'Accepted' %}
+            <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Accepted</span>
           {% elif complaint.status == 'Under Inspection' %}
             <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-clipboard-check me-1"></i>Under Inspection</span>
           {% elif complaint.status == 'Action Required' %}
@@ -78,11 +80,16 @@
 
         <!-- ROLE ACTION CARDS -->
 
-        <!-- 1. ADMIN ACTIONS: STAFF ASSIGNMENT -->
+        <!-- 1. ADMIN ACTIONS: STAFF ASSIGNMENT / REASSIGNMENT -->
         {% if is_admin %}
         <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-warning">
           <div class="card-body p-4">
-            <h5 class="fw-bold mb-3"><i class="fa-solid fa-user-gear text-warning me-2"></i>Administrator Action: Assign Maintenance Staff</h5>
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-user-gear text-warning me-2"></i>{% if complaint.assigned_to %}Administrator Action: Reassign Maintenance Staff{% else %}Administrator Action: Assign Maintenance Staff{% endif %}</h5>
+            {% if complaint.assigned_to %}
+              <div class="alert alert-success rounded-3 p-3 mb-3">
+                <span class="small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>Currently assigned to <strong>{{ complaint.assigned_to.name|default:complaint.assigned_to.username }}</strong>{% if complaint.assigned_to.specialization %} ({{ complaint.assigned_to.specialization }}){% endif %}{% if complaint.assigned_at %} since {{ complaint.assigned_at|date:"M d, Y" }}{% endif %}. To reassign, select a specialization first, then choose a staff member from that specialization.</span>
+              </div>
+            {% endif %}
             <form action="{% url 'complaints:assign_staff' complaint.complaint_id %}" method="post" id="assign-staff-form">
               {% csrf_token %}
               <div class="row g-3 align-items-end">
@@ -103,7 +110,7 @@
                 </div>
                 <div class="col-md-3">
                   <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark">
-                    <i class="fa-solid fa-user-check me-1"></i> Assign Staff
+                    <i class="fa-solid fa-user-check me-1"></i> {% if complaint.assigned_to %}Reassign Staff{% else %}Assign Staff{% endif %}
                   </button>
                 </div>
               </div>
@@ -182,6 +189,37 @@
         <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-primary">
           <div class="card-body p-4">
             <h5 class="fw-bold mb-3"><i class="fa-solid fa-screwdriver-wrench text-primary me-2"></i>Maintenance Operations Hub</h5>
+
+            {% if complaint.assigned_to %}
+              <div class="alert {% if is_assignee %}alert-success{% else %}alert-info{% endif %} rounded-3 p-3 mb-3">
+                <span class="small fw-semibold">
+                  <i class="fa-solid fa-user-check me-1"></i>
+                  {% if is_assignee %}
+                    This request is <strong>Assigned</strong> to you ({{ complaint.assigned_to.name|default:complaint.assigned_to.username }}{% if complaint.assigned_to.specialization %}, {{ complaint.assigned_to.specialization }}{% endif %}).
+                  {% else %}
+                    This request is <strong>Assigned</strong> to {{ complaint.assigned_to.name|default:complaint.assigned_to.username }}{% if complaint.assigned_to.specialization %} ({{ complaint.assigned_to.specialization }}){% endif %}.
+                  {% endif %}
+                  {% if complaint.assigned_at %}<span class="text-muted fw-normal">Assigned on {{ complaint.assigned_at|date:"M d, Y" }}.</span>{% endif %}
+                </span>
+              </div>
+            {% else %}
+              <div class="alert alert-secondary rounded-3 p-3 mb-3">
+                <span class="small fw-semibold"><i class="fa-regular fa-user me-1"></i>This request is <strong>not assigned yet</strong> — awaiting administrator assignment.</span>
+              </div>
+            {% endif %}
+
+            {% if complaint.status == 'Assigned' and is_assignee %}
+              <form action="{% url 'complaints:accept' complaint.complaint_id %}" method="post" class="mb-3">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success w-100 fw-semibold">
+                  <i class="fa-solid fa-circle-check me-1"></i> Accept Assignment
+                </button>
+              </form>
+            {% elif complaint.status == 'Accepted' %}
+              <div class="alert alert-success rounded-3 p-3 mb-3">
+                <span class="small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>{% if is_assignee %}You have <strong>Accepted</strong> this assignment.{% else %}This assignment has been <strong>Accepted</strong> by {{ complaint.assigned_to.name|default:complaint.assigned_to.username }}.{% endif %}</span>
+              </div>
+            {% endif %}
 
             <!-- Tabs for Staff Actions -->
             <ul class="nav nav-pills mb-3" id="staffActionTabs" role="tablist">
@@ -474,6 +512,9 @@
               <span class="text-dark fw-bold">
                 {% if complaint.assigned_to %}
                   <i class="fa-solid fa-user-gear me-2 text-success"></i>{{ complaint.assigned_to.name|default:complaint.assigned_to.username }}
+                  {% if complaint.assigned_to.specialization %}
+                    <small class="d-block text-muted fw-normal">Specialization: {{ complaint.assigned_to.specialization }}</small>
+                  {% endif %}
                   {% if complaint.assigned_at %}
                     <small class="d-block text-muted fw-normal">Assigned: {{ complaint.assigned_at|date:"M d, Y" }}</small>
                   {% endif %}

@@ -12,6 +12,7 @@ urlpatterns = [
     path("requests/<int:request_id>/decide/", views.admin_request_decide, name="request_decide"),
     path("<str:complaint_id>/", views.complaint_detail, name="detail"),
     path("<str:complaint_id>/assign/", views.admin_assign_staff, name="assign_staff"),
+    path("<str:complaint_id>/accept/", views.maintenance_accept, name="accept"),
     path("<str:complaint_id>/inspect/", views.maintenance_inspect, name="inspect"),
     path("<str:complaint_id>/use-inventory/", views.maintenance_use_inventory, name="use_inventory"),
     path("<str:complaint_id>/request-action/", views.maintenance_request_action, name="request_action"),

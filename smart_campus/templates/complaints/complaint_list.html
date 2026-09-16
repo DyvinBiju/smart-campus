@@ -191,6 +191,8 @@
                         <span class="badge bg-secondary text-white px-3 py-1 rounded-pill"><i class="fa-solid fa-magnifying-glass me-1"></i>Under Review</span>
                       {% elif complaint.status == 'Assigned' %}
                         <span class="badge bg-primary text-white px-3 py-1 rounded-pill"><i class="fa-solid fa-user-check me-1"></i>Assigned</span>
+                      {% elif complaint.status == 'Accepted' %}
+                        <span class="badge bg-success text-white px-3 py-1 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Accepted</span>
                       {% elif complaint.status == 'Under Inspection' %}
                         <span class="badge bg-info text-dark px-3 py-1 rounded-pill"><i class="fa-solid fa-clipboard-check me-1"></i>Under Inspection</span>
                       {% elif complaint.status == 'Action Required' %}

@@ -151,6 +151,7 @@ def complaint_detail(request, complaint_id):
         "complaint": complaint,
         "is_admin": is_admin,
         "is_staff": is_staff,
+        "is_assignee": complaint.assigned_to_id is not None and complaint.assigned_to_id == user.pk,
         "usage_form": usage_form,
         "request_form": request_form,
         "assign_form": assign_form,
@@ -222,34 +223,101 @@ def staff_by_specialization(request):
 
 @login_required
 def admin_assign_staff(request, complaint_id):
-    """Administrator assigns an available Maintenance Staff member (specialization-first)."""
+    """Administrator assigns or reassigns an available Maintenance Staff member (specialization-first)."""
     user = request.user
     if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
         raise PermissionDenied("Only Administrators can assign staff.")
 
-    complaint = get_object_or_404(Complaint, complaint_id=complaint_id)
+    complaint = get_object_or_404(
+        Complaint.objects.select_related("assigned_to"), complaint_id=complaint_id
+    )
+    previous_staff = complaint.assigned_to
+    previous_staff_id = complaint.assigned_to_id
+    previous_name = (
+        (previous_staff.name or previous_staff.username) if previous_staff else None
+    )
     if request.method == "POST":
         form = ComplaintAssignForm(request.POST, instance=complaint)
         if form.is_valid():
             updated = form.save(commit=False)
+            new_staff = updated.assigned_to
+            is_reassignment = (
+                previous_staff_id is not None
+                and new_staff is not None
+                and previous_staff_id != new_staff.pk
+            )
+            is_first_assignment = previous_staff_id is None and new_staff is not None
             updated.assigned_at = timezone.now()
-            if updated.status == Complaint.Status.SUBMITTED or updated.status == Complaint.Status.UNDER_REVIEW:
+            if is_first_assignment or is_reassignment:
+                # (Re)assignment replaces the active assignment: status becomes Assigned.
+                updated.status = Complaint.Status.ASSIGNED
+            elif updated.status in (Complaint.Status.SUBMITTED, Complaint.Status.UNDER_REVIEW):
                 updated.status = Complaint.Status.ASSIGNED
             updated.save()
 
-            staff_name = updated.assigned_to.name or updated.assigned_to.username if updated.assigned_to else "Staff"
-            updated.log_history(
-                status=updated.status,
-                changed_by=request.user,
-                comment=f"Assigned to Maintenance Staff member {staff_name}.",
-            )
-
-            messages.success(request, f"Assigned Maintenance Staff member {staff_name} to complaint {complaint.complaint_id}.")
+            staff_name = (new_staff.name or new_staff.username) if new_staff else "Staff"
+            if is_reassignment:
+                spec = (new_staff.specialization or "").strip() if new_staff else ""
+                updated.log_history(
+                    status=updated.status,
+                    changed_by=request.user,
+                    comment=(
+                        f"Reassigned from {previous_name} to Maintenance Staff member "
+                        f"{staff_name}" + (f" ({spec})." if spec else ".")
+                    ),
+                )
+                messages.success(
+                    request,
+                    f"Reassigned complaint {complaint.complaint_id} from {previous_name} to {staff_name}.",
+                )
+            else:
+                updated.log_history(
+                    status=updated.status,
+                    changed_by=request.user,
+                    comment=f"Assigned to Maintenance Staff member {staff_name}.",
+                )
+                messages.success(request, f"Assigned Maintenance Staff member {staff_name} to complaint {complaint.complaint_id}.")
             return redirect("complaints:detail", complaint_id=complaint.complaint_id)
         else:
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f"{field}: {error}" if field != "__all__" else str(error))
+    return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+
+@login_required
+def maintenance_accept(request, complaint_id):
+    """Currently assigned Maintenance Staff member accepts the assignment (Assigned -> Accepted)."""
+    user = request.user
+    if not (user.role == User.Role.MAINTENANCE):
+        raise PermissionDenied("Only Maintenance Staff can accept assignments.")
+
+    complaint = get_object_or_404(
+        Complaint.objects.select_related("assigned_to"), complaint_id=complaint_id
+    )
+    if complaint.assigned_to_id != user.pk:
+        raise PermissionDenied("Only the currently assigned Maintenance Staff member can accept this complaint.")
+
+    if request.method != "POST":
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+    if complaint.status == Complaint.Status.ACCEPTED:
+        messages.info(request, "This assignment has already been accepted.")
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+    if complaint.status != Complaint.Status.ASSIGNED:
+        messages.error(request, "Only complaints with 'Assigned' status can be accepted.")
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+    complaint.status = Complaint.Status.ACCEPTED
+    complaint.save(update_fields=["status", "updated_at"])
+    staff_name = user.name or user.username
+    complaint.log_history(
+        status=Complaint.Status.ACCEPTED,
+        changed_by=user,
+        comment=f"Assignment accepted by Maintenance Staff member {staff_name}.",
+    )
+    messages.success(request, f"Assignment for complaint {complaint.complaint_id} accepted.")
     return redirect("complaints:detail", complaint_id=complaint.complaint_id)
 
 

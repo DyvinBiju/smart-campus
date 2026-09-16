@@ -21,6 +21,7 @@ class Complaint(models.Model):
         SUBMITTED = "Submitted", _("Submitted")
         UNDER_REVIEW = "Under Review", _("Under Review")
         ASSIGNED = "Assigned", _("Assigned")
+        ACCEPTED = "Accepted", _("Accepted")
         UNDER_INSPECTION = "Under Inspection", _("Under Inspection")
         ACTION_REQUIRED = "Action Required", _("Action Required")
         IN_PROGRESS = "In Progress", _("In Progress")
