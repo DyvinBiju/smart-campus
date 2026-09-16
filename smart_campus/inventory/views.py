@@ -325,7 +325,8 @@ def inventory_use_for_complaint(request, pk):
         try:
             quantity = int(request.POST.get("quantity", 1))
         except (ValueError, TypeError):
-            quantity = 1
+            messages.error(request, "Enter a valid quantity (a whole number of at least 1).")
+            return redirect("inventory:detail", pk=item.pk)
 
         if quantity < 1:
             messages.error(request, "Quantity must be at least 1.")
@@ -396,7 +397,12 @@ def inventory_report_unavailable(request, pk):
         try:
             quantity = int(request.POST.get("quantity", 1))
         except (ValueError, TypeError):
-            quantity = 1
+            messages.error(request, "Enter a valid quantity (a whole number of at least 1).")
+            return redirect("inventory:detail", pk=item.pk)
+
+        if quantity < 1:
+            messages.error(request, "Quantity must be at least 1.")
+            return redirect("inventory:detail", pk=item.pk)
 
         reason = request.POST.get("reason", "").strip()
         complaint = get_object_or_404(Complaint, pk=complaint_pk)

@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import Asset, Location
 
 
@@ -169,3 +170,30 @@ class AssetForm(forms.ModelForm):
         self.fields["location"].empty_label = "-- Select Registered Campus Location --"
         self.fields["location"].queryset = Location.objects.filter(is_active=True)
         self.fields["building"].required = False
+
+    def clean_asset_code(self):
+        code = (self.cleaned_data.get("asset_code") or "").strip()
+        if code:
+            qs = Asset.objects.filter(asset_code__iexact=code)
+            if self.instance and self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError(f"An asset with code '{code}' already exists.")
+        return code
+
+    def clean_name(self):
+        return _strip_required(self.cleaned_data.get("name"), "Asset name")
+
+    def clean_location(self):
+        location = self.cleaned_data.get("location")
+        if location and not location.is_active:
+            raise forms.ValidationError(
+                f"Location '{location.name}' is inactive and cannot be selected."
+            )
+        return location
+
+    def clean_purchase_date(self):
+        purchase_date = self.cleaned_data.get("purchase_date")
+        if purchase_date and purchase_date > timezone.localdate():
+            raise forms.ValidationError("Purchase date cannot be in the future.")
+        return purchase_date

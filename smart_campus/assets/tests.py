@@ -383,4 +383,60 @@ class LocationManagementTest(TestCase):
         self.assertEqual(stud_res.status_code, 403)
 
 
+class AssetFormValidationTest(TestCase):
+    """Server-side validation for asset creation/editing."""
+
+    def _valid_data(self, **overrides):
+        data = {
+            "asset_code": "",
+            "name": "Oscilloscope",
+            "category": "Lab Equipment",
+            "building": "Science Block",
+            "room": "Lab 2",
+            "status": "ACTIVE",
+            "description": "",
+        }
+        data.update(overrides)
+        return data
+
+    def test_duplicate_asset_code_rejected(self):
+        from .forms import AssetForm
+
+        Asset.objects.create(
+            asset_code="AST-0099",
+            name="Multimeter",
+            category="Lab Equipment",
+            building="Science Block",
+            status="ACTIVE",
+        )
+        form = AssetForm(data=self._valid_data(asset_code="ast-0099"))
+        self.assertFalse(form.is_valid())
+        self.assertIn("asset_code", form.errors)
+
+    def test_whitespace_only_name_rejected(self):
+        from .forms import AssetForm
+
+        form = AssetForm(data=self._valid_data(name="   "))
+        self.assertFalse(form.is_valid())
+        self.assertIn("name", form.errors)
+
+    def test_future_purchase_date_rejected(self):
+        import datetime
+
+        from django.utils import timezone
+
+        from .forms import AssetForm
+
+        future = (timezone.localdate() + datetime.timedelta(days=30)).isoformat()
+        form = AssetForm(data=self._valid_data(purchase_date=future))
+        self.assertFalse(form.is_valid())
+        self.assertIn("purchase_date", form.errors)
+
+    def test_valid_asset_form_accepted(self):
+        from .forms import AssetForm
+
+        form = AssetForm(data=self._valid_data())
+        self.assertTrue(form.is_valid(), form.errors)
+
+
 

@@ -153,7 +153,7 @@ class DashboardViewTests(TestCase):
             "department": "Computer Science",
             "campus_id": "STU-001",
             "year_or_semester": "Semester 4",
-            "phone_number": "555-0100",
+            "phone_number": "5550100100",
         })
 
         self.assertRedirects(response, reverse("dashboard:student"))
@@ -327,4 +327,24 @@ class DashboardViewTests(TestCase):
         student_response = self.client.get(reverse("dashboard:student"))
         self.assertNotContains(student_response, "Maintenance Workspace")
         self.assertNotContains(student_response, "Maintenance Hub")
+
+    def test_submit_complaint_rejects_overlong_title(self):
+        """Overlong titles must be rejected instead of hitting the DB limit."""
+        self.client.force_login(self.student)
+        response = self.client.post(
+            reverse("dashboard:submit-complaint"),
+            data={"title": "x" * 300, "description": "Too long title"},
+            follow=True,
+        )
+        self.assertContains(response, "must not exceed 255 characters")
+        self.assertFalse(Activity.objects.filter(description="Too long title").exists())
+
+    def test_submit_complaint_rejects_blank_title(self):
+        self.client.force_login(self.student)
+        response = self.client.post(
+            reverse("dashboard:submit-complaint"),
+            data={"title": "   ", "description": "Blank title"},
+            follow=True,
+        )
+        self.assertContains(response, "Complaint title is required.")
 

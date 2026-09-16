@@ -641,4 +641,22 @@ class AdministratorComplaintConsoleTests(TestCase):
             self.assertEqual(response.status_code, 403)
 
 
+class MaintenanceRequestFormValidationTest(TestCase):
+    """Requested quantities must be positive whole numbers."""
+
+    def test_zero_quantity_requested_rejected(self):
+        from smart_campus.complaints.forms import MaintenanceRequestForm
+        from smart_campus.complaints.models import MaintenanceRequest
+
+        form = MaintenanceRequestForm(
+            data={
+                "request_type": MaintenanceRequest.RequestType.UNAVAILABLE_RESOURCE,
+                "quantity_requested": 0,
+                "reason": "Need bulbs",
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("quantity_requested", form.errors)
+
+
 

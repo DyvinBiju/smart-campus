@@ -20,12 +20,47 @@ def _clean_required_text(value, field_label, max_length=None):
 
 
 def _clean_phone_number(value):
+    """
+    Strict project-wide phone rule: empty (optional fields) or exactly
+    10 digits, numbers only. Never silently strips/truncates characters.
+    """
     phone = (value or "").strip()
     if not phone:
         return ""
-    if not re.fullmatch(r"^\+?[0-9][0-9\s().-]{6,23}$", phone):
-        raise ValidationError(_("Enter a valid phone number."))
+    if not re.fullmatch(r"[0-9]{10}", phone):
+        raise ValidationError(
+            _("Enter a valid 10-digit phone number containing numbers only.")
+        )
     return phone
+
+
+def _validate_password_pair(form, password1, password2):
+    """
+    Shared password creation rule: match confirmation, enforce minimum
+    8 characters explicitly, then apply AUTH_PASSWORD_VALIDATORS.
+    Errors are attached to the relevant field; never weakens security.
+    """
+    if password1 and password2:
+        if password1 != password2:
+            form.add_error("password2", _("Passwords do not match."))
+        elif len(password1) < 8:
+            form.add_error(
+                "password1", _("Password must contain at least 8 characters.")
+            )
+        else:
+            try:
+                validate_password(password1)
+            except ValidationError as exc:
+                form.add_error("password1", exc)
+
+
+PHONE_WIDGET_ATTRS = {
+    "placeholder": _("e.g. 9876543210"),
+    "class": "form-control",
+    "inputmode": "numeric",
+    "pattern": "[0-9]{10}",
+    "maxlength": "10",
+}
 
 
 class UserAdminChangeForm(admin_forms.UserChangeForm):
@@ -102,15 +137,7 @@ class StudentSignupForm(forms.Form):
         label=_("Phone Number"),
         max_length=10,
         required=False,
-        widget=forms.TextInput(
-            attrs={
-                "placeholder": _("e.g. 9876543210"),
-                "class": "form-control",
-                "inputmode": "numeric",
-                "pattern": "[0-9]*",
-                "maxlength": "10",
-            }
-        ),
+        widget=forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
     )
     password1 = forms.CharField(
         label=_("Password"),
@@ -121,6 +148,12 @@ class StudentSignupForm(forms.Form):
         widget=forms.PasswordInput(attrs={"placeholder": _("Confirm your password"), "class": "form-control"}),
     )
 
+    def clean_name(self):
+        return _clean_required_text(self.cleaned_data.get("name"), "Full name", 255)
+
+    def clean_campus_id(self):
+        return _clean_required_text(self.cleaned_data.get("campus_id"), "Student ID", 50)
+
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
@@ -128,23 +161,13 @@ class StudentSignupForm(forms.Form):
         return email
 
     def clean_phone_number(self):
-        phone_number = self.cleaned_data.get("phone_number", "").strip()
-        if phone_number and not re.fullmatch(r"[0-9]{1,10}", phone_number):
-            raise ValidationError(
-                _("Phone number must contain only numbers and be no more than 10 digits.")
-            )
-        return phone_number
+        return _clean_phone_number(self.cleaned_data.get("phone_number"))
 
     def clean(self):
         cleaned_data = super().clean()
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
-
-        if password1 and password2:
-            if password1 != password2:
-                self.add_error("password2", _("The two password fields did not match."))
-            else:
-                validate_password(password1)
+        _validate_password_pair(
+            self, cleaned_data.get("password1"), cleaned_data.get("password2")
+        )
         return cleaned_data
 
     def save(self) -> User:
@@ -211,6 +234,12 @@ class MaintenanceStaffCreationForm(forms.Form):
         widget=forms.PasswordInput(attrs={"placeholder": _("Confirm initial password"), "class": "form-control"}),
     )
 
+    def clean_name(self):
+        return _clean_required_text(self.cleaned_data.get("name"), "Full name", 255)
+
+    def clean_campus_id(self):
+        return _clean_required_text(self.cleaned_data.get("campus_id"), "Staff ID", 50)
+
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email__iexact=email).exists():
@@ -219,14 +248,9 @@ class MaintenanceStaffCreationForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
-
-        if password1 and password2:
-            if password1 != password2:
-                self.add_error("password2", _("The two password fields did not match."))
-            else:
-                validate_password(password1)
+        _validate_password_pair(
+            self, cleaned_data.get("password1"), cleaned_data.get("password2")
+        )
         return cleaned_data
 
     def save(self) -> User:
@@ -280,10 +304,16 @@ class UserSignupForm(SignupForm):
     )
     phone_number = forms.CharField(
         label=_("Phone Number"),
-        max_length=30,
+        max_length=10,
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": _("e.g. +91 9876543210")}),
+        widget=forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
     )
+
+    def clean_name(self):
+        return _clean_required_text(self.cleaned_data.get("name"), "Full name", 255)
+
+    def clean_phone_number(self):
+        return _clean_phone_number(self.cleaned_data.get("phone_number"))
 
     def save(self, request):
         user = super().save(request)
@@ -324,9 +354,13 @@ class UserSocialSignupForm(SocialSignupForm):
     )
     phone_number = forms.CharField(
         label=_("Phone Number"),
-        max_length=30,
+        max_length=10,
         required=False,
+        widget=forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
     )
+
+    def clean_phone_number(self):
+        return _clean_phone_number(self.cleaned_data.get("phone_number"))
 
     def save(self, request):
         user = super().save(request)
@@ -389,9 +423,9 @@ class UserManagementCreateForm(forms.Form):
     )
     phone_number = forms.CharField(
         label=_("Phone Number"),
-        max_length=30,
+        max_length=10,
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": _("e.g. +91 9876543210"), "class": "form-control"}),
+        widget=forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
     )
     password1 = forms.CharField(
         label=_("Initial Password"),
@@ -416,13 +450,9 @@ class UserManagementCreateForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
-        if password1 and password2:
-            if password1 != password2:
-                self.add_error("password2", _("The passwords did not match."))
-            else:
-                validate_password(password1)
+        _validate_password_pair(
+            self, cleaned_data.get("password1"), cleaned_data.get("password2")
+        )
         return cleaned_data
 
     def save(self) -> User:
@@ -478,7 +508,7 @@ class UserManagementEditForm(forms.ModelForm):
             "department": forms.TextInput(attrs={"class": "form-control"}),
             "campus_id": forms.TextInput(attrs={"class": "form-control"}),
             "year_or_semester": forms.TextInput(attrs={"class": "form-control"}),
-            "phone_number": forms.TextInput(attrs={"class": "form-control"}),
+            "phone_number": forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "is_available": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
@@ -518,7 +548,7 @@ class SelfProfileForm(forms.ModelForm):
             "department": forms.TextInput(attrs={"class": "form-control"}),
             "campus_id": forms.TextInput(attrs={"class": "form-control"}),
             "year_or_semester": forms.TextInput(attrs={"class": "form-control"}),
-            "phone_number": forms.TextInput(attrs={"class": "form-control"}),
+            "phone_number": forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
         }
 
     def clean_name(self):

@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from smart_campus.users.forms import MaintenanceStaffCreationForm
 from smart_campus.users.forms import StudentSignupForm
 from smart_campus.users.forms import UserAdminCreationForm
+from smart_campus.users.forms import UserManagementCreateForm
 from smart_campus.users.forms import UserSignupForm
 from smart_campus.users.models import User
 
@@ -116,6 +117,7 @@ class TestMaintenanceStaffCreationForm:
         form = MaintenanceStaffCreationForm(
             data={
                 "name": "John Maintenance",
+                "specialization": "Electrical",
                 "campus_id": "STF888",
                 "email": "john.staff@campus.edu",
                 "department": "Electrical & HVAC",
@@ -171,6 +173,114 @@ class TestSignupFormNoRoleDropdown:
     def test_user_signup_form_has_no_role_field(self):
         form = UserSignupForm()
         assert "role" not in form.fields
+
+
+def _valid_student_data(**overrides):
+    data = {
+        "name": "Validation Student",
+        "campus_id": "CS202501",
+        "email": "validation.student@campus.edu",
+        "department": "Computer Science",
+        "year_or_semester": "2nd Year",
+        "password1": "SecureP@ssword123!",
+        "password2": "SecureP@ssword123!",
+    }
+    data.update(overrides)
+    return data
+
+
+class TestPhoneNumberValidation:
+    """Phone numbers must be empty or exactly 10 digits, numbers only."""
+
+    def test_valid_10_digit_phone_accepted(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number="9876543210"))
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["phone_number"] == "9876543210"
+
+    def test_blank_phone_allowed_when_optional(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number=""))
+        assert form.is_valid(), form.errors
+
+    def test_short_phone_rejected(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number="987654321"))
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+        assert form.errors["phone_number"][0] == _(
+            "Enter a valid 10-digit phone number containing numbers only."
+        )
+
+    def test_long_phone_rejected(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number="98765432101"))
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+    def test_phone_with_letters_rejected(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number="98765abc10"))
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+    def test_phone_with_spaces_rejected(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number="98765 43210"))
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+    def test_phone_with_hyphen_rejected(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number="98765-43210"))
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+    def test_phone_with_country_code_rejected(self, db):
+        form = StudentSignupForm(data=_valid_student_data(phone_number="+919876543210"))
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+    def test_management_create_form_enforces_same_phone_rule(self, db):
+        form = UserManagementCreateForm(
+            data={
+                "name": "Phone Check",
+                "email": "phone.check@campus.edu",
+                "role": User.Role.STUDENT,
+                "phone_number": "98 7654321",
+                "password1": "SecureP@ssword123!",
+                "password2": "SecureP@ssword123!",
+            }
+        )
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+
+class TestPasswordValidation:
+    def test_short_password_rejected_with_clear_message(self, db):
+        form = StudentSignupForm(
+            data=_valid_student_data(password1="Abc123!", password2="Abc123!")
+        )
+        assert not form.is_valid()
+        assert "password1" in form.errors
+        assert form.errors["password1"][0] == _(
+            "Password must contain at least 8 characters."
+        )
+
+    def test_password_mismatch_message(self, db):
+        form = StudentSignupForm(
+            data=_valid_student_data(
+                password1="SecureP@ssword123!", password2="OtherP@ssword123!"
+            )
+        )
+        assert not form.is_valid()
+        assert form.errors["password2"][0] == _("Passwords do not match.")
+
+
+class TestEmailAndRequiredTextValidation:
+    def test_malformed_emails_rejected(self, db):
+        for bad_email in ["example", "example@", "@example.com", "example@gmail", "example.com"]:
+            form = StudentSignupForm(data=_valid_student_data(email=bad_email))
+            assert not form.is_valid(), bad_email
+            assert "email" in form.errors
+
+    def test_whitespace_only_campus_id_rejected(self, db):
+        form = StudentSignupForm(data=_valid_student_data(campus_id="   "))
+        assert not form.is_valid()
+        assert "campus_id" in form.errors
 
 
 

@@ -24,6 +24,64 @@ from .forms import (
 from .models import Complaint, ComplaintHistory, ComplaintResource, MaintenanceRequest
 
 
+# Public-facing student tracker configuration. Internal operational details
+# (staff names, reasons, inventory, procurement) are never exposed here.
+STUDENT_TRACKER_STAGES = [
+    "Submitted",
+    "Under Review",
+    "Maintenance Started",
+    "In Progress",
+    "Resolved",
+]
+
+# Maps internal complaint status -> (stage index, public title, public update).
+STUDENT_PUBLIC_STATUS = {
+    Complaint.Status.SUBMITTED: (0, "Submitted", "Your complaint has been received."),
+    Complaint.Status.UNDER_REVIEW: (1, "Under Review", "Our team is reviewing your complaint."),
+    Complaint.Status.ASSIGNED: (2, "Maintenance Started", "A maintenance team has been assigned and work will begin shortly."),
+    Complaint.Status.ACCEPTED: (2, "Maintenance Accepted", "The maintenance team has accepted the work."),
+    Complaint.Status.REJECTED: (1, "Under Review", "The assigned team could not take up this request; it is being reassigned."),
+    Complaint.Status.UNDER_INSPECTION: (3, "In Progress", "The maintenance team is inspecting the reported issue."),
+    Complaint.Status.ACTION_REQUIRED: (3, "Awaiting Resources", "Work is paused while the required resources are being arranged."),
+    Complaint.Status.IN_PROGRESS: (3, "In Progress", "Maintenance work is in progress."),
+    Complaint.Status.RESOLVED: (4, "Resolved", "Your complaint has been resolved."),
+    Complaint.Status.CLOSED: (4, "Resolved", "This complaint is closed."),
+}
+
+
+def _student_tracker_context(complaint):
+    """
+    Builds a student-safe context: only public stages/updates derived from
+    status values. Raw history comments, staff identities, reasons, inventory
+    and request records are deliberately excluded (backend-enforced).
+    """
+    stage_index, public_title, _ = STUDENT_PUBLIC_STATUS.get(
+        complaint.status, (1, "Under Review", "")
+    )
+    public_timeline = []
+    for entry in complaint.history.all():
+        mapped = STUDENT_PUBLIC_STATUS.get(entry.status)
+        if not mapped:
+            continue
+        entry_stage, entry_title, entry_update = mapped
+        public_timeline.append(
+            {
+                "stage": entry_stage,
+                "title": entry_title,
+                "update": entry_update,
+                "timestamp": entry.timestamp,
+            }
+        )
+    return {
+        "complaint": complaint,
+        "public_title": public_title,
+        "stage_index": stage_index,
+        "stages": STUDENT_TRACKER_STAGES,
+        "public_timeline": public_timeline,
+        "is_resolved": complaint.status in (Complaint.Status.RESOLVED, Complaint.Status.CLOSED),
+    }
+
+
 def _resolved_guard(request, complaint):
     """
     Rejects modifying maintenance actions on Resolved complaints.
@@ -159,6 +217,13 @@ def complaint_detail(request, complaint_id):
     if not (is_admin or is_staff):
         if complaint.user != user:
             raise PermissionDenied("You are not authorized to view this complaint.")
+        # Students get a dedicated tracker with backend-filtered public data only.
+        # Internal forms, history, resources and requests are never passed along.
+        return render(
+            request,
+            "complaints/complaint_detail_student.html",
+            _student_tracker_context(complaint),
+        )
 
     usage_form = DirectInventoryUsageForm()
     request_form = MaintenanceRequestForm()

@@ -546,9 +546,15 @@ class SubmitComplaintView(LoginRequiredMixin, View):
         category = request.POST.get("category", "COMPLAINT").upper()
         description = request.POST.get("description", "").strip()
         user_name = request.POST.get("user_name", "").strip()
-        
+
         if not title:
             messages.error(request, "Complaint title is required.")
+            return redirect(request.META.get("HTTP_REFERER", "/#raise-complaint"))
+        if len(title) > 255:
+            messages.error(request, "Complaint title must not exceed 255 characters.")
+            return redirect(request.META.get("HTTP_REFERER", "/#raise-complaint"))
+        if len(user_name) > 255:
+            messages.error(request, "Name must not exceed 255 characters.")
             return redirect(request.META.get("HTTP_REFERER", "/#raise-complaint"))
             
         user = request.user

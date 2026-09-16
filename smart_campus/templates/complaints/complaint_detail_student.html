@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  Track My Complaint {{ complaint.complaint_id }} - SmartCampus
+{% endblock title %}
+
+{% block content %}
+<!-- STUDENT TRACKER HERO -->
+<section class="bg-light border-bottom py-4">
+  <div class="container">
+    <a href="{% url 'complaints:list' %}" class="btn btn-outline-secondary btn-sm px-3 mb-3">
+      <i class="fa-solid fa-arrow-left me-1"></i> My Complaints
+    </a>
+    <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+      <span class="badge bg-primary font-monospace px-3 py-2">{{ complaint.complaint_id }}</span>
+      {% if is_resolved %}
+        <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>{{ public_title }}</span>
+      {% elif stage_index >= 3 %}
+        <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="fa-solid fa-gears me-1"></i>{{ public_title }}</span>
+      {% elif stage_index >= 2 %}
+        <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-screwdriver-wrench me-1"></i>{{ public_title }}</span>
+      {% else %}
+        <span class="badge bg-secondary text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-inbox me-1"></i>{{ public_title }}</span>
+      {% endif %}
+    </div>
+    <h2 class="fw-bold mb-1">{{ complaint.title }}</h2>
+    <p class="text-muted small mb-0"><i class="fa-regular fa-calendar me-1"></i>Submitted on {{ complaint.created_at|date:"F d, Y - H:i" }}</p>
+  </div>
+</section>
+
+<!-- TRACKER PROGRESS STEPS -->
+<section class="py-4">
+  <div class="container">
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+      <div class="card-body p-4">
+        <h5 class="fw-bold mb-3"><i class="fa-solid fa-route text-primary me-2"></i>Where is my complaint?</h5>
+        <div class="d-flex flex-wrap justify-content-between gap-2">
+          {% for stage in stages %}
+            <div class="text-center flex-fill px-1" style="min-width: 90px;">
+              <div class="mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center fw-bold
+                {% if forloop.counter0 < stage_index %}bg-success text-white{% elif forloop.counter0 == stage_index %}{% if is_resolved %}bg-success text-white{% else %}bg-primary text-white{% endif %}{% else %}bg-light text-muted border{% endif %}"
+                style="width: 42px; height: 42px;">
+                {% if forloop.counter0 < stage_index or forloop.counter0 == stage_index and is_resolved %}
+                  <i class="fa-solid fa-check"></i>
+                {% else %}
+                  {{ forloop.counter }}
+                {% endif %}
+              </div>
+              <div class="small {% if forloop.counter0 == stage_index %}{% if is_resolved %}fw-bold text-success{% else %}fw-bold text-primary{% endif %}{% elif forloop.counter0 < stage_index %}fw-semibold text-success{% else %}text-muted{% endif %}">{{ stage }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <!-- COMPLAINT DETAILS CARD -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="fa-solid fa-circle-info text-primary me-2"></i>Complaint Details</h5>
+            <p class="text-secondary" style="white-space: pre-line;">{{ complaint.description }}</p>
+            <div class="row g-3 mt-1">
+              <div class="col-6">
+                <label class="text-muted small fw-semibold d-block">Category</label>
+                <span class="fw-semibold"><i class="fa-solid fa-tag me-1 text-primary"></i>{{ complaint.get_category_display }}</span>
+              </div>
+              <div class="col-6">
+                <label class="text-muted small fw-semibold d-block">Priority</label>
+                {% if complaint.priority == 'High' %}
+                  <span class="badge bg-danger">High</span>
+                {% elif complaint.priority == 'Medium' %}
+                  <span class="badge bg-warning text-dark">Medium</span>
+                {% else %}
+                  <span class="badge bg-secondary">Low</span>
+                {% endif %}
+              </div>
+              <div class="col-12">
+                <label class="text-muted small fw-semibold d-block">Location</label>
+                <span class="fw-semibold"><i class="fa-solid fa-location-dot me-1 text-danger"></i>{{ complaint.display_location }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% if is_resolved %}
+        <!-- RESOLUTION CARD -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-success">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 text-success"><i class="fa-solid fa-circle-check me-2"></i>Resolved</h5>
+            {% if complaint.resolution_notes %}
+              <p class="text-dark mb-2" style="white-space: pre-line;">{{ complaint.resolution_notes }}</p>
+            {% else %}
+              <p class="text-muted small mb-2">The maintenance team has marked this complaint as resolved.</p>
+            {% endif %}
+            {% if complaint.resolved_at %}
+              <small class="text-muted"><i class="fa-regular fa-clock me-1"></i>Resolved on {{ complaint.resolved_at|date:"F d, Y - H:i" }}</small>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="col-lg-5">
+        <!-- PUBLIC PROGRESS TIMELINE -->
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-3 border-bottom pb-2"><i class="fa-solid fa-clock-rotate-left text-info me-2"></i>Progress Updates</h5>
+            {% if public_timeline %}
+              <ul class="list-unstyled mb-0">
+                {% for item in public_timeline %}
+                  <li class="pb-3 ps-3 border-start border-2 {% if forloop.last %}border-success{% else %}border-primary{% endif %} ms-2 position-relative">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="badge {% if forloop.last %}bg-success{% else %}bg-light text-primary border{% endif %}">{{ item.title }}</span>
+                      <small class="text-muted">{{ item.timestamp|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <p class="small text-muted mb-0">{{ item.update }}</p>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted small mb-0">Your complaint was just submitted. Updates will appear here as work progresses.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}

@@ -299,6 +299,14 @@ class DirectInventoryUsageForm(forms.ModelForm):
             raise forms.ValidationError("Quantity used must be greater than zero.")
         return quantity
 
+    def clean_inventory_item(self):
+        item = self.cleaned_data.get("inventory_item")
+        if item is not None and item.quantity <= 0:
+            raise forms.ValidationError(
+                f"'{item.name}' is out of stock. Please submit a resource request instead."
+            )
+        return item
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["inventory_item"].queryset = InventoryItem.objects.filter(quantity__gt=0)
@@ -354,6 +362,14 @@ class MaintenanceRequestForm(forms.ModelForm):
         if not reason:
             raise forms.ValidationError("Please provide a reason for the maintenance request.")
         return reason
+
+    def clean_quantity_requested(self):
+        quantity = self.cleaned_data.get("quantity_requested")
+        if quantity is None:
+            return quantity
+        if quantity < 1:
+            raise forms.ValidationError("Quantity requested must be at least 1.")
+        return quantity
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -266,3 +266,77 @@ class InventoryViewsPermissionsTest(TestCase):
         self.assertEqual(self.item.quantity, 70)
 
 
+class InventoryQuantityValidationTest(TestCase):
+    """Manual quantity POSTs must be rejected, never silently defaulted."""
+
+    def setUp(self):
+        self.category = InventoryCategory.objects.create(name="Validation Cat")
+        self.item = InventoryItem.objects.create(
+            name="Validation Item",
+            category=self.category,
+            quantity=10,
+            minimum_quantity=2,
+            unit="pcs",
+        )
+        self.staff_user = User.objects.create_user(
+            username="qty_staff",
+            email="qty_staff@test.com",
+            password="password123",
+            role=User.Role.MAINTENANCE,
+        )
+        self.student_user = User.objects.create_user(
+            username="qty_student",
+            email="qty_student@test.com",
+            password="password123",
+            role=User.Role.STUDENT,
+        )
+        self.complaint = Complaint.objects.create(
+            title="Validation complaint",
+            description="For quantity tests",
+            location="Lab 1",
+            user=self.student_user,
+            assigned_to=self.staff_user,
+            status="In Progress",
+        )
+
+    def test_non_numeric_quantity_rejected_on_use(self):
+        from smart_campus.complaints.models import ComplaintResource
+        from .models import StockTransaction
+
+        self.client.force_login(self.staff_user)
+        res = self.client.post(
+            reverse("inventory:use_for_complaint", kwargs={"pk": self.item.pk}),
+            data={"complaint_id": self.complaint.pk, "quantity": "two"},
+            follow=True,
+        )
+        self.assertContains(res, "Enter a valid quantity")
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.quantity, 10)
+        self.assertFalse(StockTransaction.objects.exists())
+        self.assertFalse(ComplaintResource.objects.exists())
+
+    def test_zero_quantity_rejected_on_report(self):
+        self.client.force_login(self.staff_user)
+        res = self.client.post(
+            reverse("inventory:report_unavailable", kwargs={"pk": self.item.pk}),
+            data={"complaint_id": self.complaint.pk, "quantity": 0, "reason": "x"},
+            follow=True,
+        )
+        self.assertContains(res, "Quantity must be at least 1.")
+        self.assertFalse(
+            MaintenanceRequest.objects.filter(complaint=self.complaint).exists()
+        )
+
+    def test_non_numeric_quantity_rejected_on_report(self):
+        self.client.force_login(self.staff_user)
+        res = self.client.post(
+            reverse("inventory:report_unavailable", kwargs={"pk": self.item.pk}),
+            data={"complaint_id": self.complaint.pk, "quantity": "many", "reason": "x"},
+            follow=True,
+        )
+        self.assertContains(res, "Enter a valid quantity")
+        self.assertFalse(
+            MaintenanceRequest.objects.filter(complaint=self.complaint).exists()
+        )
+
+
