@@ -169,6 +169,7 @@ def complaint_detail(request, complaint_id):
         "complaint": complaint,
         "is_admin": is_admin,
         "is_staff": is_staff,
+        "is_administrator": user.is_admin_user,
         "is_assignee": complaint.assigned_to_id is not None and complaint.assigned_to_id == user.pk,
         "usage_form": usage_form,
         "request_form": request_form,
@@ -243,12 +244,15 @@ def staff_by_specialization(request):
 def admin_assign_staff(request, complaint_id):
     """Administrator assigns or reassigns an available Maintenance Staff member (specialization-first)."""
     user = request.user
-    if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
+    if not user.is_admin_user:
         raise PermissionDenied("Only Administrators can assign staff.")
 
     complaint = get_object_or_404(
         Complaint.objects.select_related("assigned_to"), complaint_id=complaint_id
     )
+    resolved_response = _resolved_guard(request, complaint)
+    if resolved_response is not None:
+        return resolved_response
     previous_staff = complaint.assigned_to
     previous_staff_id = complaint.assigned_to_id
     previous_name = (
