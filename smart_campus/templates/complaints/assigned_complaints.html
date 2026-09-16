@@ -83,6 +83,8 @@
                         <span class="badge bg-primary text-white px-3 py-1 rounded-pill">Assigned</span>
                       {% elif complaint.status == 'Accepted' %}
                         <span class="badge bg-success text-white px-3 py-1 rounded-pill">Accepted</span>
+                      {% elif complaint.status == 'Rejected' %}
+                        <span class="badge bg-danger text-white px-3 py-1 rounded-pill">Rejected</span>
                       {% elif complaint.status == 'Under Inspection' %}
                         <span class="badge bg-info text-dark px-3 py-1 rounded-pill">Under Inspection</span>
                       {% elif complaint.status == 'Action Required' %}

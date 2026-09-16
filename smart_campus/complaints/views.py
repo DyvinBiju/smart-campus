@@ -16,6 +16,7 @@ from .forms import (
     ComplaintForm,
     DirectInventoryUsageForm,
     MaintenanceInspectionForm,
+    MaintenanceRejectionForm,
     MaintenanceRequestForm,
 )
 from .models import Complaint, ComplaintHistory, ComplaintResource, MaintenanceRequest
@@ -253,6 +254,9 @@ def admin_assign_staff(request, complaint_id):
                 updated.status = Complaint.Status.ASSIGNED
             elif updated.status in (Complaint.Status.SUBMITTED, Complaint.Status.UNDER_REVIEW):
                 updated.status = Complaint.Status.ASSIGNED
+            # A fresh assignment starts a new cycle: clear any previous rejection
+            # reason. The rejection event itself stays preserved in history.
+            updated.rejection_reason = ""
             updated.save()
 
             staff_name = (new_staff.name or new_staff.username) if new_staff else "Staff"
@@ -318,6 +322,54 @@ def maintenance_accept(request, complaint_id):
         comment=f"Assignment accepted by Maintenance Staff member {staff_name}.",
     )
     messages.success(request, f"Assignment for complaint {complaint.complaint_id} accepted.")
+    return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+
+@login_required
+def maintenance_reject(request, complaint_id):
+    """Currently assigned Maintenance Staff member rejects the assignment with a reason."""
+    user = request.user
+    if not (user.role == User.Role.MAINTENANCE):
+        raise PermissionDenied("Only Maintenance Staff can reject assignments.")
+
+    complaint = get_object_or_404(
+        Complaint.objects.select_related("assigned_to"), complaint_id=complaint_id
+    )
+    if complaint.assigned_to_id != user.pk:
+        raise PermissionDenied("Only the currently assigned Maintenance Staff member can reject this complaint.")
+
+    if request.method != "POST":
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+    if complaint.status == Complaint.Status.REJECTED:
+        messages.info(request, "This assignment has already been rejected.")
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+    if complaint.status not in (Complaint.Status.ASSIGNED, Complaint.Status.ACCEPTED):
+        messages.error(request, "Only complaints with 'Assigned' or 'Accepted' status can be rejected.")
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+    form = MaintenanceRejectionForm(request.POST)
+    if not form.is_valid():
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, f"{field}: {error}" if field != "__all__" else str(error))
+        return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+
+    reason = form.cleaned_data["reason"]
+    staff_name = user.name or user.username
+    complaint.status = Complaint.Status.REJECTED
+    complaint.rejection_reason = reason
+    # Release the assignment so the Administrator can assign new staff
+    # specialization-first; the rejection event stays preserved in history.
+    complaint.assigned_to = None
+    complaint.save(update_fields=["status", "rejection_reason", "assigned_to", "updated_at"])
+    complaint.log_history(
+        status=Complaint.Status.REJECTED,
+        changed_by=user,
+        comment=f"Assignment rejected by Maintenance Staff member {staff_name}. Reason: {reason}",
+    )
+    messages.success(request, f"Assignment for complaint {complaint.complaint_id} rejected.")
     return redirect("complaints:detail", complaint_id=complaint.complaint_id)
 
 

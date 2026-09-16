@@ -249,6 +249,27 @@ class MaintenanceInspectionForm(forms.ModelForm):
         ]
 
 
+class MaintenanceRejectionForm(forms.Form):
+    reason = forms.CharField(
+        label="Rejection Reason",
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Provide a clear reason for rejecting this assignment...",
+                "required": True,
+            }
+        ),
+    )
+
+    def clean_reason(self):
+        reason = (self.cleaned_data.get("reason") or "").strip()
+        if not reason:
+            raise forms.ValidationError("Please provide a reason for rejecting this assignment.")
+        return reason
+
+
 class DirectInventoryUsageForm(forms.ModelForm):
     class Meta:
         model = ComplaintResource

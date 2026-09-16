@@ -21,6 +21,8 @@
             <span class="badge bg-primary text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-user-check me-1"></i>Assigned</span>
           {% elif complaint.status == 'Accepted' %}
             <span class="badge bg-success text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-check me-1"></i>Accepted</span>
+          {% elif complaint.status == 'Rejected' %}
+            <span class="badge bg-danger text-white px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-xmark me-1"></i>Rejected</span>
           {% elif complaint.status == 'Under Inspection' %}
             <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="fa-solid fa-clipboard-check me-1"></i>Under Inspection</span>
           {% elif complaint.status == 'Action Required' %}
@@ -79,6 +81,17 @@
         </div>
 
         <!-- ROLE ACTION CARDS -->
+
+        {% if complaint.status == 'Rejected' %}
+        <div class="alert alert-danger rounded-4 p-4 mb-4 shadow-sm">
+          <h6 class="fw-bold mb-2"><i class="fa-solid fa-circle-xmark me-2"></i>Assignment Rejected — Administrator Action Required</h6>
+          {% if complaint.rejection_reason %}
+            <p class="mb-0 small" style="white-space: pre-line;"><strong>Reason:</strong> {{ complaint.rejection_reason }}</p>
+          {% else %}
+            <p class="mb-0 small">The assigned Maintenance Staff member rejected this request. Please assign a new staff member below.</p>
+          {% endif %}
+        </div>
+        {% endif %}
 
         <!-- 1. ADMIN ACTIONS: STAFF ASSIGNMENT / REASSIGNMENT -->
         {% if is_admin %}
@@ -218,6 +231,20 @@
             {% elif complaint.status == 'Accepted' %}
               <div class="alert alert-success rounded-3 p-3 mb-3">
                 <span class="small fw-semibold"><i class="fa-solid fa-circle-check me-1"></i>{% if is_assignee %}You have <strong>Accepted</strong> this assignment.{% else %}This assignment has been <strong>Accepted</strong> by {{ complaint.assigned_to.name|default:complaint.assigned_to.username }}.{% endif %}</span>
+              </div>
+            {% endif %}
+
+            {% if is_assignee and complaint.status == 'Assigned' or is_assignee and complaint.status == 'Accepted' %}
+              <div class="border rounded-3 p-3 mb-3 bg-light">
+                <h6 class="fw-bold text-danger mb-2"><i class="fa-solid fa-circle-xmark me-1"></i>Reject Assignment</h6>
+                <form action="{% url 'complaints:reject' complaint.complaint_id %}" method="post">
+                  {% csrf_token %}
+                  <label class="form-label small fw-semibold" for="id_reject_reason">Rejection Reason <span class="text-danger">*</span></label>
+                  <textarea name="reason" id="id_reject_reason" class="form-control mb-2" rows="3" placeholder="Provide a clear reason for rejecting this assignment..." required></textarea>
+                  <button type="submit" class="btn btn-outline-danger w-100 fw-semibold">
+                    <i class="fa-solid fa-circle-xmark me-1"></i> Reject Assignment
+                  </button>
+                </form>
               </div>
             {% endif %}
 
