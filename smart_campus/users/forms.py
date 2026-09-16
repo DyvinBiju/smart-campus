@@ -40,7 +40,7 @@ class UserAdminCreationForm(admin_forms.AdminUserCreationForm):
 
     class Meta(admin_forms.UserCreationForm.Meta):
         model = User
-        fields = ("username", "name", "email", "role", "department", "phone_number", "campus_id", "year_or_semester")
+        fields = ("username", "name", "email", "role", "specialization", "department", "phone_number", "campus_id", "year_or_semester")
         error_messages = {
             "username": {"unique": _("This username has already been taken.")},
         }
@@ -178,6 +178,13 @@ class MaintenanceStaffCreationForm(forms.Form):
         required=True,
         widget=forms.TextInput(attrs={"placeholder": _("e.g. Robert Taylor"), "class": "form-control"}),
     )
+    specialization = forms.ChoiceField(
+        label=_("Specialization"),
+        choices=User.Specialization.choices,
+        initial=User.Specialization.OTHER,
+        required=True,
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
     campus_id = forms.CharField(
         label=_("Staff ID"),
         max_length=50,
@@ -232,6 +239,7 @@ class MaintenanceStaffCreationForm(forms.Form):
             email=email,
             name=self.cleaned_data["name"].strip(),
             role=User.Role.MAINTENANCE,
+            specialization=self.cleaned_data.get("specialization", User.Specialization.OTHER),
             department=self.cleaned_data.get("department", "").strip(),
             campus_id=campus_id,
             is_staff=True,
@@ -354,6 +362,13 @@ class UserManagementCreateForm(forms.Form):
         initial=User.Role.STUDENT,
         widget=forms.Select(attrs={"class": "form-select"}),
     )
+    specialization = forms.ChoiceField(
+        label=_("Specialization"),
+        choices=User.Specialization.choices,
+        initial=User.Specialization.OTHER,
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
     campus_id = forms.CharField(
         label=_("Campus / Employee / Roll ID"),
         max_length=50,
@@ -424,6 +439,7 @@ class UserManagementCreateForm(forms.Form):
             email=email,
             name=self.cleaned_data["name"].strip(),
             role=role,
+            specialization=self.cleaned_data.get("specialization", User.Specialization.OTHER) or User.Specialization.OTHER,
             department=self.cleaned_data.get("department", "").strip(),
             campus_id=campus_id,
             year_or_semester=self.cleaned_data.get("year_or_semester", "").strip(),
@@ -446,6 +462,7 @@ class UserManagementEditForm(forms.ModelForm):
             "name",
             "email",
             "role",
+            "specialization",
             "department",
             "campus_id",
             "year_or_semester",
@@ -457,6 +474,7 @@ class UserManagementEditForm(forms.ModelForm):
             "name": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "role": forms.Select(attrs={"class": "form-select"}),
+            "specialization": forms.Select(attrs={"class": "form-select"}),
             "department": forms.TextInput(attrs={"class": "form-control"}),
             "campus_id": forms.TextInput(attrs={"class": "form-control"}),
             "year_or_semester": forms.TextInput(attrs={"class": "form-control"}),

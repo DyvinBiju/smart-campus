@@ -77,6 +77,19 @@
               </div>
             </div>
 
+            {% if form.specialization %}
+            <div class="mb-3">
+              <label for="{{ form.specialization.id_for_label }}" class="form-label fw-semibold text-dark">
+                Specialization (Maintenance Staff)
+              </label>
+              {{ form.specialization }}
+              {% if form.specialization.errors %}
+                <div class="text-danger small mt-1">{{ form.specialization.errors.0 }}</div>
+              {% endif %}
+              <div class="form-text small">Used for specialization-first complaint assignment.</div>
+            </div>
+            {% endif %}
+
             <div class="row g-3 mb-3">
               <div class="col-12 col-md-6">
                 <label for="{{ form.department.id_for_label }}" class="form-label fw-semibold text-dark">

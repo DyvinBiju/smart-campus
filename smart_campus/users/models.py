@@ -15,6 +15,14 @@ class User(AbstractUser):
         MAINTENANCE = "MAINTENANCE", _("Maintenance Staff")
         ADMIN = "ADMIN", _("Administrator")
 
+    class Specialization(models.TextChoices):
+        ELECTRICAL = "Electrical", _("Electrical")
+        PLUMBING = "Plumbing", _("Plumbing")
+        FURNITURE = "Furniture", _("Furniture")
+        CLEANLINESS = "Cleanliness", _("Cleanliness")
+        IT_NETWORK = "IT / Network", _("IT / Network")
+        OTHER = "Other", _("Other")
+
     # First and last name do not cover name patterns around the globe
     name = models.CharField(_("Name of User"), blank=True, max_length=255)
     role = models.CharField(
@@ -42,6 +50,14 @@ class User(AbstractUser):
         _("Available for Assignment"),
         default=True,
         help_text=_("Designates whether maintenance staff is available for new assignments."),
+    )
+    specialization = models.CharField(
+        _("Specialization"),
+        max_length=50,
+        choices=Specialization.choices,
+        default=Specialization.OTHER,
+        blank=True,
+        help_text=_("Maintenance specialization used for specialization-first staff assignment."),
     )
 
     first_name = None  # type: ignore[assignment]

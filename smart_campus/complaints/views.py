@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -201,8 +202,27 @@ def admin_complaint_manage(request):
 
 
 @login_required
+def staff_by_specialization(request):
+    """JSON endpoint for specialization-first assignment: only staff of the given specialization."""
+    user = request.user
+    if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
+        raise PermissionDenied("Only Administrators can assign staff.")
+    specialization = (request.GET.get("specialization") or "").strip()
+    valid = {choice[0] for choice in User.Specialization.choices}
+    if specialization not in valid:
+        return JsonResponse({"staff": []})
+    qs = (
+        User.objects.filter(Q(role=User.Role.MAINTENANCE) | Q(is_staff=True))
+        .filter(is_available=True, specialization=specialization)
+        .order_by("name", "username")
+        .values("id", "username", "name", "specialization")
+    )
+    return JsonResponse({"staff": list(qs)})
+
+
+@login_required
 def admin_assign_staff(request, complaint_id):
-    """Administrator assigns an available Maintenance Staff member."""
+    """Administrator assigns an available Maintenance Staff member (specialization-first)."""
     user = request.user
     if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
         raise PermissionDenied("Only Administrators can assign staff.")
@@ -226,6 +246,10 @@ def admin_assign_staff(request, complaint_id):
 
             messages.success(request, f"Assigned Maintenance Staff member {staff_name} to complaint {complaint.complaint_id}.")
             return redirect("complaints:detail", complaint_id=complaint.complaint_id)
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}" if field != "__all__" else str(error))
     return redirect("complaints:detail", complaint_id=complaint.complaint_id)
 
 

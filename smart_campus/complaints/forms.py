@@ -111,6 +111,19 @@ class ComplaintForm(forms.ModelForm):
 
 
 class ComplaintAssignForm(forms.ModelForm):
+    specialization = forms.ChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.Select(
+            attrs={
+                "class": "form-select",
+                "id": "id_specialization",
+                "required": True,
+            }
+        ),
+        label="Specialization",
+    )
+
     class Meta:
         model = Complaint
         fields = ["assigned_to"]
@@ -119,18 +132,81 @@ class ComplaintAssignForm(forms.ModelForm):
                 attrs={
                     "class": "form-select",
                     "required": True,
+                    "id": "id_assigned_to",
                 }
             ),
         }
 
     def __init__(self, *args, **kwargs):
+        specialization = kwargs.pop("specialization", None)
         super().__init__(*args, **kwargs)
+        # Reuse the single source of truth: User.Specialization choices.
+        self.fields["specialization"].choices = [("", "-- Select Specialization --")] + list(
+            User.Specialization.choices
+        )
         self.fields["assigned_to"].empty_label = "-- Select Available Staff Member --"
-        # Prefer Maintenance Staff members marked as available
-        staff_qs = User.objects.filter(
+        base_qs = User.objects.filter(
             Q(role=User.Role.MAINTENANCE) | Q(is_staff=True)
         ).filter(is_available=True)
-        self.fields["assigned_to"].queryset = staff_qs
+        # Determine selected specialization from explicit kwarg, bound data, or instance.
+        selected = specialization
+        if selected is None and self.data.get("specialization"):
+            selected = self.data.get("specialization")
+        if selected is None and self.is_bound is False and getattr(self.instance, "assigned_to", None):
+            try:
+                selected = self.instance.assigned_to.specialization
+            except Exception:
+                selected = None
+        if selected:
+            self.fields["specialization"].initial = selected
+            self.fields["assigned_to"].queryset = base_qs.filter(specialization=selected)
+        else:
+            # No specialization chosen yet: show no staff so admin must select it first.
+            # Keep full list available via AJAX endpoint; initial render stays empty to
+            # enforce the specialization-first step (progressive enhancement via JS).
+            if self.is_bound:
+                # Bound without specialization (legacy posts): fall back to all
+                # available staff so old clients keep working; clean() still validates.
+                self.fields["assigned_to"].queryset = base_qs
+            else:
+                self.fields["assigned_to"].queryset = base_qs.none()
+        # Stash base queryset for clean() so tampered specializations can't widen scope.
+        self._assignable_base_qs = base_qs
+
+    def clean_specialization(self):
+        spec = (self.cleaned_data.get("specialization") or "").strip()
+        if not spec:
+            # Required in UI (HTML required attr); allow blank server-side for
+            # backward compatibility with legacy posts that only send assigned_to.
+            return spec
+        valid = {choice[0] for choice in User.Specialization.choices}
+        if spec not in valid:
+            raise forms.ValidationError("Select a valid specialization.")
+        return spec
+
+    def clean_assigned_to(self):
+        staff = self.cleaned_data.get("assigned_to")
+        if staff is None:
+            return staff
+        if not (staff.role == User.Role.MAINTENANCE or staff.is_staff):
+            raise forms.ValidationError("Assigned user must be a Maintenance Staff member.")
+        if not staff.is_available:
+            raise forms.ValidationError("Selected staff member is not available for assignment.")
+        return staff
+
+    def clean(self):
+        cleaned_data = super().clean()
+        staff = cleaned_data.get("assigned_to")
+        spec = (cleaned_data.get("specialization") or "").strip()
+        if staff is not None and spec:
+            staff_spec = (staff.specialization or "").strip()
+            if staff_spec != spec:
+                self.add_error(
+                    "assigned_to",
+                    f"Selected staff member belongs to '{staff_spec or 'Unspecified'}', "
+                    f"not '{spec}'. Please choose staff from the selected specialization.",
+                )
+        return cleaned_data
 
 
 class MaintenanceInspectionForm(forms.ModelForm):

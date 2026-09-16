@@ -8,6 +8,7 @@ urlpatterns = [
     path("create/", views.complaint_create, name="create"),
     path("assigned/", views.assigned_complaints, name="assigned"),
     path("admin-manage/", views.admin_complaint_manage, name="admin_manage"),
+    path("staff-by-specialization/", views.staff_by_specialization, name="staff_by_specialization"),
     path("requests/<int:request_id>/decide/", views.admin_request_decide, name="request_decide"),
     path("<str:complaint_id>/", views.complaint_detail, name="detail"),
     path("<str:complaint_id>/assign/", views.admin_assign_staff, name="assign_staff"),

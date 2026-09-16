@@ -104,7 +104,10 @@
                   </div>
                 </td>
                 <td class="fw-semibold text-dark">{{ u.campus_id|default:"STF-001" }}</td>
-                <td>{{ u.department|default:"General Maintenance" }}</td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ u.get_specialization_display|default:"Other" }}</span>
+                  <div class="small text-muted">{{ u.department|default:"General Maintenance" }}</div>
+                </td>
                 <td>
                   {% if u.is_available %}
                     <span class="badge bg-success text-white rounded-pill px-3 py-2">

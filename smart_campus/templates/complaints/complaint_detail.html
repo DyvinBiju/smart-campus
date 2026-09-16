@@ -83,14 +83,25 @@
         <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-warning">
           <div class="card-body p-4">
             <h5 class="fw-bold mb-3"><i class="fa-solid fa-user-gear text-warning me-2"></i>Administrator Action: Assign Maintenance Staff</h5>
-            <form action="{% url 'complaints:assign_staff' complaint.complaint_id %}" method="post">
+            <form action="{% url 'complaints:assign_staff' complaint.complaint_id %}" method="post" id="assign-staff-form">
               {% csrf_token %}
               <div class="row g-3 align-items-end">
-                <div class="col-md-8">
-                  <label class="form-label small fw-semibold text-muted">Select Available Maintenance Staff Member</label>
-                  {{ assign_form.assigned_to }}
-                </div>
                 <div class="col-md-4">
+                  <label class="form-label small fw-semibold text-muted" for="id_specialization">Select Staff Specialization</label>
+                  {{ assign_form.specialization }}
+                  {% if assign_form.specialization.errors %}
+                    <div class="text-danger small mt-1">{{ assign_form.specialization.errors.0 }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label small fw-semibold text-muted" for="id_assigned_to">Select Available Maintenance Staff Member</label>
+                  {{ assign_form.assigned_to }}
+                  {% if assign_form.assigned_to.errors %}
+                    <div class="text-danger small mt-1">{{ assign_form.assigned_to.errors.0 }}</div>
+                  {% endif %}
+                  <div class="form-text small" id="assign-staff-hint">First select a specialization to load matching staff.</div>
+                </div>
+                <div class="col-md-3">
                   <button type="submit" class="btn btn-warning w-100 fw-semibold text-dark">
                     <i class="fa-solid fa-user-check me-1"></i> Assign Staff
                   </button>
@@ -99,6 +110,71 @@
             </form>
           </div>
         </div>
+        <script>
+          (function () {
+            var specSelect = document.getElementById("id_specialization");
+            var staffSelect = document.getElementById("id_assigned_to");
+            var hint = document.getElementById("assign-staff-hint");
+            if (!specSelect || !staffSelect) return;
+            // Snapshot all rendered options for client-side filtering fallback.
+            var allOptions = Array.prototype.slice.call(staffSelect.options).map(function (opt) {
+              return { value: opt.value, text: opt.text, spec: opt.getAttribute("data-specialization") || "" };
+            });
+            function setStaffOptions(list, selectedSpec) {
+              staffSelect.innerHTML = "";
+              var placeholder = document.createElement("option");
+              placeholder.value = "";
+              placeholder.textContent = list.length ? "-- Select Available Staff Member --" : "-- No staff in this specialization --";
+              staffSelect.appendChild(placeholder);
+              list.forEach(function (item) {
+                var opt = document.createElement("option");
+                opt.value = item.value || item.id;
+                var label = item.text || ((item.name ? item.name + " (" + item.username + ")" : item.username) || "");
+                opt.textContent = label;
+                opt.setAttribute("data-specialization", item.spec || item.specialization || selectedSpec || "");
+                staffSelect.appendChild(opt);
+              });
+              staffSelect.disabled = !selectedSpec;
+              if (hint) {
+                hint.textContent = !selectedSpec
+                  ? "First select a specialization to load matching staff."
+                  : (list.length ? "Showing only staff from the selected specialization." : "No available staff in this specialization.");
+              }
+            }
+            function filterLocal(selectedSpec) {
+              if (!selectedSpec) { setStaffOptions([], ""); return; }
+              var filtered = allOptions.filter(function (o) { return !o.value || o.spec === selectedSpec; });
+              // Drop the generic placeholder from the snapshot; setStaffOptions re-adds it.
+              filtered = filtered.filter(function (o) { return o.value; });
+              setStaffOptions(filtered, selectedSpec);
+            }
+            async function loadFromServer(selectedSpec) {
+              try {
+                var url = "{% url 'complaints:staff_by_specialization' %}?specialization=" + encodeURIComponent(selectedSpec);
+                var resp = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                if (!resp.ok) throw new Error("bad response");
+                var data = await resp.json();
+                var list = (data.staff || []).map(function (s) {
+                  return { id: s.id, text: (s.name ? s.name + " (" + s.username + ")" : s.username), specialization: s.specialization };
+                });
+                setStaffOptions(list, selectedSpec);
+              } catch (e) {
+                filterLocal(selectedSpec);
+              }
+            }
+            specSelect.addEventListener("change", function () {
+              var selectedSpec = specSelect.value;
+              if (!selectedSpec) { setStaffOptions([], ""); return; }
+              loadFromServer(selectedSpec);
+            });
+            // Initial state: staff disabled until a specialization is chosen.
+            if (!specSelect.value) {
+              staffSelect.disabled = true;
+            } else {
+              loadFromServer(specSelect.value);
+            }
+          })();
+        </script>
         {% endif %}
 
         <!-- 2. MAINTENANCE STAFF ACTIONS -->
