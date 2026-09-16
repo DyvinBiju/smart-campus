@@ -265,7 +265,7 @@ def assigned_complaints(request):
 def admin_complaint_manage(request):
     """Administrator management hub showing unassigned complaints & pending requests."""
     user = request.user
-    if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
+    if not user.is_admin_user:
         raise PermissionDenied("Only Administrators can access complaint management.")
 
     unassigned_complaints = Complaint.objects.select_related("user", "asset").filter(assigned_to__isnull=True)
@@ -290,7 +290,7 @@ def admin_complaint_manage(request):
 def staff_by_specialization(request):
     """JSON endpoint for specialization-first assignment: only staff of the given specialization."""
     user = request.user
-    if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
+    if not user.is_admin_user:
         raise PermissionDenied("Only Administrators can assign staff.")
     specialization = (request.GET.get("specialization") or "").strip()
     valid = {choice[0] for choice in User.Specialization.choices}
@@ -621,7 +621,7 @@ def maintenance_request_action(request, complaint_id):
 def admin_request_decide(request, request_id):
     """Administrator reviews and decides on pending maintenance resource/asset requests."""
     user = request.user
-    if not (user.is_superuser or user.role == User.Role.ADMIN or user.is_staff):
+    if not user.is_admin_user:
         raise PermissionDenied("Only Administrators can decide on maintenance requests.")
 
     req = get_object_or_404(MaintenanceRequest.objects.select_related("complaint", "inventory_item", "requested_by"), pk=request_id)
