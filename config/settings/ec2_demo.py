@@ -15,6 +15,9 @@ CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 # HTTP-only demo overrides. Secure cookies cannot be set over plain HTTP.
 SECURE_SSL_REDIRECT = False
+# No reverse proxy sits in front of Gunicorn here, so do not trust
+# client-supplied X-Forwarded-Proto headers.
+SECURE_PROXY_SSL_HEADER = None
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "sessionid"
