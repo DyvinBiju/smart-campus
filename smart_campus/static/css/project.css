@@ -87,8 +87,9 @@
    layout on small and in-between window sizes without changing behaviour.
    ========================================================================== */
 
-/* Never allow the page to scroll sideways on small screens */
-html,
+/* Never allow the page to scroll sideways on small screens.
+   Keep this on body only: applying it to <html> would make <body> the
+   scroll container and break window-scroll based effects (e.g. WOW). */
 body {
   overflow-x: hidden;
 }
@@ -162,6 +163,16 @@ iframe {
     background-color: #eef2ff;
   }
 
+  /* The theme positions the hero illustration absolutely (bottom right),
+     which makes it overlap the text once the columns stack. Put it back
+     in normal flow below the text instead. */
+  .hero-text-img {
+    position: static !important;
+    right: auto;
+    bottom: auto;
+    margin-top: 1.5rem;
+  }
+
   .hero-home .hero-text h1 {
     padding-top: 8px;
     font-size: clamp(2rem, 7vw, 3rem);
@@ -170,10 +181,6 @@ iframe {
 
   .hero-home .hero-text p {
     max-width: none;
-  }
-
-  .hero-home .hero-text-img {
-    margin-top: 0.5rem;
   }
 }
 
