@@ -56,6 +56,11 @@
          {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
          {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}
          {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %}
+         {% if attrs.pattern %}pattern="{{ attrs.pattern }}"{% endif %}
+         {% if attrs.minlength %}minlength="{{ attrs.minlength }}"{% endif %}
+         {% if attrs.maxlength %}maxlength="{{ attrs.maxlength }}"{% endif %}
+         {% if attrs.inputmode %}inputmode="{{ attrs.inputmode }}"{% endif %}
+         {% if attrs.title %}title="{{ attrs.title }}"{% endif %}
          value="{{ attrs.value|default_if_none:"" }}"
          type="{{ attrs.type }}"
          class="form-control" />

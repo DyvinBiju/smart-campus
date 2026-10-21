@@ -283,4 +283,49 @@ class TestEmailAndRequiredTextValidation:
         assert "campus_id" in form.errors
 
 
+class TestClientSideValidationAttributes:
+    def test_student_signup_widgets_carry_html_constraints(self):
+        form = StudentSignupForm()
+        email_attrs = form.fields["email"].widget.attrs
+        phone_attrs = form.fields["phone_number"].widget.attrs
+        password_attrs = form.fields["password1"].widget.attrs
+
+        assert email_attrs["pattern"] == r"[^@\s]+@[^@\s]+\.[A-Za-z]{2,}"
+        assert phone_attrs["pattern"] == "[0-9]{10}"
+        assert phone_attrs["minlength"] == "10"
+        assert phone_attrs["maxlength"] == "10"
+        assert password_attrs["minlength"] == "8"
+
+    def test_management_create_widgets_carry_html_constraints(self):
+        form = UserManagementCreateForm()
+        assert form.fields["email"].widget.attrs["pattern"]
+        assert form.fields["password1"].widget.attrs["minlength"] == "8"
+
+    def test_admin_create_form_phone_rule(self, db):
+        form = UserAdminCreationForm(
+            {
+                "username": "adminphone",
+                "email": "admin.phone@campus.edu",
+                "phone_number": "12345",
+                "password1": "SecureP@ssword123!",
+                "password2": "SecureP@ssword123!",
+            }
+        )
+        assert not form.is_valid()
+        assert "phone_number" in form.errors
+
+    def test_admin_create_form_rejects_email_without_domain_dot(self, db):
+        form = UserAdminCreationForm(
+            {
+                "username": "adminmail",
+                "email": "admin@campus",
+                "phone_number": "9876543210",
+                "password1": "SecureP@ssword123!",
+                "password2": "SecureP@ssword123!",
+            }
+        )
+        assert not form.is_valid()
+        assert "email" in form.errors
+
+
 

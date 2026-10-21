@@ -24,7 +24,7 @@
           <span class="badge bg-light text-primary border">{{ profile_user.get_role_display }}</span>
         </div>
         <div class="dash-card-body p-4">
-          <form method="post" novalidate>
+          <form method="post">
             {% csrf_token %}
             {% if form.non_field_errors %}
               <div class="alert alert-danger">{{ form.non_field_errors }}</div>

@@ -54,14 +54,45 @@ def _validate_password_pair(form, password1, password2):
                 form.add_error("password1", exc)
 
 
+_EMAIL_RE = re.compile(r"[^@\s]+@[^@\s]+\.[A-Za-z]{2,}")
+
+EMAIL_WIDGET_ATTRS = {
+    "class": "form-control",
+    "autocomplete": "email",
+    "inputmode": "email",
+    "pattern": r"[^@\s]+@[^@\s]+\.[A-Za-z]{2,}",
+    "title": _("Enter a valid email address, e.g. name@example.com"),
+}
+
+PASSWORD_WIDGET_ATTRS = {
+    "class": "form-control",
+    "autocomplete": "new-password",
+    "minlength": "8",
+    "title": _("Use at least 8 characters."),
+}
+
 PHONE_WIDGET_ATTRS = {
     "placeholder": _("e.g. 9876543210"),
     "class": "form-control",
     "inputmode": "numeric",
     "pattern": "[0-9]{10}",
+    "minlength": "10",
     "maxlength": "10",
     "autocomplete": "off",
+    "title": _("Enter a 10-digit phone number containing numbers only"),
 }
+
+
+def _clean_email(value):
+    """Normalise an email and require a full address (localpart@domain.tld)."""
+    email = (value or "").strip().lower()
+    if not email:
+        raise ValidationError(_("Email cannot be blank."))
+    if not _EMAIL_RE.fullmatch(email):
+        raise ValidationError(
+            _("Enter a valid email address, e.g. name@example.com.")
+        )
+    return email
 
 
 class UserAdminChangeForm(admin_forms.UserChangeForm):
@@ -86,6 +117,22 @@ class UserAdminCreationForm(admin_forms.AdminUserCreationForm):
         if "role" in self.fields:
             self.fields["role"].required = False
             self.fields["role"].initial = User.Role.STUDENT
+        if "email" in self.fields:
+            self.fields["email"].widget.attrs.update(EMAIL_WIDGET_ATTRS)
+        if "phone_number" in self.fields:
+            self.fields["phone_number"].widget.attrs.update(PHONE_WIDGET_ATTRS)
+        for name in ("password1", "password2"):
+            if name in self.fields:
+                self.fields[name].widget.attrs.update(
+                    {"minlength": "8", "autocomplete": "new-password"}
+                )
+
+    def clean_email(self):
+        value = self.cleaned_data.get("email")
+        return _clean_email(value) if value else value
+
+    def clean_phone_number(self):
+        return _clean_phone_number(self.cleaned_data.get("phone_number"))
 
 
 def _generate_unique_username(email: str, campus_id: str) -> str:
@@ -120,7 +167,7 @@ class StudentSignupForm(forms.Form):
     email = forms.EmailField(
         label=_("College Email"),
         required=True,
-        widget=forms.EmailInput(attrs={"placeholder": _("e.g. student@campus.edu"), "class": "form-control"}),
+        widget=forms.EmailInput(attrs={**EMAIL_WIDGET_ATTRS, "placeholder": _("e.g. student@campus.edu")}),
     )
     department = forms.CharField(
         label=_("Department / Major"),
@@ -142,11 +189,11 @@ class StudentSignupForm(forms.Form):
     )
     password1 = forms.CharField(
         label=_("Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Enter secure password"), "class": "form-control", "autocomplete": "new-password"}),
+        widget=forms.PasswordInput(attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Enter secure password")}),
     )
     password2 = forms.CharField(
         label=_("Confirm Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm your password"), "class": "form-control", "autocomplete": "new-password"}),
+        widget=forms.PasswordInput(attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Confirm your password")}),
     )
 
     def clean_name(self):
@@ -156,7 +203,7 @@ class StudentSignupForm(forms.Form):
         return _clean_required_text(self.cleaned_data.get("campus_id"), "Student ID", 50)
 
     def clean_email(self):
-        email = self.cleaned_data["email"].strip().lower()
+        email = _clean_email(self.cleaned_data.get("email"))
         if User.objects.filter(email__iexact=email).exists():
             raise ValidationError(_("An account with this email already exists."))
         return email
@@ -218,7 +265,7 @@ class MaintenanceStaffCreationForm(forms.Form):
     email = forms.EmailField(
         label=_("Staff Email"),
         required=True,
-        widget=forms.EmailInput(attrs={"placeholder": _("e.g. staff.robert@campus.edu"), "class": "form-control"}),
+        widget=forms.EmailInput(attrs={**EMAIL_WIDGET_ATTRS, "placeholder": _("e.g. staff.robert@campus.edu")}),
     )
     department = forms.CharField(
         label=_("Department / Area"),
@@ -226,13 +273,19 @@ class MaintenanceStaffCreationForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={"placeholder": _("e.g. Electrical Maintenance & HVAC"), "class": "form-control"}),
     )
+    phone_number = forms.CharField(
+        label=_("Phone Number"),
+        max_length=10,
+        required=False,
+        widget=forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
+    )
     password1 = forms.CharField(
         label=_("Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Set initial password"), "class": "form-control", "autocomplete": "new-password"}),
+        widget=forms.PasswordInput(attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Set initial password")}),
     )
     password2 = forms.CharField(
         label=_("Confirm Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm initial password"), "class": "form-control", "autocomplete": "new-password"}),
+        widget=forms.PasswordInput(attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Confirm initial password")}),
     )
 
     def clean_name(self):
@@ -242,10 +295,13 @@ class MaintenanceStaffCreationForm(forms.Form):
         return _clean_required_text(self.cleaned_data.get("campus_id"), "Staff ID", 50)
 
     def clean_email(self):
-        email = self.cleaned_data["email"].strip().lower()
+        email = _clean_email(self.cleaned_data.get("email"))
         if User.objects.filter(email__iexact=email).exists():
             raise ValidationError(_("An account with this email already exists."))
         return email
+
+    def clean_phone_number(self):
+        return _clean_phone_number(self.cleaned_data.get("phone_number"))
 
     def clean(self):
         cleaned_data = super().clean()
@@ -267,6 +323,7 @@ class MaintenanceStaffCreationForm(forms.Form):
             specialization=self.cleaned_data.get("specialization", User.Specialization.OTHER),
             department=self.cleaned_data.get("department", "").strip(),
             campus_id=campus_id,
+            phone_number=self.cleaned_data.get("phone_number", "").strip(),
             is_staff=True,
         )
         user.set_password(self.cleaned_data["password1"])
@@ -309,6 +366,14 @@ class UserSignupForm(SignupForm):
         required=False,
         widget=forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "email" in self.fields:
+            self.fields["email"].widget.attrs.update(EMAIL_WIDGET_ATTRS)
+        for name in ("password1", "password2"):
+            if name in self.fields:
+                self.fields[name].widget.attrs.update(PASSWORD_WIDGET_ATTRS)
 
     def clean_name(self):
         return _clean_required_text(self.cleaned_data.get("name"), "Full name", 255)
@@ -360,6 +425,11 @@ class UserSocialSignupForm(SocialSignupForm):
         widget=forms.TextInput(attrs=dict(PHONE_WIDGET_ATTRS)),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "email" in self.fields:
+            self.fields["email"].widget.attrs.update(EMAIL_WIDGET_ATTRS)
+
     def clean_phone_number(self):
         return _clean_phone_number(self.cleaned_data.get("phone_number"))
 
@@ -389,7 +459,7 @@ class UserManagementCreateForm(forms.Form):
     email = forms.EmailField(
         label=_("Email Address"),
         required=True,
-        widget=forms.EmailInput(attrs={"placeholder": _("e.g. user@campus.edu"), "class": "form-control"}),
+        widget=forms.EmailInput(attrs={**EMAIL_WIDGET_ATTRS, "placeholder": _("e.g. user@campus.edu")}),
     )
     role = forms.ChoiceField(
         label=_("Campus Role"),
@@ -430,18 +500,18 @@ class UserManagementCreateForm(forms.Form):
     )
     password1 = forms.CharField(
         label=_("Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Enter password"), "class": "form-control", "autocomplete": "new-password"}),
+        widget=forms.PasswordInput(attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Enter password")}),
     )
     password2 = forms.CharField(
         label=_("Confirm Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm password"), "class": "form-control", "autocomplete": "new-password"}),
+        widget=forms.PasswordInput(attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Confirm password")}),
     )
 
     def clean_name(self):
         return _clean_required_text(self.cleaned_data.get("name"), "Full name", 255)
 
     def clean_email(self):
-        email = self.cleaned_data["email"].strip().lower()
+        email = _clean_email(self.cleaned_data.get("email"))
         if User.objects.filter(email__iexact=email).exists():
             raise ValidationError(_("An account with this email already exists."))
         return email
@@ -503,7 +573,7 @@ class UserManagementEditForm(forms.ModelForm):
         ]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
-            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs=dict(EMAIL_WIDGET_ATTRS)),
             "role": forms.Select(attrs={"class": "form-select"}),
             "specialization": forms.Select(attrs={"class": "form-select"}),
             "department": forms.TextInput(attrs={"class": "form-control"}),
@@ -518,7 +588,8 @@ class UserManagementEditForm(forms.ModelForm):
         return _clean_required_text(self.cleaned_data.get("name"), "Full name", 255)
 
     def clean_email(self):
-        email = self.cleaned_data["email"].strip().lower()
+        value = self.cleaned_data.get("email")
+        email = _clean_email(value) if value else value
         qs = User.objects.filter(email__iexact=email)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
@@ -545,7 +616,7 @@ class SelfProfileForm(forms.ModelForm):
         ]
         widgets = {
             "name": forms.TextInput(attrs={"class": "form-control"}),
-            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs=dict(EMAIL_WIDGET_ATTRS)),
             "department": forms.TextInput(attrs={"class": "form-control"}),
             "campus_id": forms.TextInput(attrs={"class": "form-control"}),
             "year_or_semester": forms.TextInput(attrs={"class": "form-control"}),
@@ -556,7 +627,8 @@ class SelfProfileForm(forms.ModelForm):
         return _clean_required_text(self.cleaned_data.get("name"), "Full name", 255)
 
     def clean_email(self):
-        email = self.cleaned_data["email"].strip().lower()
+        value = self.cleaned_data.get("email")
+        email = _clean_email(value) if value else value
         if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
             raise ValidationError(_("Another user with this email address already exists."))
         return email
