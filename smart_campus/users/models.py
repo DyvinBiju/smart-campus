@@ -1,5 +1,11 @@
+import hashlib
+import hmac
+import secrets
+from datetime import timedelta
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -90,5 +96,62 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.name or self.username
+
+
+class PasswordResetCode(models.Model):
+    """Short-lived, single-use code issued by an administrator for password resets."""
+
+    CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    CODE_LENGTH = 8
+    VALIDITY_MINUTES = 15
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="password_reset_codes",
+    )
+    code_hash = models.CharField(_("Code Hash"), max_length=64)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    expires_at = models.DateTimeField(_("Expires At"))
+    used_at = models.DateTimeField(_("Used At"), null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Reset code for {self.user.username}"
+
+    @staticmethod
+    def hash_code(code: str) -> str:
+        return hashlib.sha256(code.strip().upper().encode()).hexdigest()
+
+    @classmethod
+    def issue_for(cls, user: "User") -> tuple["PasswordResetCode", str]:
+        """Invalidate older codes, create a new one, and return (record, plaintext)."""
+        code = "".join(secrets.choice(cls.CODE_ALPHABET) for _ in range(cls.CODE_LENGTH))
+        cls.objects.filter(user=user, used_at__isnull=True).update(
+            used_at=timezone.now()
+        )
+        record = cls.objects.create(
+            user=user,
+            code_hash=cls.hash_code(code),
+            expires_at=timezone.now() + timedelta(minutes=cls.VALIDITY_MINUTES),
+        )
+        return record, code
+
+    @property
+    def is_expired(self) -> bool:
+        return timezone.now() >= self.expires_at
+
+    @property
+    def is_usable(self) -> bool:
+        return self.used_at is None and not self.is_expired
+
+    def matches(self, code: str) -> bool:
+        return hmac.compare_digest(self.code_hash, self.hash_code(code))
+
+    def mark_used(self) -> None:
+        self.used_at = timezone.now()
+        self.save(update_fields=["used_at"])
 
 

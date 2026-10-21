@@ -47,11 +47,7 @@
   <div class="mb-3">
     <div class="d-flex justify-content-between align-items-center mb-1">
       <label for="id_password" class="form-label fw-semibold small text-dark mb-0">{% trans "Password" %}</label>
-      {% if url_reset_password %}
-        <a href="{{ url_reset_password }}" class="small text-decoration-none text-primary">{% trans "Forgot password?" %}</a>
-      {% elif url_password_reset %}
-        <a href="{{ url_password_reset }}" class="small text-decoration-none text-primary">{% trans "Forgot password?" %}</a>
-      {% endif %}
+      <a href="{% url 'demo_password_reset' %}" class="small text-decoration-none text-primary">{% trans "Forgot password?" %}</a>
     </div>
     <div class="input-group">
       <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>

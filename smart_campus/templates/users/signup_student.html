@@ -81,6 +81,9 @@
               {% trans "Already have an account?" %}
               <a href="{% url 'account_login' %}" class="fw-semibold text-primary">{% trans "Sign In" %}</a>
             </p>
+            <p class="text-muted small mb-0 mt-1">
+              <a href="{% url 'demo_password_reset' %}" class="text-decoration-none">{% trans "Forgot your password?" %}</a>
+            </p>
           </div>
         </div>
       </div>

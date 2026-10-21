@@ -24,6 +24,14 @@
       </div>
     </div>
     <div class="d-flex gap-2">
+      {% if not managed_user.is_admin_user %}
+        <form method="post" action="{% url 'users:issue_reset_code' managed_user.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-warning px-3">
+            <i class="fa-solid fa-key me-2"></i>Issue Reset Code
+          </button>
+        </form>
+      {% endif %}
       <a href="{% url 'users:edit' managed_user.pk %}" class="btn btn-outline-primary px-3">
         <i class="fa-solid fa-user-pen me-2"></i>Edit Profile
       </a>

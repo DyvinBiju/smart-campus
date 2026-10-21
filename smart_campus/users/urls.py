@@ -9,6 +9,7 @@ urlpatterns = [
     # User Management Console Routes
     path("manage/", view=views.UserManagementListView.as_view(), name="manage"),
     path("create/", view=views.UserManagementCreateView.as_view(), name="create"),
+    path("<int:pk>/reset-code/", view=views.IssuePasswordResetCodeView.as_view(), name="issue_reset_code"),
     path("<int:pk>/", view=views.UserManagementDetailView.as_view(), name="detail"),
     path("<int:pk>/edit/", view=views.UserManagementEditView.as_view(), name="edit"),
     path("<int:pk>/toggle-active/", view=views.UserManagementToggleActiveView.as_view(), name="toggle_active"),

@@ -4,10 +4,13 @@ from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from django import forms
 from django.contrib.auth import forms as admin_forms
 from django.contrib.auth.password_validation import validate_password
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.db.models import Q
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from .models import User
+from .models import PasswordResetCode, User
 
 
 def _clean_required_text(value, field_label, max_length=None):
@@ -635,6 +638,133 @@ class SelfProfileForm(forms.ModelForm):
 
     def clean_phone_number(self):
         return _clean_phone_number(self.cleaned_data.get("phone_number"))
+
+
+class CodePasswordResetForm(forms.Form):
+    """
+    Demo password reset: the student enters the username and the short-lived
+    code issued by an administrator, then chooses a new password.
+    """
+
+    MAX_ATTEMPTS = 5
+    ATTEMPT_WINDOW = 3600
+
+    username = forms.CharField(
+        label=_("Username or Email"),
+        max_length=254,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": _("Enter your username or email"),
+                "autocomplete": "username",
+            }
+        ),
+    )
+    code = forms.CharField(
+        label=_("Reset Code"),
+        max_length=12,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control text-uppercase",
+                "placeholder": _("Enter the code from your administrator"),
+                "autocomplete": "off",
+                "autocapitalize": "characters",
+                "spellcheck": "false",
+            }
+        ),
+    )
+    password1 = forms.CharField(
+        label=_("New Password"),
+        widget=forms.PasswordInput(
+            attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Enter new password")}
+        ),
+    )
+    password2 = forms.CharField(
+        label=_("Confirm New Password"),
+        widget=forms.PasswordInput(
+            attrs={**PASSWORD_WIDGET_ATTRS, "placeholder": _("Confirm new password")}
+        ),
+    )
+
+    def __init__(self, *args, request=None, **kwargs):
+        self.request = request
+        self.user = None
+        self.reset_code = None
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def _cache_key(username: str) -> str:
+        return f"password-reset-code:{username.strip().lower()}"
+
+    def _attempts(self, username: str) -> int:
+        return cache.get(self._cache_key(username), 0)
+
+    def _register_failure(self, username: str) -> None:
+        cache.set(
+            self._cache_key(username),
+            self._attempts(username) + 1,
+            self.ATTEMPT_WINDOW,
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        username = (cleaned_data.get("username") or "").strip()
+        code = (cleaned_data.get("code") or "").strip().upper()
+
+        if username and code:
+            if self._attempts(username) >= self.MAX_ATTEMPTS:
+                raise ValidationError(
+                    _(
+                        "Too many failed attempts. Ask an administrator for a new "
+                        "code and try again later."
+                    )
+                )
+
+            user = None
+            matches = list(
+                User.objects.filter(
+                    Q(username__iexact=username) | Q(email__iexact=username),
+                    is_active=True,
+                )[:2]
+            )
+            if len(matches) == 1:
+                user = matches[0]
+
+            reset_code = None
+            if user is not None:
+                reset_code = (
+                    PasswordResetCode.objects.filter(
+                        user=user,
+                        used_at__isnull=True,
+                        expires_at__gt=timezone.now(),
+                    )
+                    .order_by("-created_at")
+                    .first()
+                )
+
+            if (
+                user is None
+                or reset_code is None
+                or not reset_code.matches(code)
+            ):
+                self._register_failure(username)
+                raise ValidationError(_("Invalid username/email or reset code."))
+
+            self.user = user
+            self.reset_code = reset_code
+
+        _validate_password_pair(
+            self, cleaned_data.get("password1"), cleaned_data.get("password2")
+        )
+        return cleaned_data
+
+    def save(self):
+        user = self.user
+        user.set_password(self.cleaned_data["password1"])
+        user.save(update_fields=["password"])
+        self.reset_code.mark_used()
+        cache.delete(self._cache_key(self.cleaned_data["username"]))
+        return user
 
 
 

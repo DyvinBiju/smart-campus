@@ -21,13 +21,16 @@ from django.db.models import Q, Count
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, View
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404
+from django.shortcuts import render
 
 from smart_campus.users.forms import (
+    CodePasswordResetForm,
     SelfProfileForm,
     StudentSignupForm,
     UserManagementCreateForm,
     UserManagementEditForm,
 )
+from smart_campus.users.models import PasswordResetCode
 from smart_campus.complaints.models import Complaint
 
 
@@ -342,6 +345,61 @@ class UserManagementToggleActiveView(RoleRequiredMixin, View):
             _(f"User account '{target_user.name or target_user.username}' was {status_text} successfully."),
         )
         return redirect("users:manage")
+
+
+class IssuePasswordResetCodeView(RoleRequiredMixin, View):
+    """Admin action that issues a short-lived, single-use reset code."""
+
+    allowed_roles = [User.Role.ADMIN]
+
+    def post(self, request, pk, *args, **kwargs):
+        target_user = get_object_or_404(User, pk=pk)
+
+        if target_user.is_admin_user:
+            messages.error(
+                request,
+                _("Reset codes cannot be issued for administrator accounts."),
+            )
+            return redirect("users:detail", pk=pk)
+
+        if not target_user.is_active:
+            messages.error(
+                request,
+                _("This account is inactive. Activate it before issuing a reset code."),
+            )
+            return redirect("users:detail", pk=pk)
+
+        record, code = PasswordResetCode.issue_for(target_user)
+        return render(
+            request,
+            "users/reset_code_issued.html",
+            {
+                "managed_user": target_user,
+                "reset_code": code,
+                "expires_at": record.expires_at,
+            },
+        )
+
+
+class CodePasswordResetView(FormView):
+    """Demo password reset using an administrator-issued code (no email)."""
+
+    template_name = "users/password_reset_code.html"
+    form_class = CodePasswordResetForm
+    success_url = reverse_lazy("account_login")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["request"] = self.request
+        return kwargs
+
+    def form_valid(self, form):
+        form.save()
+        messages.success(
+            self.request,
+            _("Password updated successfully. You can now sign in."),
+        )
+        return super().form_valid(form)
 
 
 class MaintenanceStaffListView(RoleRequiredMixin, ListView):

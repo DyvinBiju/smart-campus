@@ -9,6 +9,7 @@ from django.views.generic import TemplateView
 from smart_campus.assets.models import Asset, Location
 from smart_campus.inventory.models import InventoryItem
 from smart_campus.users.models import User
+from smart_campus.users.views import CodePasswordResetView
 from smart_campus.users.views import smart_campus_login_view
 
 
@@ -44,6 +45,12 @@ urlpatterns = [
     # User management
     path("users/", include("smart_campus.users.urls", namespace="users")),
     path("accounts/login/", smart_campus_login_view, name="account_login"),
+    # Demo reset (admin-issued code) replaces allauth's email-based reset page.
+    path(
+        "accounts/password/reset/",
+        CodePasswordResetView.as_view(),
+        name="demo_password_reset",
+    ),
     path("accounts/", include("allauth.urls")),
 
     # Custom apps & Admin-scoped management routes
