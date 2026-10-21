@@ -60,6 +60,7 @@ PHONE_WIDGET_ATTRS = {
     "inputmode": "numeric",
     "pattern": "[0-9]{10}",
     "maxlength": "10",
+    "autocomplete": "off",
 }
 
 
@@ -141,11 +142,11 @@ class StudentSignupForm(forms.Form):
     )
     password1 = forms.CharField(
         label=_("Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Enter secure password"), "class": "form-control"}),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Enter secure password"), "class": "form-control", "autocomplete": "new-password"}),
     )
     password2 = forms.CharField(
         label=_("Confirm Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm your password"), "class": "form-control"}),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm your password"), "class": "form-control", "autocomplete": "new-password"}),
     )
 
     def clean_name(self):
@@ -227,11 +228,11 @@ class MaintenanceStaffCreationForm(forms.Form):
     )
     password1 = forms.CharField(
         label=_("Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Set initial password"), "class": "form-control"}),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Set initial password"), "class": "form-control", "autocomplete": "new-password"}),
     )
     password2 = forms.CharField(
         label=_("Confirm Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm initial password"), "class": "form-control"}),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm initial password"), "class": "form-control", "autocomplete": "new-password"}),
     )
 
     def clean_name(self):
@@ -429,11 +430,11 @@ class UserManagementCreateForm(forms.Form):
     )
     password1 = forms.CharField(
         label=_("Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Enter password"), "class": "form-control"}),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Enter password"), "class": "form-control", "autocomplete": "new-password"}),
     )
     password2 = forms.CharField(
         label=_("Confirm Initial Password"),
-        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm password"), "class": "form-control"}),
+        widget=forms.PasswordInput(attrs={"placeholder": _("Confirm password"), "class": "form-control", "autocomplete": "new-password"}),
     )
 
     def clean_name(self):

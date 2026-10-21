@@ -101,52 +101,54 @@
     <!-- Detailed Activities Audit Logs -->
     <h5 class="section-title">2. Detailed Project Activities Audit Log</h5>
     <p class="small text-muted mb-2">This log captures all operations events collected across connected campus systems.</p>
-    <table class="table table-striped table-bordered table-sm align-middle mb-4">
-      <thead class="table-light">
-        <tr>
-          <th style="width: 15%;">Timestamp</th>
-          <th style="width: 15%;">Activity Type</th>
-          <th style="width: 15%;">Logged By</th>
-          <th style="width: 25%;">Activity Title</th>
-          <th style="width: 20%;">Description</th>
-          <th style="width: 10%;">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for act in activities %}
+    <div class="table-responsive mb-4">
+      <table class="table table-striped table-bordered table-sm align-middle mb-0 audit-log-table">
+        <thead class="table-light">
           <tr>
-            <td class="small">{{ act.timestamp|date:"Y-m-d H:i:s" }}</td>
-            <td>
-              <span class="badge 
-                {% if act.activity_type == 'COMPLAINT' %}bg-danger text-white
-                {% elif act.activity_type == 'MAINTENANCE' %}bg-warning text-dark
-                {% elif act.activity_type == 'ASSET' %}bg-info text-white
-                {% elif act.activity_type == 'INVENTORY' %}bg-secondary text-white
-                {% elif act.activity_type == 'USER' %}bg-primary text-white
-                {% else %}bg-dark text-white{% endif %}">
-                {{ act.activity_type_display }}
-              </span>
-            </td>
-            <td>{{ act.user_name }}</td>
-            <td class="fw-semibold small text-dark">{{ act.title }}</td>
-            <td class="small text-muted">{{ act.description }}</td>
-            <td>
-              {% if act.status %}
-                <span class="badge bg-light text-dark border">{{ act.status }}</span>
-              {% else %}
-                <span class="text-muted small">-</span>
-              {% endif %}
-            </td>
+            <th style="width: 15%;">Timestamp</th>
+            <th style="width: 15%;">Activity Type</th>
+            <th style="width: 15%;">Logged By</th>
+            <th style="width: 25%;">Activity Title</th>
+            <th style="width: 20%;">Description</th>
+            <th style="width: 10%;">Status</th>
           </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6" class="text-center py-4 text-muted">
-              No matching activities found for the selected filters.
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for act in activities %}
+            <tr>
+              <td class="small">{{ act.timestamp|date:"Y-m-d H:i:s" }}</td>
+              <td>
+                <span class="badge 
+                  {% if act.activity_type == 'COMPLAINT' %}bg-danger text-white
+                  {% elif act.activity_type == 'MAINTENANCE' %}bg-warning text-dark
+                  {% elif act.activity_type == 'ASSET' %}bg-info text-white
+                  {% elif act.activity_type == 'INVENTORY' %}bg-secondary text-white
+                  {% elif act.activity_type == 'USER' %}bg-primary text-white
+                  {% else %}bg-dark text-white{% endif %}">
+                  {{ act.activity_type_display }}
+                </span>
+              </td>
+              <td>{{ act.user_name }}</td>
+              <td class="fw-semibold small text-dark">{{ act.title }}</td>
+              <td class="small text-muted">{{ act.description }}</td>
+              <td>
+                {% if act.status %}
+                  <span class="badge bg-light text-dark border">{{ act.status }}</span>
+                {% else %}
+                  <span class="text-muted small">-</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">
+                No matching activities found for the selected filters.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
     <!-- Footer Signature -->
     <div class="mt-5 pt-4 text-center border-top">

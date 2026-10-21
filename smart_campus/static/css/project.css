@@ -80,3 +80,187 @@
   background-color: #f2dede;
   border-color: #eed3d7;
 }
+
+/* ==========================================================================
+   RESPONSIVE FIXES
+   Loaded after the theme stylesheet so these rules can safely adjust the
+   layout on small and in-between window sizes without changing behaviour.
+   ========================================================================== */
+
+/* Never allow the page to scroll sideways on small screens */
+html,
+body {
+  overflow-x: hidden;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+
+/* -------------------- Header / Navigation -------------------- */
+@media (max-width: 991.98px) {
+  /* The template's hamburger menu replaces the desktop navigation */
+  #main-menu {
+    display: none !important;
+  }
+
+  #navigation {
+    padding: 16px 20px;
+  }
+
+  .site-logo {
+    width: auto;
+    max-width: 190px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  #navigation {
+    padding: 12px 16px;
+  }
+
+  .site-logo {
+    max-width: 150px;
+  }
+}
+
+/* -------------------- Home hero -------------------- */
+.hero-home {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  height: auto;
+  min-height: 580px;
+  padding: 40px 0 60px;
+}
+
+.hero-home .hero-text h1 {
+  padding-top: 35px;
+}
+
+.hero-home .hero-text p {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* Keep the hero illustration visible at every breakpoint */
+.hero-text-img img {
+  display: block !important;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 991.98px) {
+  /* Drop the decorative background image so it no longer clashes
+     with the hero content when the window is narrow */
+  .hero-home {
+    min-height: auto;
+    padding: 24px 0 40px;
+    background-image: none !important;
+    background-color: #eef2ff;
+  }
+
+  .hero-home .hero-text h1 {
+    padding-top: 8px;
+    font-size: clamp(2rem, 7vw, 3rem);
+    line-height: 1.15;
+  }
+
+  .hero-home .hero-text p {
+    max-width: none;
+  }
+
+  .hero-home .hero-text-img {
+    margin-top: 0.5rem;
+  }
+}
+
+/* -------------------- Generic sections -------------------- */
+@media (max-width: 767.98px) {
+  .section-padding {
+    padding: 50px 0;
+  }
+
+  .section-title {
+    margin-bottom: 35px;
+  }
+
+  .section-title h2 {
+    font-size: 26px;
+  }
+
+  .count_area {
+    margin-top: 0;
+  }
+
+  .single-counter {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .section-padding {
+    padding: 40px 0;
+  }
+}
+
+/* Page banner used by the About and account-management pages */
+@media (max-width: 767.98px) {
+  .section-top {
+    padding-top: 110px;
+    padding-bottom: 50px;
+  }
+
+  .section-top-title h1 {
+    font-size: 34px;
+  }
+}
+
+/* -------------------- Dashboard -------------------- */
+@media (max-width: 767.98px) {
+  .page-title-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .dash-card-body {
+    padding: 1rem;
+  }
+
+  .dash-card-header {
+    padding: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .widget-value {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-content {
+    padding: 1rem 0.75rem;
+  }
+}
+
+/* -------------------- Tables & long content -------------------- */
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+}
+
+.table td {
+  word-break: break-word;
+}
+
+/* Audit log tables need to keep their columns readable on phones */
+.audit-log-table {
+  min-width: 720px;
+}
+
+/* -------------------- Footer -------------------- */
+.footer .single_footer img {
+  max-height: 55px;
+  width: auto;
+}
