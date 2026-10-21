@@ -1,0 +1,31 @@
+volumes:
+  ec2_django_media: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    image: smart_campus_ec2_django
+    restart: unless-stopped
+    ports:
+      - "80:5000"
+    volumes:
+      - ec2_django_media:/app/smart_campus/media
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.ec2_demo
+    command: >
+      sh -c "python /app/manage.py migrate --noinput && /start"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/')"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
