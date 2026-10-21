@@ -248,6 +248,20 @@ EMAIL_BACKEND = env(
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-timeout
 EMAIL_TIMEOUT = 5
 
+# SMTP configuration (used when EMAIL_BACKEND is the SMTP backend).
+# Local development defaults to the console backend, so these are optional there.
+EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    default="SmartCampus <noreply@localhost>",
+)
+
 # ADMIN
 # ------------------------------------------------------------------------------
 # Django Admin URL.
@@ -298,6 +312,11 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 # https://docs.allauth.org/en/latest/account/configuration.html
 ACCOUNT_ADAPTER = "smart_campus.users.adapters.AccountAdapter"
+# Throttle password-reset requests so the endpoint cannot be used to spam.
+ACCOUNT_RATE_LIMITS = {
+    "reset_password": "5/h",
+    "reset_password_from_key": "10/h",
+}
 # https://docs.allauth.org/en/latest/account/forms.html
 ACCOUNT_FORMS = {"signup": "smart_campus.users.forms.UserSignupForm"}
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
