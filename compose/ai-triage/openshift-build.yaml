@@ -1,0 +1,36 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: ai-triage-service
+  labels:
+    app: ai-triage-service
+spec:
+  lookupPolicy:
+    local: true
+  tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: image-registry.openshift-image-registry.svc:5000/sandbox-shared-models/ai-triage-service:latest
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: ai-triage-service
+  labels:
+    app: ai-triage-service
+spec:
+  source:
+    type: Binary
+    binary: {}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfile: Dockerfile
+      noCache: true
+  output:
+    to:
+      kind: ImageStreamTag
+      name: ai-triage-service:latest
+  triggers:
+    - type: ConfigChange
