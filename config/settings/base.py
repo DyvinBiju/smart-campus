@@ -305,6 +305,10 @@ SOCIALACCOUNT_ADAPTER = "smart_campus.users.adapters.SocialAccountAdapter"
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
 SOCIALACCOUNT_FORMS = {"signup": "smart_campus.users.forms.UserSocialSignupForm"}
 
+# AI-assisted complaint triage (feature-flagged, disabled by default).
+# ------------------------------------------------------------------------------
+AI_TRIAGE_ENABLED = env.bool("AI_TRIAGE_ENABLED", default=False)
+AI_TRIAGE_API_URL = env("AI_TRIAGE_API_URL", default="")
 
 # Your stuff...
 # ------------------------------------------------------------------------------

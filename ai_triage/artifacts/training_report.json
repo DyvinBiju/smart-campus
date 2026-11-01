@@ -1,0 +1,89 @@
+{
+  "samples_total": 600,
+  "category_report": {
+    "Cleanliness": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 17.0
+    },
+    "Electrical": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 18.0
+    },
+    "Furniture": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "IT / Network": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 24.0
+    },
+    "Other": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 21.0
+    },
+    "Plumbing": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 20.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 120.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 120.0
+    }
+  },
+  "priority_report": {
+    "High": {
+      "precision": 0.39473684210526316,
+      "recall": 0.375,
+      "f1-score": 0.38461538461538464,
+      "support": 40.0
+    },
+    "Low": {
+      "precision": 0.34285714285714286,
+      "recall": 0.3157894736842105,
+      "f1-score": 0.3287671232876712,
+      "support": 38.0
+    },
+    "Medium": {
+      "precision": 0.425531914893617,
+      "recall": 0.47619047619047616,
+      "f1-score": 0.449438202247191,
+      "support": 42.0
+    },
+    "accuracy": 0.39166666666666666,
+    "macro avg": {
+      "precision": 0.387708633285341,
+      "recall": 0.38899331662489556,
+      "f1-score": 0.3876069033834156,
+      "support": 120.0
+    },
+    "weighted avg": {
+      "precision": 0.3890865461526156,
+      "recall": 0.39166666666666666,
+      "f1-score": 0.38961808803274095,
+      "support": 120.0
+    }
+  },
+  "category_model_path": "E:\\SmartCampus\\smart_campus\\ai_triage\\artifacts\\category_model.joblib",
+  "priority_model_path": "E:\\SmartCampus\\smart_campus\\ai_triage\\artifacts\\priority_model.joblib"
+}

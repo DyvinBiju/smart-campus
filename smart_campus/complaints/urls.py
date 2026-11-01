@@ -6,6 +6,7 @@ app_name = "complaints"
 urlpatterns = [
     path("", views.complaint_list, name="list"),
     path("create/", views.complaint_create, name="create"),
+    path("suggest-triage/", views.suggest_triage, name="suggest_triage"),
     path("assigned/", views.assigned_complaints, name="assigned"),
     path("admin-manage/", views.admin_complaint_manage, name="admin_manage"),
     path("staff-by-specialization/", views.staff_by_specialization, name="staff_by_specialization"),

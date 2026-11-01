@@ -108,6 +108,27 @@
                 <div class="form-text">Describe the exact problem so maintenance personnel can resolve it efficiently.</div>
               </div>
 
+              <div id="ai-triage-section" class="mb-4 d-none">
+                <button type="button" id="ai-triage-btn" class="btn btn-outline-primary px-3 py-2">
+                  <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Suggest Category & Priority
+                </button>
+                <div id="ai-triage-loading" class="d-none mt-2 text-info small">
+                  <i class="fa-solid fa-spinner fa-spin me-1"></i> Generating suggestions...
+                </div>
+                <div id="ai-triage-result" class="mt-3 d-none">
+                  <div class="alert alert-success py-2 px-3 small">
+                    <strong>Suggested Category:</strong> <span id="ai-suggested-category"></span><br>
+                    <strong>Suggested Priority:</strong> <span id="ai-suggested-priority"></span>
+                    <div id="ai-triage-confidence" class="mt-1 text-muted"></div>
+                    <div class="mt-2">
+                      <button type="button" id="ai-apply-btn" class="btn btn-sm btn-success">Apply Suggestions</button>
+                      <button type="button" id="ai-ignore-btn" class="btn btn-sm btn-secondary">Ignore</button>
+                    </div>
+                  </div>
+                </div>
+                <div id="ai-triage-error" class="mt-2 alert alert-danger py-2 px-3 small d-none"></div>
+              </div>
+
               <div class="d-flex align-items-center gap-3 pt-2">
                 <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
                   <i class="fa-solid fa-paper-plane me-2"></i>Submit Complaint
@@ -151,6 +172,78 @@
       assetSelect.addEventListener('change', syncAssetLocation);
       syncAssetLocation();
     }
+  });
+</script>
+<!-- AI Triage JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const triageSection = document.getElementById('ai-triage-section');
+    const triageBtn = document.getElementById('ai-triage-btn');
+    const triageLoading = document.getElementById('ai-triage-loading');
+    const triageResult = document.getElementById('ai-triage-result');
+    const triageError = document.getElementById('ai-triage-error');
+    const applyBtn = document.getElementById('ai-apply-btn');
+    const ignoreBtn = document.getElementById('ai-ignore-btn');
+
+    if (!triageBtn || !triageSection) return;
+
+    triageBtn.addEventListener('click', function() {
+      const title = (document.getElementById('id_title')?.value || '').trim();
+      const description = (document.getElementById('id_description')?.value || '').trim();
+      if (!title) {
+        alert('Please enter a complaint title first.');
+        return;
+      }
+      triageLoading.classList.remove('d-none');
+      triageResult.classList.add('d-none');
+      triageError.classList.add('d-none');
+
+      fetch("{% url 'complaints:suggest_triage' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ title: title, description: description }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(data => { throw new Error(data.detail || 'Request failed'); });
+        }
+        return response.json();
+      })
+      .then(data => {
+        triageLoading.classList.add('d-none');
+        if (data.abstain) {
+          document.getElementById('ai-triage-confidence').textContent = 'Low confidence — suggestions may be unreliable.';
+        } else if (data.category_confidence !== undefined && data.priority_confidence !== undefined) {
+          document.getElementById('ai-triage-confidence').textContent = 'Confidence — Category: ' + Math.round(data.category_confidence * 100) + '%, Priority: ' + Math.round(data.priority_confidence * 100) + '%';
+        }
+        document.getElementById('ai-suggested-category').textContent = data.category;
+        document.getElementById('ai-suggested-priority').textContent = data.priority;
+        triageResult.classList.remove('d-none');
+      })
+      .catch(error => {
+        triageLoading.classList.add('d-none');
+        triageError.textContent = error.message || 'Triage service unavailable.';
+        triageError.classList.remove('d-none');
+      });
+    });
+
+    applyBtn?.addEventListener('click', function() {
+      const category = document.getElementById('ai-suggested-category').textContent;
+      const priority = document.getElementById('ai-suggested-priority').textContent;
+      const categorySelect = document.getElementById('id_category');
+      const prioritySelect = document.getElementById('id_priority');
+      if (categorySelect) categorySelect.value = category;
+      if (prioritySelect) prioritySelect.value = priority;
+      triageResult.classList.add('d-none');
+    });
+
+    ignoreBtn?.addEventListener('click', function() {
+      triageResult.classList.add('d-none');
+    });
   });
 </script>
 <!-- END COMPLAINT FORM SECTION -->

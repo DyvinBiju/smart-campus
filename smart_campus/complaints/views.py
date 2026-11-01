@@ -8,6 +8,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.conf import settings
+import json
 
 from smart_campus.dashboard.models import Notification
 from smart_campus.inventory.models import StockTransaction
@@ -131,6 +133,48 @@ def complaint_create(request):
         form = ComplaintForm()
 
     return render(request, "complaints/complaint_form.html", {"form": form})
+
+
+@login_required
+def suggest_triage(request):
+    """Return AI category/priority suggestions for a draft complaint."""
+    if not getattr(settings, "AI_TRIAGE_ENABLED", False):
+        return JsonResponse({"detail": "AI triage is disabled."}, status=503)
+
+    if request.method != "POST" or request.headers.get("x-requested-with") != "XMLHttpRequest":
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({"detail": "Invalid JSON body."}, status=400)
+
+    title = (payload.get("title") or "").strip()
+    description = (payload.get("description") or "").strip()
+    if not title:
+        return JsonResponse({"detail": "Title is required."}, status=400)
+
+    api_url = getattr(settings, "AI_TRIAGE_API_URL", "") or ""
+    if not api_url:
+        return JsonResponse({"detail": "Triage service URL is not configured."}, status=503)
+
+    try:
+        import urllib.request
+        import urllib.error
+
+        data = json.dumps({"title": title, "description": description}).encode("utf-8")
+        req = urllib.request.Request(
+            api_url.rstrip("/") + "/predict",
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return JsonResponse({"detail": "Triage service unavailable."}, status=503)
+
+    return JsonResponse(result)
 
 
 @login_required
