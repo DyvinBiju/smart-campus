@@ -1,88 +1,185 @@
 {
   "samples_total": 600,
   "category_report": {
-    "Cleanliness": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 17.0
-    },
-    "Electrical": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 18.0
-    },
-    "Furniture": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 20.0
-    },
-    "IT / Network": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 24.0
-    },
-    "Other": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 21.0
-    },
-    "Plumbing": {
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 20.0
+    "labels": [
+      "Electrical",
+      "Plumbing",
+      "Furniture",
+      "Cleanliness",
+      "IT / Network",
+      "Other"
+    ],
+    "per_class": {
+      "Electrical": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 19
+      },
+      "Plumbing": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 18
+      },
+      "Furniture": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 19
+      },
+      "Cleanliness": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 20
+      },
+      "IT / Network": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 22
+      },
+      "Other": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "support": 22
+      }
     },
     "accuracy": 1.0,
-    "macro avg": {
+    "macro_avg": {
       "precision": 1.0,
       "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 120.0
+      "f1_score": 1.0
     },
-    "weighted avg": {
+    "weighted_avg": {
       "precision": 1.0,
       "recall": 1.0,
-      "f1-score": 1.0,
-      "support": 120.0
+      "f1_score": 1.0
     }
   },
+  "category_confusion_matrix": {
+    "labels": [
+      "Electrical",
+      "Plumbing",
+      "Furniture",
+      "Cleanliness",
+      "IT / Network",
+      "Other"
+    ],
+    "matrix": [
+      [
+        19,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        18,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        19,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        20,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        22,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        22
+      ]
+    ]
+  },
   "priority_report": {
-    "High": {
-      "precision": 0.39473684210526316,
-      "recall": 0.375,
-      "f1-score": 0.38461538461538464,
-      "support": 40.0
+    "labels": [
+      "Low",
+      "Medium",
+      "High"
+    ],
+    "per_class": {
+      "Low": {
+        "precision": 0.6,
+        "recall": 0.6923076923076923,
+        "f1_score": 0.6428571428571429,
+        "support": 39
+      },
+      "Medium": {
+        "precision": 0.5454545454545454,
+        "recall": 0.5581395348837209,
+        "f1_score": 0.5517241379310345,
+        "support": 43
+      },
+      "High": {
+        "precision": 0.7741935483870968,
+        "recall": 0.631578947368421,
+        "f1_score": 0.6956521739130435,
+        "support": 38
+      }
     },
-    "Low": {
-      "precision": 0.34285714285714286,
-      "recall": 0.3157894736842105,
-      "f1-score": 0.3287671232876712,
-      "support": 38.0
+    "accuracy": 0.625,
+    "macro_avg": {
+      "precision": 0.639882697947214,
+      "recall": 0.6273420581866115,
+      "f1_score": 0.6300778182337402
     },
-    "Medium": {
-      "precision": 0.425531914893617,
-      "recall": 0.47619047619047616,
-      "f1-score": 0.449438202247191,
-      "support": 42.0
-    },
-    "accuracy": 0.39166666666666666,
-    "macro avg": {
-      "precision": 0.387708633285341,
-      "recall": 0.38899331662489556,
-      "f1-score": 0.3876069033834156,
-      "support": 120.0
-    },
-    "weighted avg": {
-      "precision": 0.3890865461526156,
-      "recall": 0.39166666666666666,
-      "f1-score": 0.38961808803274095,
-      "support": 120.0
+    "weighted_avg": {
+      "precision": 0.635615835777126,
+      "recall": 0.625,
+      "f1_score": 0.6269195759263226
     }
+  },
+  "priority_confusion_matrix": {
+    "labels": [
+      "Low",
+      "Medium",
+      "High"
+    ],
+    "matrix": [
+      [
+        27,
+        9,
+        3
+      ],
+      [
+        15,
+        24,
+        4
+      ],
+      [
+        3,
+        11,
+        24
+      ]
+    ]
   },
   "category_model_path": "E:\\SmartCampus\\smart_campus\\ai_triage\\artifacts\\category_model.joblib",
   "priority_model_path": "E:\\SmartCampus\\smart_campus\\ai_triage\\artifacts\\priority_model.joblib"

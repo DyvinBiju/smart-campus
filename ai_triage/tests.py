@@ -14,6 +14,7 @@ from django.urls import reverse
 from ai_triage.dataset import generate_synthetic_complaints, CATEGORIES, PRIORITIES
 from ai_triage.train import build_pipeline, train, predict, CATEGORY_MODEL_PATH, PRIORITY_MODEL_PATH
 from ai_triage.serve import app as fastapi_app
+from ai_triage.fallback import predict as rule_predict
 
 User = get_user_model()
 
@@ -81,7 +82,7 @@ class ServeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
 
-    def test_predict_endpoint(self):
+    def test_predict_endpoint_returns_priority_source_and_abstain_reason(self):
         from fastapi.testclient import TestClient
         client = TestClient(fastapi_app)
         payload = {
@@ -94,6 +95,11 @@ class ServeTests(TestCase):
         self.assertIn(data["category"], CATEGORIES)
         self.assertIn(data["priority"], PRIORITIES)
         self.assertIn("abstain", data)
+        self.assertIn("priority_source", data)
+        self.assertIn("abstain_reason", data)
+        # Rule should fire for strong flooding language.
+        self.assertEqual(data["priority_source"], "rule")
+        self.assertIsNone(data["abstain_reason"])
 
     def test_predict_empty_title(self):
         from fastapi.testclient import TestClient
@@ -138,6 +144,8 @@ class ComplaintTriageDjangoTests(TestCase):
             "category_confidence": 0.95,
             "priority_confidence": 0.88,
             "abstain": False,
+            "priority_source": "ml",
+            "abstain_reason": None,
         }).encode("utf-8")
         mock_response.__enter__ = MagicMock(return_value=mock_response)
         mock_response.__exit__ = MagicMock(return_value=False)
@@ -167,3 +175,35 @@ class ComplaintTriageDjangoTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 503)
+
+
+# ---------------------------------------------------------------------------
+# Fallback / abstention tests
+# ---------------------------------------------------------------------------
+
+
+class FallbackTests(TestCase):
+    def test_rule_predict_high_urgency(self):
+        result = rule_predict("Exposed wiring fire hazard sparking near Room 101.")
+        self.assertEqual(result["priority"], "High")
+        self.assertGreater(result["priority_confidence"], 0.5)
+        self.assertFalse(result["abstain"])
+
+    def test_rule_predict_medium_urgency(self):
+        result = rule_predict("Flickering lights in Room 101, slow drain.")
+        self.assertEqual(result["priority"], "Medium")
+        self.assertGreater(result["priority_confidence"], 0.5)
+        self.assertFalse(result["abstain"])
+
+    def test_rule_predict_low_urgency(self):
+        result = rule_predict("Cosmetic scuff mark and minor paint touch-up.")
+        self.assertEqual(result["priority"], "Low")
+        self.assertLess(result["priority_confidence"], 0.5)
+        self.assertTrue(result["abstain"])
+
+    def test_fallback_integration_uses_rule_when_ml_weak(self):
+        train()
+        text = "Cosmetic scuff mark near Cafeteria."
+        result = rule_predict(text)
+        self.assertEqual(result["priority"], "Low")
+        self.assertTrue(result["abstain"])

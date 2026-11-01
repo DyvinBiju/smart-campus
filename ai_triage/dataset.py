@@ -79,6 +79,149 @@ _CATEGORY_TEMPLATES: dict[str, list[str]] = {
     ],
 }
 
+# Category-aware urgency phrases so the priority classifier can learn
+# category-specific priority signals instead of generic global phrases.
+_CATEGORY_PRIORITY_PHRASES: dict[str, dict[str, list[str]]] = {
+    "Electrical": {
+        "High": [
+            "sparking",
+            "shock risk",
+            "fire hazard",
+            "exposed wiring",
+            "power outage",
+        ],
+        "Medium": [
+            "flickering",
+            "intermittent",
+            "dim",
+            "loose connection",
+            "tripping",
+        ],
+        "Low": [
+            "cosmetic",
+            "paint",
+            "sticker",
+            "minor noise",
+            "dust",
+        ],
+    },
+    "Plumbing": {
+        "High": [
+            "leaking",
+            "flooding",
+            "burst pipe",
+            "sewage backup",
+            "no water",
+        ],
+        "Medium": [
+            "low pressure",
+            "slow drain",
+            "stuck",
+            "dripping",
+            "clogged",
+        ],
+        "Low": [
+            "cosmetic",
+            "stain",
+            "minor leak",
+            "paint",
+            "caulk",
+        ],
+    },
+    "Furniture": {
+        "High": [
+            "unsafe",
+            "collapsed",
+            "broken leg",
+            "sharp edge",
+            "unstable",
+        ],
+        "Medium": [
+            "stuck",
+            "loose",
+            "wobbly",
+            "drawer stuck",
+            "hinge broken",
+        ],
+        "Low": [
+            "cosmetic",
+            "paint",
+            "stain",
+            "minor wear",
+            "scuff mark",
+        ],
+    },
+    "Cleanliness": {
+        "High": [
+            "biohazard",
+            "sewage",
+            "flooding",
+            "unsafe",
+            "infestation",
+        ],
+        "Medium": [
+            "foul smell",
+            "overflowing",
+            "spilled",
+            "sticky",
+            "trash",
+        ],
+        "Low": [
+            "dust",
+            "cobweb",
+            "minor stain",
+            "graffiti",
+            "cosmetic",
+        ],
+    },
+    "IT / Network": {
+        "High": [
+            "server down",
+            "outage",
+            "data loss",
+            "security breach",
+            "unreachable",
+        ],
+        "Medium": [
+            "slow",
+            "intermittent",
+            "offline",
+            "distorted",
+            "lag",
+        ],
+        "Low": [
+            "cosmetic",
+            "label",
+            "minor",
+            "sticker",
+            "display",
+        ],
+    },
+    "Other": {
+        "High": [
+            "emergency",
+            "unsafe",
+            "blocked",
+            "hazard",
+            "urgent",
+        ],
+        "Medium": [
+            "noise",
+            "inquiry",
+            "soon",
+            "needs",
+            "requested",
+        ],
+        "Low": [
+            "cosmetic",
+            "minor",
+            "inquiry",
+            "signage",
+            "schedule",
+        ],
+    },
+}
+
 _ROOMS = [
     "Room 101",
     "Room 102",
@@ -98,79 +241,6 @@ _ROOMS = [
     "Hostel Block A",
 ]
 
-_PRIORITY_HINTS: dict[str, list[str]] = {
-    "High": [
-        "sparking",
-        "leaking",
-        "flooding",
-        "not working",
-        "emergency",
-        "unsafe",
-        "shock",
-        "blocked",
-        "broken",
-        "crashing",
-        "unreachable",
-        "fire",
-    ],
-    "Medium": [
-        "flickering",
-        "low pressure",
-        "stuck",
-        "loose",
-        "sticky",
-        "offline",
-        "distorted",
-        "missing",
-        "foul smell",
-        "overdue",
-        "slow",
-        "noisy",
-    ],
-    "Low": [
-        "cosmetic",
-        "paint",
-        "minor",
-        "noise",
-        "inquiry",
-        "signage",
-        "graffiti",
-        "lost item",
-        "menu",
-        "parking",
-    ],
-}
-
-
-def _inject_priority_hint(text: str, priority: str) -> str:
-    # Always append a strong, priority-specific phrase so the classifier can learn.
-    phrases = {
-        "High": [
-            "This is an urgent safety issue.",
-            "Immediate attention required.",
-            "Risk of damage or injury.",
-            "Emergency maintenance needed.",
-        ],
-        "Medium": [
-            "Prompt attention requested.",
-            "Should be fixed soon.",
-            "Affects normal operations.",
-            "Needs maintenance soon.",
-        ],
-        "Low": [
-            "Can be scheduled later.",
-            "Minor inconvenience.",
-            "Low urgency request.",
-            "Non-blocking issue.",
-        ],
-    }
-    candidates = phrases.get(priority, [])
-    if candidates:
-        return f"{text} {random.choice(candidates)}"
-    return text
-
-
-# Category -> priority distribution weights (higher = more likely).
 _CATEGORY_PRIORITY_WEIGHTS: dict[str, dict[str, int]] = {
     "Electrical": {"High": 4, "Medium": 3, "Low": 1},
     "Plumbing": {"High": 4, "Medium": 2, "Low": 1},
@@ -189,6 +259,16 @@ def _weighted_choice(category: str) -> str:
     return random.choice(items)
 
 
+def _inject_priority_hint(text: str, category: str, priority: str) -> str:
+    phrases = _CATEGORY_PRIORITY_PHRASES.get(category, {}).get(priority, [])
+    if not phrases:
+        return text
+    # Use 1-2 category-specific urgency phrases so the classifier can
+    # learn priority from domain language, not generic appendages.
+    chosen = random.sample(phrases, k=min(len(phrases), random.choice([1, 2])))
+    return f"{text} {' '.join(chosen)}."
+
+
 def generate_synthetic_complaints(count: int = 600, seed: int = 42) -> list[dict]:
     """Return a list of synthetic complaint dicts with title, description, category, priority."""
     random.seed(seed)
@@ -200,7 +280,7 @@ def generate_synthetic_complaints(count: int = 600, seed: int = 42) -> list[dict
         room = random.choice(_ROOMS)
         title_template = random.choice(_CATEGORY_TEMPLATES[category])
         title = title_template.format(room=room)
-        description = _inject_priority_hint(title, priority)
+        description = _inject_priority_hint(title, category, priority)
         if random.random() < 0.25:
             description = f"{description} Please fix urgently." if priority == "High" else f"{description} Please look into this when possible."
         samples.append(

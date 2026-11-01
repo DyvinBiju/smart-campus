@@ -11,7 +11,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 
 from ai_triage.dataset import generate_synthetic_complaints, CATEGORIES, PRIORITIES
 
@@ -45,6 +45,33 @@ def build_pipeline() -> Pipeline:
     )
 
 
+def _to_serialisable_report(report_dict: dict, labels: list[str]) -> dict:
+    """Convert sklearn report dict to a JSON-safe structure with confusion matrix."""
+    return {
+        "labels": labels,
+        "per_class": {
+            label: {
+                "precision": float(report_dict[label]["precision"]),
+                "recall": float(report_dict[label]["recall"]),
+                "f1_score": float(report_dict[label]["f1-score"]),
+                "support": int(report_dict[label]["support"]),
+            }
+            for label in labels
+        },
+        "accuracy": float(report_dict["accuracy"]),
+        "macro_avg": {
+            "precision": float(report_dict["macro avg"]["precision"]),
+            "recall": float(report_dict["macro avg"]["recall"]),
+            "f1_score": float(report_dict["macro avg"]["f1-score"]),
+        },
+        "weighted_avg": {
+            "precision": float(report_dict["weighted avg"]["precision"]),
+            "recall": float(report_dict["weighted avg"]["recall"]),
+            "f1_score": float(report_dict["weighted avg"]["f1-score"]),
+        },
+    }
+
+
 def train() -> dict:
     data = generate_synthetic_complaints(count=600)
     texts = [f"{sample['title']} {sample['description']}" for sample in data]
@@ -64,6 +91,7 @@ def train() -> dict:
     category_report = classification_report(
         y_cat_test, category_preds, output_dict=True, zero_division=0
     )
+    category_cm = confusion_matrix(y_cat_test, category_preds, labels=CATEGORIES).tolist()
 
     priority_model = build_pipeline()
     priority_model.fit(X_train, y_pri_train)
@@ -71,6 +99,7 @@ def train() -> dict:
     priority_report = classification_report(
         y_pri_test, priority_preds, output_dict=True, zero_division=0
     )
+    priority_cm = confusion_matrix(y_pri_test, priority_preds, labels=PRIORITIES).tolist()
 
     os.makedirs(ARTIFACTS_DIR, exist_ok=True)
     joblib.dump(category_model, CATEGORY_MODEL_PATH)
@@ -78,8 +107,16 @@ def train() -> dict:
 
     report = {
         "samples_total": len(data),
-        "category_report": category_report,
-        "priority_report": priority_report,
+        "category_report": _to_serialisable_report(category_report, CATEGORIES),
+        "category_confusion_matrix": {
+            "labels": CATEGORIES,
+            "matrix": category_cm,
+        },
+        "priority_report": _to_serialisable_report(priority_report, PRIORITIES),
+        "priority_confusion_matrix": {
+            "labels": PRIORITIES,
+            "matrix": priority_cm,
+        },
         "category_model_path": str(CATEGORY_MODEL_PATH),
         "priority_model_path": str(PRIORITY_MODEL_PATH),
     }
